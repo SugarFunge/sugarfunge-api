@@ -1,11 +1,33 @@
 use crate::state::*;
 use crate::sugarfunge;
 use crate::util::*;
-use actix_web::{error, web, HttpResponse};
+use actix_web::{error, web, HttpRequest, HttpResponse};
+use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use sp_core::Pair;
 use std::str::FromStr;
+use subxt::sp_runtime::traits::IdentifyAccount;
 use subxt::PairSigner;
+
+#[derive(Serialize, Deserialize)]
+pub struct CreateAccountOutput {
+    seed: String,
+    account: String,
+}
+
+/// Generate a unique seed and its associated account
+pub async fn create(_req: HttpRequest) -> error::Result<HttpResponse> {
+    let seed = rand::thread_rng().gen::<[u8; 32]>();
+    let seed = hex::encode(seed);
+    let seed = format!("//{}", seed);
+    let pair = get_pair_from_seed(&seed)?;
+    let account = pair.public().into_account();
+    Ok(HttpResponse::Ok().json(CreateAccountOutput {
+        seed,
+        account: format!("{}", account),
+    }))
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct FundAccountInput {

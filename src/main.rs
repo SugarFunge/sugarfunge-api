@@ -36,6 +36,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
             .data(state.clone())
+            .route("account/create", web::post().to(account::create))
             .route("account/fund", web::post().to(account::fund))
             .route("account/balance", web::post().to(account::balance))
             .route("token/issue", web::post().to(token::issue))
