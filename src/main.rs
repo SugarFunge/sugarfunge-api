@@ -46,6 +46,7 @@ async fn main() -> std::io::Result<()> {
             .route("token/balance", web::post().to(token::balance))
             .route("nft/create", web::post().to(nft::create))
             .route("nft/mint", web::post().to(nft::mint))
+            .route("nft/collections", web::post().to(nft::collections))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()

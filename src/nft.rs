@@ -31,7 +31,7 @@ pub async fn create(
     let pair = get_pair_from_seed(&req.input.seed)?;
     let signer = PairSigner::new(pair);
 
-    let metadata: Vec<u8> = serde_json::to_vec(&req.input.metadata).unwrap();
+    let metadata: Vec<u8> = serde_json::to_vec(&req.input.metadata).unwrap_or_default();
 
     let api = data.api.lock().unwrap();
     let result = api
@@ -85,7 +85,7 @@ pub async fn mint(
     let pair = get_pair_from_seed(&req.input.seed)?;
     let signer = PairSigner::new(pair);
 
-    let metadata: Vec<u8> = serde_json::to_vec(&req.input.metadata).unwrap();
+    let metadata: Vec<u8> = serde_json::to_vec(&req.input.metadata).unwrap_or_default();
 
     let api = data.api.lock().unwrap();
     let result = api
@@ -109,5 +109,50 @@ pub async fn mint(
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::nft::events::TokenMint"),
         })),
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct NftCollectionsInput {
+    input: NftCollectionsArg,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct NftCollectionsArg {
+    collection_id: u64,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct NftCollectionsOutput {
+    owner: String,
+    total_supply: u128,
+    deposit: u128,
+    metadata: serde_json::Value,
+}
+
+/// Get balance for given token id
+pub async fn collections(
+    data: web::Data<AppState>,
+    req: web::Json<NftCollectionsInput>,
+) -> error::Result<HttpResponse> {
+    let api = data.api.lock().unwrap();
+    let result = api
+        .storage()
+        .nft()
+        .collections(req.input.collection_id, None)
+        .await;
+    let collection_info = result.map_err(map_subxt_err)?;
+    if let Some(collection_info) = collection_info {
+        let metadata = serde_json::from_slice(&collection_info.properties).unwrap_or_default();
+        Ok(HttpResponse::Ok().json(NftCollectionsOutput {
+            owner: collection_info.owner.to_string(),
+            total_supply: collection_info.total_supply,
+            deposit: collection_info.deposit,
+            metadata,
+        }))
+    } else {
+        Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Invalid collection"),
+        }))
     }
 }
