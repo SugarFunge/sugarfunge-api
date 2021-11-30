@@ -35,7 +35,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::DefaultHeaders::new().header("X-Version", "0.2"))
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
-            .data(state.clone())
+            .app_data(state.clone())
             .route("account/fund", web::post().to(account::fund))
             .route("account/balance", web::post().to(account::balance))
             .route("token/issue", web::post().to(token::issue))
