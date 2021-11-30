@@ -1,0 +1,73 @@
+[package]
+name = "sugarfunge-api"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+env_logger = "0.8"
+structopt = "0.3"
+actix-web = "4.0.0-beta.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+jsonrpsee-types = "0.4.1"
+url = { version = "2", features = ["serde"] }
+scale-info = { version = "1.0.0", default-features = false, features = [] }
+scale = { package = "parity-scale-codec", version = "2.3.0", default-features = false, features = [] }
+derive_more = { version = "0.99.0", default-features = false }
+
+[dependencies.subxt]
+# path = "../subxt"
+git = "https://github.com/SugarFunge/subxt.git"
+rev = "e3f08267d19715555ac985d97019109143583c97"
+
+[dependencies.sp-keyring]
+git = "https://github.com/paritytech/substrate.git"
+branch = "polkadot-v0.9.12"
+package = "sp-keyring"
+
+[dependencies.sp-core]
+git = "https://github.com/paritytech/substrate.git"
+branch = "polkadot-v0.9.12"
+package = "sp-core"
+features = ["full_crypto"]
+
+[features]
+default = ["std"]
+std = ["scale/std", "scale-info/std"]
+
+# [dependencies.sp-runtime]
+# git = "https://github.com/paritytech/substrate.git"
+# branch = "polkadot-v0.9.12"
+# package = "sp-runtime"
+
+# [dependencies.sugarfunge-runtime]
+# git = "https://github.com/SugarFunge/sugarfunge-node.git"
+# rev = "c860098f1a7ce482d9e6ceed8e77d8f24c60eea0"
+# version = "0.1.0"
+# package = "sugarfunge-runtime"
+
+# [dependencies.sugarfunge-nft]
+# git = "https://github.com/SugarFunge/sugarfunge-node.git"
+# rev = "c860098f1a7ce482d9e6ceed8e77d8f24c60eea0"
+# version = "0.1.0"
+# package = "sugarfunge-nft"
+
+# [dependencies.sugarfunge-currency]
+# git = "https://github.com/SugarFunge/sugarfunge-node.git"
+# rev = "c860098f1a7ce482d9e6ceed8e77d8f24c60eea0"
+# version = "0.1.0"
+# package = "sugarfunge-currency"
+
+# [dependencies.orml-currencies]
+# version = '0.4.1-dev'
+# default-features = false
+# git = "https://github.com/open-web3-stack/open-runtime-module-library.git"
+# branch = "master"
+
+# [dependencies.sugarfunge-token]
+# git = "https://github.com/SugarFunge/sugarfunge-node.git"
+# rev = "c860098f1a7ce482d9e6ceed8e77d8f24c60eea0"
+# version = "0.1.0"
+# package = "sugarfunge-token"
