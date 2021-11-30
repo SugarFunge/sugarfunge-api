@@ -44,6 +44,7 @@ async fn main() -> std::io::Result<()> {
             .route("token/issuance", web::post().to(token::issuance))
             .route("token/mint", web::post().to(token::mint))
             .route("token/balance", web::post().to(token::balance))
+            .route("token/transfer_from", web::post().to(token::transfer_from))
             .route("nft/create", web::post().to(nft::create))
             .route("nft/mint", web::post().to(nft::mint))
             .route("nft/collections", web::post().to(nft::collections))

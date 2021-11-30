@@ -44,52 +44,39 @@ pub async fn issue(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.input.seed)?;
     let signer = PairSigner::new(pair);
-
-    let account = sp_core::sr25519::Public::from_str(&req.input.account);
-    if let Ok(account) = account {
-        let account = sp_core::crypto::AccountId32::from(account);
-        let account = subxt::sp_runtime::MultiAddress::Id(account);
-
-        let currency_id =
-            sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId::Id(req.input.token_id);
-
-        let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::OrmlCurrencies(
-            sugarfunge::runtime_types::orml_currencies::module::Call::update_balance {
-                who: account,
-                currency_id,
-                amount: req.input.amount,
-            },
-        );
-
-        let api = data.api.lock().unwrap();
-        let result = api
-            .tx()
-            .sudo()
-            .sudo(call)
-            .sign_and_submit_then_watch(&signer)
-            .await
-            .map_err(map_subxt_err)?;
-
-        let result = result
-            .find_event::<sugarfunge::orml_currencies::events::BalanceUpdated>()
-            .map_err(map_scale_err)?;
-
-        match result {
-            Some(event) => Ok(HttpResponse::Ok().json(IssueTokenOutput {
-                token_id: event.0.into(),
-                account: event.1.to_string(),
-                amount: event.2,
-            })),
-            None => Ok(HttpResponse::BadRequest().json(RequestError {
-                message: json!(
-                    "Failed to find sugarfunge::orml_currencies::events::BalanceUpdated"
-                ),
-            })),
-        }
-    } else {
-        Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Invalid account"),
-        }))
+    let account =
+        sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
+    let account = sp_core::crypto::AccountId32::from(account);
+    let account = subxt::sp_runtime::MultiAddress::Id(account);
+    let currency_id =
+        sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId::Id(req.input.token_id);
+    let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::OrmlCurrencies(
+        sugarfunge::runtime_types::orml_currencies::module::Call::update_balance {
+            who: account,
+            currency_id,
+            amount: req.input.amount,
+        },
+    );
+    let api = data.api.lock().unwrap();
+    let result = api
+        .tx()
+        .sudo()
+        .sudo(call)
+        .sign_and_submit_then_watch(&signer)
+        .await
+        .map_err(map_subxt_err)?;
+    let result = result
+        .find_event::<sugarfunge::orml_currencies::events::BalanceUpdated>()
+        .map_err(map_scale_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(IssueTokenOutput {
+            token_id: event.0.into(),
+            account: event.1.to_string(),
+            amount: event.2,
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::orml_currencies::events::BalanceUpdated"),
+        })),
     }
 }
 
@@ -114,14 +101,12 @@ pub async fn issuance(
     req: web::Json<TokenIssuanceInput>,
 ) -> error::Result<HttpResponse> {
     let api = data.api.lock().unwrap();
-
     let currency_id = CurrencyId::Id(req.input.token_id);
     let result = api
         .storage()
         .orml_tokens()
         .total_issuance(currency_id, None)
         .await;
-
     let amount = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(TokenIssuanceOutput { amount }))
 }
@@ -152,9 +137,7 @@ pub async fn mint(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.input.seed)?;
     let signer = PairSigner::new(pair);
-
     let currency_id = CurrencyId::Id(req.input.token_id);
-
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
@@ -163,11 +146,9 @@ pub async fn mint(
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
-
     let result = result
         .find_event::<sugarfunge::currency::events::TokenMint>()
         .map_err(map_scale_err)?;
-
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintTokenOutput {
             token_id: event.0.into(),
@@ -201,20 +182,79 @@ pub async fn balance(
     data: web::Data<AppState>,
     req: web::Json<TokenBalanceInput>,
 ) -> error::Result<HttpResponse> {
-    let account = sp_core::sr25519::Public::from_str(&req.input.account);
-    if let Ok(account) = account {
-        let account = sp_core::crypto::AccountId32::from(account);
-        let api = data.api.lock().unwrap();
-        let result = api
-            .storage()
-            .token()
-            .balances(account, (0, req.input.token_id), None)
-            .await;
-        let amount = result.map_err(map_subxt_err)?;
-        Ok(HttpResponse::Ok().json(TokenBalanceOutput { amount }))
-    } else {
-        Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Invalid account"),
-        }))
+    let account =
+        sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
+    let account = sp_core::crypto::AccountId32::from(account);
+    let api = data.api.lock().unwrap();
+    let result = api
+        .storage()
+        .token()
+        .balances(account, (0, req.input.token_id), None)
+        .await;
+    let amount = result.map_err(map_subxt_err)?;
+    Ok(HttpResponse::Ok().json(TokenBalanceOutput { amount }))
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TransferTokenInput {
+    input: TransferTokenArg,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TransferTokenArg {
+    seed: String,
+    from: String,
+    to: String,
+    token_id: u64,
+    amount: u128,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TransferTokenOutput {
+    token_id: u64,
+    from: String,
+    to: String,
+    amount: u128,
+}
+
+/// Transfer token from to accounts
+pub async fn transfer_from(
+    data: web::Data<AppState>,
+    req: web::Json<TransferTokenInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.input.seed)?;
+    let signer = PairSigner::new(pair);
+    let account_from =
+        sp_core::sr25519::Public::from_str(&req.input.from).map_err(map_account_err)?;
+    let account_to = sp_core::sr25519::Public::from_str(&req.input.to).map_err(map_account_err)?;
+    let account_from = sp_core::crypto::AccountId32::from(account_from);
+    let account_to = sp_core::crypto::AccountId32::from(account_to);
+    let api = data.api.lock().unwrap();
+    let result = api
+        .tx()
+        .token()
+        .transfer_from(
+            account_from,
+            account_to,
+            0,
+            req.input.token_id,
+            req.input.amount,
+        )
+        .sign_and_submit_then_watch(&signer)
+        .await
+        .map_err(map_subxt_err)?;
+    let result = result
+        .find_event::<sugarfunge::token::events::Transferred>()
+        .map_err(map_scale_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(TransferTokenOutput {
+            from: event.0.to_string(),
+            to: event.1.to_string(),
+            token_id: event.3,
+            amount: event.4,
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::nft::events::TokenTransferred"),
+        })),
     }
 }

@@ -227,34 +227,24 @@ pub async fn owner(
     data: web::Data<AppState>,
     req: web::Json<NftOwnerInput>,
 ) -> error::Result<HttpResponse> {
-    let account = sp_core::sr25519::Public::from_str(&req.input.account);
-    if let Ok(account) = account {
-        let account = sp_core::crypto::AccountId32::from(account);
-
-        let api = data.api.lock().unwrap();
-        let result = api.storage().nft().tokens_by_owner_iter(None).await;
-        let mut iter = result.map_err(map_subxt_err)?;
-
-        // TODO: Filter by owner
-        let mut tokens: Vec<NftOwnerToken> = vec![];
-        while let Some((_key, (collection_id, token_id))) =
-            iter.next().await.map_err(map_subxt_err)?
-        {
-            tokens.push(NftOwnerToken {
-                collection_id,
-                token_id,
-            })
-        }
-
-        Ok(HttpResponse::Ok().json(NftOwnerOutput {
-            owner: account.to_string(),
-            tokens,
-        }))
-    } else {
-        Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Invalid account"),
-        }))
+    let account =
+        sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
+    let account = sp_core::crypto::AccountId32::from(account);
+    let api = data.api.lock().unwrap();
+    let result = api.storage().nft().tokens_by_owner_iter(None).await;
+    let mut iter = result.map_err(map_subxt_err)?;
+    // TODO: Filter by owner
+    let mut tokens: Vec<NftOwnerToken> = vec![];
+    while let Some((_key, (collection_id, token_id))) = iter.next().await.map_err(map_subxt_err)? {
+        tokens.push(NftOwnerToken {
+            collection_id,
+            token_id,
+        })
     }
+    Ok(HttpResponse::Ok().json(NftOwnerOutput {
+        owner: account.to_string(),
+        tokens,
+    }))
 }
 
 #[derive(Serialize, Deserialize)]
@@ -285,37 +275,28 @@ pub async fn transfer(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.input.seed)?;
     let signer = PairSigner::new(pair);
-
-    let account = sp_core::sr25519::Public::from_str(&req.input.to);
-    if let Ok(account) = account {
-        let account = sp_core::crypto::AccountId32::from(account);
-        let api = data.api.lock().unwrap();
-        let result = api
-            .tx()
-            .nft()
-            .transfer(account, req.input.collection_id, req.input.token_id)
-            .sign_and_submit_then_watch(&signer)
-            .await
-            .map_err(map_subxt_err)?;
-
-        let result = result
-            .find_event::<sugarfunge::nft::events::TokenTransferred>()
-            .map_err(map_scale_err)?;
-
-        match result {
-            Some(event) => Ok(HttpResponse::Ok().json(TransferNftOutput {
-                collection_id: event.0,
-                token_id: event.1,
-                from: event.2.to_string(),
-                to: event.3.to_string(),
-            })),
-            None => Ok(HttpResponse::BadRequest().json(RequestError {
-                message: json!("Failed to find sugarfunge::nft::events::TokenTransferred"),
-            })),
-        }
-    } else {
-        Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Invalid account"),
-        }))
+    let account = sp_core::sr25519::Public::from_str(&req.input.to).map_err(map_account_err)?;
+    let account = sp_core::crypto::AccountId32::from(account);
+    let api = data.api.lock().unwrap();
+    let result = api
+        .tx()
+        .nft()
+        .transfer(account, req.input.collection_id, req.input.token_id)
+        .sign_and_submit_then_watch(&signer)
+        .await
+        .map_err(map_subxt_err)?;
+    let result = result
+        .find_event::<sugarfunge::nft::events::TokenTransferred>()
+        .map_err(map_scale_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(TransferNftOutput {
+            collection_id: event.0,
+            token_id: event.1,
+            from: event.2.to_string(),
+            to: event.3.to_string(),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::nft::events::TokenTransferred"),
+        })),
     }
 }

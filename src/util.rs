@@ -29,6 +29,12 @@ pub fn map_scale_err(e: scale::Error) -> actix_web::Error {
     error::ErrorBadRequest(req_error)
 }
 
+pub fn map_account_err(_e: sp_core::crypto::PublicError) -> actix_web::Error {
+    let json_err: serde_json::Value = json!("Invalid account");
+    let req_error = RequestError { message: json_err };
+    error::ErrorBadRequest(req_error)
+}
+
 pub fn get_pair_from_seed(seed: &str) -> error::Result<sp_core::sr25519::Pair> {
     sp_core::sr25519::Pair::from_string(&seed, None).map_err(|e| {
         let req_error = RequestError {
