@@ -47,7 +47,7 @@ pub async fn fund(
 
         let result = result
             .find_event::<sugarfunge::balances::events::Transfer>()
-            .map_err(|e| error::ErrorBadRequest(e.to_string()))?;
+            .map_err(map_scale_err)?;
 
         match result {
             Some(event) => Ok(HttpResponse::Ok().json(FundAccountOutput { amount: event.2 })),
@@ -87,7 +87,7 @@ pub async fn balance(
         let account = sp_core::crypto::AccountId32::from(account);
         let api = data.api.lock().unwrap();
         let result = api.storage().system().account(account, None).await;
-        let data = result.map_err(|e| error::ErrorBadRequest(e.to_string()))?;
+        let data = result.map_err(map_subxt_err)?;
         Ok(HttpResponse::Ok().json(AccountBalanceOutput {
             balance: data.data.free,
         }))

@@ -72,7 +72,7 @@ pub async fn issue(
 
         let result = result
             .find_event::<sugarfunge::orml_currencies::events::BalanceUpdated>()
-            .map_err(|e| error::ErrorBadRequest(e.to_string()))?;
+            .map_err(map_scale_err)?;
 
         match result {
             Some(event) => Ok(HttpResponse::Ok().json(IssueTokenOutput {
@@ -122,7 +122,7 @@ pub async fn issuance(
         .total_issuance(currency_id, None)
         .await;
 
-    let amount = result.map_err(|e| error::ErrorBadRequest(e.to_string()))?;
+    let amount = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(TokenIssuanceOutput { amount }))
 }
 
@@ -166,7 +166,7 @@ pub async fn mint(
 
     let result = result
         .find_event::<sugarfunge::currency::events::TokenMint>()
-        .map_err(|e| error::ErrorBadRequest(e.to_string()))?;
+        .map_err(map_scale_err)?;
 
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintTokenOutput {
@@ -210,7 +210,7 @@ pub async fn balance(
             .token()
             .balances(account, (0, req.input.token_id), None)
             .await;
-        let amount = result.map_err(|e| error::ErrorBadRequest(e.to_string()))?;
+        let amount = result.map_err(map_subxt_err)?;
         Ok(HttpResponse::Ok().json(TokenBalanceOutput { amount }))
     } else {
         Ok(HttpResponse::BadRequest().json(RequestError {

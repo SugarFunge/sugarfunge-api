@@ -17,8 +17,14 @@ pub fn map_subxt_err(e: subxt::Error) -> actix_web::Error {
             }
             _ => json!(rpc.to_string()),
         },
-        _ => json!("default".to_string()),
+        _ => json!(e.to_string()),
     };
+    let req_error = RequestError { message: json_err };
+    error::ErrorBadRequest(req_error)
+}
+
+pub fn map_scale_err(e: scale::Error) -> actix_web::Error {
+    let json_err: serde_json::Value = json!(e.to_string());
     let req_error = RequestError { message: json_err };
     error::ErrorBadRequest(req_error)
 }
