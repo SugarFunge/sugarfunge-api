@@ -9,6 +9,7 @@ use subxt::ClientBuilder;
 pub mod sugarfunge {}
 mod account;
 mod command;
+mod nft;
 mod state;
 mod token;
 mod util;
@@ -43,6 +44,8 @@ async fn main() -> std::io::Result<()> {
             .route("token/issuance", web::post().to(token::issuance))
             .route("token/mint", web::post().to(token::mint))
             .route("token/balance", web::post().to(token::balance))
+            .route("nft/create", web::post().to(nft::create))
+            .route("nft/mint", web::post().to(nft::mint))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()

@@ -33,7 +33,7 @@ impl Into<u64> for CurrencyId {
 #[derive(Serialize)]
 pub struct IssueTokenOutput {
     token_id: u64,
-    account_id: String,
+    account: String,
     amount: i128,
 }
 
@@ -77,7 +77,7 @@ pub async fn issue(
         match result {
             Some(event) => Ok(HttpResponse::Ok().json(IssueTokenOutput {
                 token_id: event.0.into(),
-                account_id: event.1.to_string(),
+                account: event.1.to_string(),
                 amount: event.2,
             })),
             None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -142,7 +142,7 @@ pub struct MintTokenArg {
 pub struct MintTokenOutput {
     token_id: u64,
     amount: u128,
-    account_id: String,
+    account: String,
 }
 
 /// Mint amount of token id
@@ -172,7 +172,7 @@ pub async fn mint(
         Some(event) => Ok(HttpResponse::Ok().json(MintTokenOutput {
             token_id: event.0.into(),
             amount: event.1,
-            account_id: event.2.to_string(),
+            account: event.2.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::TokenMint"),
