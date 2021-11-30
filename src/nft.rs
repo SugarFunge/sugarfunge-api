@@ -130,7 +130,7 @@ pub struct NftCollectionsOutput {
     metadata: serde_json::Value,
 }
 
-/// Get balance for given token id
+/// Get collection info for collection id
 pub async fn collections(
     data: web::Data<AppState>,
     req: web::Json<NftCollectionsInput>,
@@ -148,6 +148,48 @@ pub async fn collections(
             owner: collection_info.owner.to_string(),
             total_supply: collection_info.total_supply,
             deposit: collection_info.deposit,
+            metadata,
+        }))
+    } else {
+        Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Invalid collection"),
+        }))
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct NftAssetsInput {
+    input: NftAssetsArg,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct NftAssetsArg {
+    collection_id: u64,
+    asset_id: u64,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct NftAssetsOutput {
+    owner: String,
+    metadata: serde_json::Value,
+}
+
+/// Get asset info for collection and asset id
+pub async fn assets(
+    data: web::Data<AppState>,
+    req: web::Json<NftAssetsInput>,
+) -> error::Result<HttpResponse> {
+    let api = data.api.lock().unwrap();
+    let result = api
+        .storage()
+        .nft()
+        .nft_assets(req.input.collection_id, req.input.asset_id, None)
+        .await;
+    let asset_info = result.map_err(map_subxt_err)?;
+    if let Some(asset_info) = asset_info {
+        let metadata = serde_json::from_slice(&asset_info.metadata).unwrap_or_default();
+        Ok(HttpResponse::Ok().json(NftAssetsOutput {
+            owner: asset_info.owner.to_string(),
             metadata,
         }))
     } else {
