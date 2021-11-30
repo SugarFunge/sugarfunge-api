@@ -19,6 +19,11 @@ scale-info = { version = "1.0.0", default-features = false, features = [] }
 scale = { package = "parity-scale-codec", version = "2.3.0", default-features = false, features = [] }
 derive_more = { version = "0.99.0", default-features = false }
 
+# [dependencies.frame-support]
+#  git = "https://github.com/paritytech/substrate"
+#  branch = "polkadot-v0.9.12"
+#  package = "frame-support"
+
 [dependencies.subxt]
 # path = "../subxt"
 git = "https://github.com/SugarFunge/subxt.git"
