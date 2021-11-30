@@ -2,7 +2,7 @@ use structopt::StructOpt;
 use url::Url;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "sf-api")]
+#[structopt(name = "sugarfunge-api")]
 pub struct Opt {
     #[structopt(
         short = "s",
@@ -15,4 +15,3 @@ pub struct Opt {
     #[structopt(short = "d", long = "db-uri")]
     pub db: Option<String>,
 }
-
