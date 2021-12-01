@@ -20,7 +20,7 @@ pub struct CreateNftArg {
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateNftOutput {
-    collection_id: u64,
+    collection_id: u128,
     account: String,
 }
 
@@ -66,15 +66,15 @@ pub struct MintNftInput {
 #[derive(Serialize, Deserialize)]
 pub struct MintNftArg {
     seed: String,
-    collection_id: u64,
+    collection_id: u128,
     metadata: serde_json::Value,
-    quantity: u32,
+    quantity: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct MintNftOutput {
-    collection_id: u64,
-    token_ids: Vec<u64>,
+    collection_id: u128,
+    token_ids: Vec<u128>,
     account: String,
 }
 
@@ -120,7 +120,7 @@ pub struct NftCollectionsInput {
 
 #[derive(Serialize, Deserialize)]
 pub struct NftCollectionsArg {
-    collection_id: u64,
+    collection_id: u128,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -165,8 +165,8 @@ pub struct NftTokensInput {
 
 #[derive(Serialize, Deserialize)]
 pub struct NftTokensArg {
-    collection_id: u64,
-    token_id: u64,
+    collection_id: u128,
+    token_id: u128,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -212,8 +212,8 @@ pub struct NftOwnerArg {
 
 #[derive(Serialize, Deserialize)]
 pub struct NftOwnerToken {
-    collection_id: u64,
-    token_id: u64,
+    collection_id: u128,
+    token_id: u128,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -256,14 +256,14 @@ pub struct TransferNftInput {
 pub struct TransferNftArg {
     seed: String,
     to: String,
-    collection_id: u64,
-    token_id: u64,
+    collection_id: u128,
+    token_id: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct TransferNftOutput {
-    collection_id: u64,
-    token_id: u64,
+    collection_id: u128,
+    token_id: u128,
     from: String,
     to: String,
 }
