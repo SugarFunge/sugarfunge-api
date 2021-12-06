@@ -1,6 +1,6 @@
 use actix_web::error;
 use derive_more::Display;
-use serde::{Deserialize, Serialize};
+use serde::{ser, Deserialize, Serialize};
 use serde_json::json;
 use sp_core::Pair;
 
@@ -12,7 +12,9 @@ pub struct RequestError {
 pub fn map_subxt_err(e: subxt::Error) -> actix_web::Error {
     let json_err: serde_json::Value = match e {
         subxt::Error::Rpc(rpc) => match rpc {
-            jsonrpsee_types::error::Error::Request(e) => json!(e),
+            jsonrpsee_types::error::Error::Request(e) => {
+                serde_json::from_str(&e).unwrap_or(json!(&e))
+            }
             _ => json!(rpc.to_string()),
         },
         subxt::Error::Runtime(e) => match e {
