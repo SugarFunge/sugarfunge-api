@@ -9,7 +9,7 @@ use subxt::ClientBuilder;
 pub mod sugarfunge {}
 mod account;
 mod command;
-mod nft;
+// mod nft;
 mod state;
 mod token;
 mod util;
@@ -40,17 +40,11 @@ async fn main() -> std::io::Result<()> {
             .route("account/create", web::post().to(account::create))
             .route("account/fund", web::post().to(account::fund))
             .route("account/balance", web::post().to(account::balance))
-            .route("token/issue", web::post().to(token::issue))
-            .route("token/issuance", web::post().to(token::issuance))
+            .route("token/create_collection", web::post().to(token::create_collection))
+            .route("token/create", web::post().to(token::create))
             .route("token/mint", web::post().to(token::mint))
             .route("token/balance", web::post().to(token::balance))
             .route("token/transfer_from", web::post().to(token::transfer_from))
-            .route("nft/create", web::post().to(nft::create))
-            .route("nft/mint", web::post().to(nft::mint))
-            .route("nft/collections", web::post().to(nft::collections))
-            .route("nft/tokens", web::post().to(nft::tokens))
-            .route("nft/owner", web::post().to(nft::owner))
-            .route("nft/transfer", web::post().to(nft::transfer))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()
