@@ -38,6 +38,7 @@ pub struct FundAccountInput {
 pub struct FundAccountArg {
     seed: String,
     account: String,
+    amount: u128,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -56,11 +57,12 @@ pub async fn fund(
         sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let account = subxt::sp_runtime::MultiAddress::Id(account);
+    let amount_input = req.input.amount;
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .balances()
-        .transfer(account, 99_711)
+        .transfer(account, amount_input)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
