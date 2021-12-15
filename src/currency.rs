@@ -9,26 +9,26 @@ use subxt::PairSigner;
 use sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
 
 #[derive(Serialize, Deserialize)]
-pub struct CreateCollectionInput {
-    input: CreateCollectionArg,
+pub struct CreateClassInput {
+    input: CreateClassArg,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct CreateCollectionArg {
+pub struct CreateClassArg {
     seed: String,
     metadata: serde_json::Value,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct CreateCollectionOutput {
-    collection_id: u64,
+pub struct CreateClassOutput {
+    class_id: u64,
     account: String,
 }
 
-/// Create a collection for an account
+/// Create a class for an account
 pub async fn create(
     data: web::Data<AppState>,
-    req: web::Json<CreateCollectionInput>,
+    req: web::Json<CreateClassInput>,
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.input.seed)?;
     let signer = PairSigner::new(pair);
@@ -39,22 +39,22 @@ pub async fn create(
     let result = api
         .tx()
         .token()
-        .create_collection(metadata)
+        .create_class(metadata)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
 
     let result = result
-        .find_event::<sugarfunge::token::events::CollectionCreated>()
+        .find_event::<sugarfunge::token::events::ClassCreated>()
         .map_err(map_scale_err)?;
 
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(CreateCollectionOutput {
-            collection_id: event.0,
+        Some(event) => Ok(HttpResponse::Ok().json(CreateClassOutput {
+            class_id: event.0,
             account: event.1.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::token::events::CollectionCreated"),
+            message: json!("Failed to find sugarfunge::token::events::ClassCreated"),
         })),
     }
 }
@@ -171,7 +171,7 @@ pub struct MintTokenInput {
 pub struct MintTokenArg {
     seed: String,
     account: String,
-    collection_id: u64,
+    class_id: u64,
     token_id: u64,
     amount: u128,
 }
@@ -179,7 +179,7 @@ pub struct MintTokenArg {
 #[derive(Serialize, Deserialize)]
 pub struct MintTokenOutput {
     account: String,
-    collection_id: u64,
+    class_id: u64,
     token_id: u64,
     amount: u128,
 }
@@ -200,7 +200,7 @@ pub async fn mint(
         .token()
         .mint(
             account,
-            req.input.collection_id,
+            req.input.class_id,
             req.input.token_id,
             req.input.amount,
         )
@@ -213,7 +213,7 @@ pub async fn mint(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintTokenOutput {
             account: event.0.to_string(),
-            collection_id: event.1,
+            class_id: event.1,
             token_id: event.2,
             amount: event.3,
         })),
@@ -231,7 +231,7 @@ pub struct TokenBalanceInput {
 #[derive(Serialize, Deserialize)]
 pub struct TokenBalanceArg {
     account: String,
-    collection_id: u64,
+    class_id: u64,
     token_id: u64,
 }
 
@@ -252,7 +252,7 @@ pub async fn balance(
     let result = api
         .storage()
         .token()
-        .balances(account, (req.input.collection_id, req.input.token_id), None)
+        .balances(account, (req.input.class_id, req.input.token_id), None)
         .await;
     let amount = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(TokenBalanceOutput { amount }))
@@ -268,7 +268,7 @@ pub struct TransferTokenArg {
     seed: String,
     from: String,
     to: String,
-    collection_id: u64,
+    class_id: u64,
     token_id: u64,
     amount: u128,
 }
@@ -277,7 +277,7 @@ pub struct TransferTokenArg {
 pub struct TransferTokenOutput {
     from: String,
     to: String,
-    collection_id: u64,
+    class_id: u64,
     token_id: u64,
     amount: u128,
 }
@@ -301,7 +301,7 @@ pub async fn transfer_from(
         .transfer_from(
             account_from,
             account_to,
-            req.input.collection_id,
+            req.input.class_id,
             req.input.token_id,
             req.input.amount,
         )
@@ -315,7 +315,7 @@ pub async fn transfer_from(
         Some(event) => Ok(HttpResponse::Ok().json(TransferTokenOutput {
             from: event.0.to_string(),
             to: event.1.to_string(),
-            collection_id: event.2,
+            class_id: event.2,
             token_id: event.3,
             amount: event.4,
         })),

@@ -40,7 +40,7 @@ async fn main() -> std::io::Result<()> {
             .route("account/create", web::post().to(account::create))
             .route("account/fund", web::post().to(account::fund))
             .route("account/balance", web::post().to(account::balance))
-            .route("token/create_collection", web::post().to(token::create_collection))
+            .route("token/create_class", web::post().to(token::create_class))
             .route("token/create", web::post().to(token::create))
             .route("token/mint", web::post().to(token::mint))
             .route("token/balance", web::post().to(token::balance))

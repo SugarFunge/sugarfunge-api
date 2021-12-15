@@ -8,26 +8,26 @@ use std::str::FromStr;
 use subxt::PairSigner;
 
 #[derive(Serialize, Deserialize)]
-pub struct CreateCollectionInput {
-    input: CreateCollectionArg,
+pub struct CreateClassInput {
+    input: CreateClassArg,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct CreateCollectionArg {
+pub struct CreateClassArg {
     seed: String,
     metadata: serde_json::Value,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct CreateCollectionOutput {
-    collection_id: u64,
+pub struct CreateClassOutput {
+    class_id: u64,
     account: String,
 }
 
-/// Create a token collection for an account
-pub async fn create_collection(
+/// Create a token class for an account
+pub async fn create_class(
     data: web::Data<AppState>,
-    req: web::Json<CreateCollectionInput>,
+    req: web::Json<CreateClassInput>,
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.input.seed)?;
     let signer = PairSigner::new(pair);
@@ -36,22 +36,22 @@ pub async fn create_collection(
     let result = api
         .tx()
         .token()
-        .create_collection(metadata)
+        .create_class(metadata)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
 
     let result = result
-        .find_event::<sugarfunge::token::events::CollectionCreated>()
+        .find_event::<sugarfunge::token::events::ClassCreated>()
         .map_err(map_scale_err)?;
 
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(CreateCollectionOutput {
-            collection_id: event.0,
+        Some(event) => Ok(HttpResponse::Ok().json(CreateClassOutput {
+            class_id: event.0,
             account: event.1.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::token::events::CollectionCreated"),
+            message: json!("Failed to find sugarfunge::token::events::ClassCreated"),
         })),
     }
 }
@@ -64,14 +64,14 @@ pub struct CreateInput {
 #[derive(Serialize, Deserialize)]
 pub struct CreateArg {
     seed: String,
-    collection_id: u64,
+    class_id: u64,
     token_id: u64,
     metadata: serde_json::Value,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateOutput {
-    collection_id: u64,
+    class_id: u64,
     token_id: u64,
     account: String,
 }
@@ -88,7 +88,7 @@ pub async fn create(
     let result = api
         .tx()
         .token()
-        .create_token(req.input.collection_id, req.input.token_id, metadata)
+        .create_token(req.input.class_id, req.input.token_id, metadata)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
@@ -99,12 +99,12 @@ pub async fn create(
 
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateOutput {
-            collection_id: event.0,
+            class_id: event.0,
             token_id: event.1,
             account: event.2.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::token::events::CollectionCreated"),
+            message: json!("Failed to find sugarfunge::token::events::ClassCreated"),
         })),
     }
 }
@@ -118,7 +118,7 @@ pub struct MintInput {
 pub struct MintArg {
     seed: String,
     account: String,
-    collection_id: u64,
+    class_id: u64,
     token_id: u64,
     amount: u128,
 }
@@ -126,7 +126,7 @@ pub struct MintArg {
 #[derive(Serialize, Deserialize)]
 pub struct MintOutput {
     account: String,
-    collection_id: u64,
+    class_id: u64,
     token_id: u64,
     amount: u128,
 }
@@ -147,7 +147,7 @@ pub async fn mint(
         .token()
         .mint(
             account,
-            req.input.collection_id,
+            req.input.class_id,
             req.input.token_id,
             req.input.amount,
         )
@@ -160,7 +160,7 @@ pub async fn mint(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintOutput {
             account: event.0.to_string(),
-            collection_id: event.1,
+            class_id: event.1,
             token_id: event.2,
             amount: event.3,
         })),
@@ -178,7 +178,7 @@ pub struct TokenBalanceInput {
 #[derive(Serialize, Deserialize)]
 pub struct TokenBalanceArg {
     account: String,
-    collection_id: u64,
+    class_id: u64,
     token_id: u64,
 }
 
@@ -199,7 +199,7 @@ pub async fn balance(
     let result = api
         .storage()
         .token()
-        .balances(account, (req.input.collection_id, req.input.token_id), None)
+        .balances(account, (req.input.class_id, req.input.token_id), None)
         .await;
     let amount = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(TokenBalanceOutput { amount }))
@@ -215,7 +215,7 @@ pub struct TransferFromArg {
     seed: String,
     from: String,
     to: String,
-    collection_id: u64,
+    class_id: u64,
     token_id: u64,
     amount: u128,
 }
@@ -224,7 +224,7 @@ pub struct TransferFromArg {
 pub struct TransferFromOutput {
     from: String,
     to: String,
-    collection_id: u64,
+    class_id: u64,
     token_id: u64,
     amount: u128,
 }
@@ -248,7 +248,7 @@ pub async fn transfer_from(
         .transfer_from(
             account_from,
             account_to,
-            req.input.collection_id,
+            req.input.class_id,
             req.input.token_id,
             req.input.amount,
         )
@@ -262,7 +262,7 @@ pub async fn transfer_from(
         Some(event) => Ok(HttpResponse::Ok().json(TransferFromOutput {
             from: event.0.to_string(),
             to: event.1.to_string(),
-            collection_id: event.2,
+            class_id: event.2,
             token_id: event.3,
             amount: event.4,
         })),

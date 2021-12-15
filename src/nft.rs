@@ -20,11 +20,11 @@ pub struct CreateNftArg {
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateNftOutput {
-    collection_id: u128,
+    class_id: u128,
     account: String,
 }
 
-/// Create a collection for an account
+/// Create a class for an account
 pub async fn create(
     data: web::Data<AppState>,
     req: web::Json<CreateNftInput>,
@@ -38,22 +38,22 @@ pub async fn create(
     let result = api
         .tx()
         .nft()
-        .create_collection(metadata)
+        .create_class(metadata)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
 
     let result = result
-        .find_event::<sugarfunge::nft::events::CollectionCreated>()
+        .find_event::<sugarfunge::nft::events::ClassCreated>()
         .map_err(map_scale_err)?;
 
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateNftOutput {
-            collection_id: event.0,
+            class_id: event.0,
             account: event.1.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::nft::events::CollectionCreated"),
+            message: json!("Failed to find sugarfunge::nft::events::ClassCreated"),
         })),
     }
 }
@@ -66,19 +66,19 @@ pub struct MintNftInput {
 #[derive(Serialize, Deserialize)]
 pub struct MintNftArg {
     seed: String,
-    collection_id: u128,
+    class_id: u128,
     metadata: serde_json::Value,
     quantity: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct MintNftOutput {
-    collection_id: u128,
+    class_id: u128,
     token_ids: Vec<u128>,
     account: String,
 }
 
-/// Create a collection for an account
+/// Create a class for an account
 pub async fn mint(
     data: web::Data<AppState>,
     req: web::Json<MintNftInput>,
@@ -92,7 +92,7 @@ pub async fn mint(
     let result = api
         .tx()
         .nft()
-        .mint(req.input.collection_id, metadata, req.input.quantity)
+        .mint(req.input.class_id, metadata, req.input.quantity)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
@@ -103,7 +103,7 @@ pub async fn mint(
 
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintNftOutput {
-            collection_id: event.0,
+            class_id: event.0,
             token_ids: event.1,
             account: event.2.to_string(),
         })),
@@ -114,46 +114,46 @@ pub async fn mint(
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct NftCollectionsInput {
-    input: NftCollectionsArg,
+pub struct NftClasssInput {
+    input: NftClasssArg,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct NftCollectionsArg {
-    collection_id: u128,
+pub struct NftClasssArg {
+    class_id: u128,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct NftCollectionsOutput {
+pub struct NftClasssOutput {
     owner: String,
     total_supply: u128,
     deposit: u128,
     metadata: serde_json::Value,
 }
 
-/// Get collection info for collection id
-pub async fn collections(
+/// Get class info for class id
+pub async fn classs(
     data: web::Data<AppState>,
-    req: web::Json<NftCollectionsInput>,
+    req: web::Json<NftClasssInput>,
 ) -> error::Result<HttpResponse> {
     let api = data.api.lock().unwrap();
     let result = api
         .storage()
         .nft()
-        .collections(req.input.collection_id, None)
+        .classs(req.input.class_id, None)
         .await;
-    let collection_info = result.map_err(map_subxt_err)?;
-    if let Some(collection_info) = collection_info {
-        let metadata = serde_json::from_slice(&collection_info.properties).unwrap_or_default();
-        Ok(HttpResponse::Ok().json(NftCollectionsOutput {
-            owner: collection_info.owner.to_string(),
-            total_supply: collection_info.total_supply,
-            deposit: collection_info.deposit,
+    let class_info = result.map_err(map_subxt_err)?;
+    if let Some(class_info) = class_info {
+        let metadata = serde_json::from_slice(&class_info.properties).unwrap_or_default();
+        Ok(HttpResponse::Ok().json(NftClasssOutput {
+            owner: class_info.owner.to_string(),
+            total_supply: class_info.total_supply,
+            deposit: class_info.deposit,
             metadata,
         }))
     } else {
         Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Invalid collection"),
+            message: json!("Invalid class"),
         }))
     }
 }
@@ -165,7 +165,7 @@ pub struct NftTokensInput {
 
 #[derive(Serialize, Deserialize)]
 pub struct NftTokensArg {
-    collection_id: u128,
+    class_id: u128,
     token_id: u128,
 }
 
@@ -175,7 +175,7 @@ pub struct NftTokensOutput {
     metadata: serde_json::Value,
 }
 
-/// Get token info for collection and token id
+/// Get token info for class and token id
 pub async fn tokens(
     data: web::Data<AppState>,
     req: web::Json<NftTokensInput>,
@@ -184,7 +184,7 @@ pub async fn tokens(
     let result = api
         .storage()
         .nft()
-        .tokens(req.input.collection_id, req.input.token_id, None)
+        .tokens(req.input.class_id, req.input.token_id, None)
         .await;
     let token_info = result.map_err(map_subxt_err)?;
     if let Some(token_info) = token_info {
@@ -195,7 +195,7 @@ pub async fn tokens(
         }))
     } else {
         Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Invalid collection"),
+            message: json!("Invalid class"),
         }))
     }
 }
@@ -212,7 +212,7 @@ pub struct NftOwnerArg {
 
 #[derive(Serialize, Deserialize)]
 pub struct NftOwnerToken {
-    collection_id: u128,
+    class_id: u128,
     token_id: u128,
 }
 
@@ -222,7 +222,7 @@ pub struct NftOwnerOutput {
     tokens: Vec<NftOwnerToken>,
 }
 
-/// Get token info for collection and token id
+/// Get token info for class and token id
 pub async fn owner(
     data: web::Data<AppState>,
     req: web::Json<NftOwnerInput>,
@@ -235,9 +235,9 @@ pub async fn owner(
     let mut iter = result.map_err(map_subxt_err)?;
     // TODO: Filter by owner
     let mut tokens: Vec<NftOwnerToken> = vec![];
-    while let Some((_key, (collection_id, token_id))) = iter.next().await.map_err(map_subxt_err)? {
+    while let Some((_key, (class_id, token_id))) = iter.next().await.map_err(map_subxt_err)? {
         tokens.push(NftOwnerToken {
-            collection_id,
+            class_id,
             token_id,
         })
     }
@@ -256,13 +256,13 @@ pub struct TransferNftInput {
 pub struct TransferNftArg {
     seed: String,
     to: String,
-    collection_id: u128,
+    class_id: u128,
     token_id: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct TransferNftOutput {
-    collection_id: u128,
+    class_id: u128,
     token_id: u128,
     from: String,
     to: String,
@@ -281,7 +281,7 @@ pub async fn transfer(
     let result = api
         .tx()
         .nft()
-        .transfer(account, req.input.collection_id, req.input.token_id)
+        .transfer(account, req.input.class_id, req.input.token_id)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
@@ -290,7 +290,7 @@ pub async fn transfer(
         .map_err(map_scale_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(TransferNftOutput {
-            collection_id: event.0,
+            class_id: event.0,
             token_id: event.1,
             from: event.2.to_string(),
             to: event.3.to_string(),
