@@ -24,7 +24,7 @@ pub struct CreateClassOutput {
     account: String,
 }
 
-/// Create a token class for an account
+/// Create a asset class for an account
 pub async fn create_class(
     data: web::Data<AppState>,
     req: web::Json<CreateClassInput>,
@@ -35,14 +35,14 @@ pub async fn create_class(
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
-        .token()
+        .asset()
         .create_class(metadata)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
 
     let result = result
-        .find_event::<sugarfunge::token::events::ClassCreated>()
+        .find_event::<sugarfunge::asset::events::ClassCreated>()
         .map_err(map_scale_err)?;
 
     match result {
@@ -51,7 +51,7 @@ pub async fn create_class(
             account: event.1.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::token::events::ClassCreated"),
+            message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
         })),
     }
 }
@@ -65,18 +65,18 @@ pub struct CreateInput {
 pub struct CreateArg {
     seed: String,
     class_id: u64,
-    token_id: u64,
+    asset_id: u64,
     metadata: serde_json::Value,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateOutput {
     class_id: u64,
-    token_id: u64,
+    asset_id: u64,
     account: String,
 }
 
-/// Create a token for an account
+/// Create a asset for an account
 pub async fn create(
     data: web::Data<AppState>,
     req: web::Json<CreateInput>,
@@ -87,24 +87,24 @@ pub async fn create(
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
-        .token()
-        .create_token(req.input.class_id, req.input.token_id, metadata)
+        .asset()
+        .create_asset(req.input.class_id, req.input.asset_id, metadata)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
 
     let result = result
-        .find_event::<sugarfunge::token::events::TokenCreated>()
+        .find_event::<sugarfunge::asset::events::AssetCreated>()
         .map_err(map_scale_err)?;
 
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateOutput {
             class_id: event.0,
-            token_id: event.1,
+            asset_id: event.1,
             account: event.2.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::token::events::ClassCreated"),
+            message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
         })),
     }
 }
@@ -119,7 +119,7 @@ pub struct MintArg {
     seed: String,
     account: String,
     class_id: u64,
-    token_id: u64,
+    asset_id: u64,
     amount: u128,
 }
 
@@ -127,11 +127,11 @@ pub struct MintArg {
 pub struct MintOutput {
     account: String,
     class_id: u64,
-    token_id: u64,
+    asset_id: u64,
     amount: u128,
 }
 
-/// Mint amount of token id to account
+/// Mint amount of asset id to account
 pub async fn mint(
     data: web::Data<AppState>,
     req: web::Json<MintInput>,
@@ -144,53 +144,53 @@ pub async fn mint(
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
-        .token()
+        .asset()
         .mint(
             account,
             req.input.class_id,
-            req.input.token_id,
+            req.input.asset_id,
             req.input.amount,
         )
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_event::<sugarfunge::token::events::Mint>()
+        .find_event::<sugarfunge::asset::events::Mint>()
         .map_err(map_scale_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintOutput {
             account: event.0.to_string(),
             class_id: event.1,
-            token_id: event.2,
+            asset_id: event.2,
             amount: event.3,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::currency::events::TokenMint"),
+            message: json!("Failed to find sugarfunge::currency::events::AssetMint"),
         })),
     }
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct TokenBalanceInput {
-    input: TokenBalanceArg,
+pub struct AssetBalanceInput {
+    input: AssetBalanceArg,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct TokenBalanceArg {
+pub struct AssetBalanceArg {
     account: String,
     class_id: u64,
-    token_id: u64,
+    asset_id: u64,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct TokenBalanceOutput {
+pub struct AssetBalanceOutput {
     amount: u128,
 }
 
-/// Get balance for given token id
+/// Get balance for given asset id
 pub async fn balance(
     data: web::Data<AppState>,
-    req: web::Json<TokenBalanceInput>,
+    req: web::Json<AssetBalanceInput>,
 ) -> error::Result<HttpResponse> {
     let account =
         sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
@@ -198,11 +198,11 @@ pub async fn balance(
     let api = data.api.lock().unwrap();
     let result = api
         .storage()
-        .token()
-        .balances(account, (req.input.class_id, req.input.token_id), None)
+        .asset()
+        .balances(account, (req.input.class_id, req.input.asset_id), None)
         .await;
     let amount = result.map_err(map_subxt_err)?;
-    Ok(HttpResponse::Ok().json(TokenBalanceOutput { amount }))
+    Ok(HttpResponse::Ok().json(AssetBalanceOutput { amount }))
 }
 
 #[derive(Serialize, Deserialize)]
@@ -216,7 +216,7 @@ pub struct TransferFromArg {
     from: String,
     to: String,
     class_id: u64,
-    token_id: u64,
+    asset_id: u64,
     amount: u128,
 }
 
@@ -225,11 +225,11 @@ pub struct TransferFromOutput {
     from: String,
     to: String,
     class_id: u64,
-    token_id: u64,
+    asset_id: u64,
     amount: u128,
 }
 
-/// Transfer token from to accounts
+/// Transfer asset from to accounts
 pub async fn transfer_from(
     data: web::Data<AppState>,
     req: web::Json<TransferFromInput>,
@@ -244,30 +244,30 @@ pub async fn transfer_from(
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
-        .token()
+        .asset()
         .transfer_from(
             account_from,
             account_to,
             req.input.class_id,
-            req.input.token_id,
+            req.input.asset_id,
             req.input.amount,
         )
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_event::<sugarfunge::token::events::Transferred>()
+        .find_event::<sugarfunge::asset::events::Transferred>()
         .map_err(map_scale_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(TransferFromOutput {
             from: event.0.to_string(),
             to: event.1.to_string(),
             class_id: event.2,
-            token_id: event.3,
+            asset_id: event.3,
             amount: event.4,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::token::events::Transferred"),
+            message: json!("Failed to find sugarfunge::asset::events::Transferred"),
         })),
     }
 }

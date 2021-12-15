@@ -8,10 +8,9 @@ use subxt::ClientBuilder;
 #[subxt::subxt(runtime_metadata_path = "sugarfunge_metadata.scale")]
 pub mod sugarfunge {}
 mod account;
+mod asset;
 mod command;
-// mod nft;
 mod state;
-mod token;
 mod util;
 
 #[actix_web::main]
@@ -40,11 +39,11 @@ async fn main() -> std::io::Result<()> {
             .route("account/create", web::post().to(account::create))
             .route("account/fund", web::post().to(account::fund))
             .route("account/balance", web::post().to(account::balance))
-            .route("token/create_class", web::post().to(token::create_class))
-            .route("token/create", web::post().to(token::create))
-            .route("token/mint", web::post().to(token::mint))
-            .route("token/balance", web::post().to(token::balance))
-            .route("token/transfer_from", web::post().to(token::transfer_from))
+            .route("asset/create_class", web::post().to(asset::create_class))
+            .route("asset/create", web::post().to(asset::create))
+            .route("asset/mint", web::post().to(asset::mint))
+            .route("asset/balance", web::post().to(asset::balance))
+            .route("asset/transfer_from", web::post().to(asset::transfer_from))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()

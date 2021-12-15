@@ -73,8 +73,8 @@ std = ["scale/std", "scale-info/std"]
 # git = "https://github.com/open-web3-stack/open-runtime-module-library.git"
 # branch = "master"
 
-# [dependencies.sugarfunge-token]
+# [dependencies.sugarfunge-asset]
 # git = "https://github.com/SugarFunge/sugarfunge-node.git"
 # rev = "c860098f1a7ce482d9e6ceed8e77d8f24c60eea0"
 # version = "0.1.0"
-# package = "sugarfunge-token"
+# package = "sugarfunge-asset"
