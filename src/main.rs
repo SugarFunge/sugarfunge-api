@@ -10,6 +10,7 @@ pub mod sugarfunge {}
 mod account;
 mod asset;
 mod command;
+mod currency;
 mod state;
 mod util;
 
@@ -44,6 +45,11 @@ async fn main() -> std::io::Result<()> {
             .route("asset/mint", web::post().to(asset::mint))
             .route("asset/balance", web::post().to(asset::balance))
             .route("asset/transfer_from", web::post().to(asset::transfer_from))
+            .route("currency/issue", web::post().to(currency::issue))
+            .route("currency/issuance", web::post().to(currency::issuance))
+            .route("currency/mint", web::post().to(currency::mint))
+            .route("currency/supply", web::post().to(currency::supply))
+            .route("currency/balance", web::post().to(currency::balance))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()
