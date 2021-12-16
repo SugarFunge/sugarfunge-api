@@ -46,7 +46,7 @@ pub struct FundAccountOutput {
     amount: u128,
 }
 
-/// Fund a given account with the default amount
+/// Fund a given account with amount
 pub async fn fund(
     data: web::Data<AppState>,
     req: web::Json<FundAccountInput>,

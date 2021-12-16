@@ -11,6 +11,7 @@ mod account;
 mod asset;
 mod command;
 mod currency;
+mod dex;
 mod state;
 mod util;
 
@@ -50,6 +51,11 @@ async fn main() -> std::io::Result<()> {
             .route("currency/mint", web::post().to(currency::mint))
             .route("currency/supply", web::post().to(currency::supply))
             .route("currency/balance", web::post().to(currency::balance))
+            .route("dex/create", web::post().to(dex::create))
+            .route("dex/buy_assets", web::post().to(dex::buy_assets))
+            .route("dex/sell_assets", web::post().to(dex::sell_assets))
+            .route("dex/add_liquidity", web::post().to(dex::add_liquidity))
+            .route("dex/remove_liquidity", web::post().to(dex::remove_liquidity))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()

@@ -48,8 +48,7 @@ pub async fn issue(
         sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let account = subxt::sp_runtime::MultiAddress::Id(account);
-    let currency_id =
-        sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId::Id(req.input.currency_id);
+    let currency_id = CurrencyId::Id(req.input.currency_id);
     let api = data.api.lock().unwrap();
     let result = api
         .storage()
@@ -57,8 +56,7 @@ pub async fn issue(
         .total_issuance(currency_id, None)
         .await;
     let total_issuance = result.map_err(map_subxt_err)?;
-    let currency_id =
-        sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId::Id(req.input.currency_id);
+    let currency_id = CurrencyId::Id(req.input.currency_id);
     let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::OrmlCurrencies(
         sugarfunge::runtime_types::orml_currencies::module::Call::update_balance {
             who: account,
