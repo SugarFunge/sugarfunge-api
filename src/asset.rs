@@ -199,11 +199,52 @@ pub async fn balance(
     let result = api
         .storage()
         .asset()
-        .balances(account, (req.input.class_id, req.input.asset_id), None)
+        .balances(account, req.input.class_id, req.input.asset_id, None)
         .await;
     let amount = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(AssetBalanceOutput { amount }))
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct AssetBalancesInput {
+    input: AssetBalancesArg,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct AssetBalancesArg {
+    account: String,
+    class_id: Option<u64>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct AssetBalancesOutput {
+    balances: Vec<AssetBalanceItemOutput>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct AssetBalanceItemOutput {
+    class_id: u64,
+    asset_id: u64,
+    amount: u128,
+}
+
+/// Get balances for given account
+// pub async fn balances(
+//     data: web::Data<AppState>,
+//     req: web::Json<AssetBalancesInput>,
+// ) -> error::Result<HttpResponse> {
+//     let account =
+//         sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
+//     let account = sp_core::crypto::AccountId32::from(account);
+//     let api = data.api.lock().unwrap();
+//     let result = api
+//         .storage()
+//         .asset()
+//         .balances(account, req.input.class_id, req.input.asset_id, None)
+//         .await;
+//     let amount = result.map_err(map_subxt_err)?;
+//     Ok(HttpResponse::Ok().json(AssetBalancesOutput { amount }))
+// }
 
 #[derive(Serialize, Deserialize)]
 pub struct TransferFromInput {

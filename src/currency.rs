@@ -233,7 +233,7 @@ pub async fn balance(
     let result = api
         .storage()
         .asset()
-        .balances(account, (currency_class, req.input.currency_id), None)
+        .balances(account, currency_class, req.input.currency_id, None)
         .await;
     let amount = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(AssetBalanceOutput { amount }))
