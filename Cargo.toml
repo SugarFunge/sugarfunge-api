@@ -21,22 +21,22 @@ derive_more = { version = "0.99.0", default-features = false }
 
 # [dependencies.frame-support]
 #  git = "https://github.com/paritytech/substrate"
-#  branch = "polkadot-v0.9.12"
+#  branch = "polkadot-v0.9.13"
 #  package = "frame-support"
 
 [dependencies.subxt]
 # path = "../subxt"
 git = "https://github.com/SugarFunge/subxt.git"
-rev = "e3f08267d19715555ac985d97019109143583c97"
+rev = "91e61a4955255228abcc29a35f68a38def5cc338"
 
 [dependencies.sp-keyring]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.12"
+branch = "polkadot-v0.9.13"
 package = "sp-keyring"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.12"
+branch = "polkadot-v0.9.13"
 package = "sp-core"
 features = ["full_crypto"]
 
@@ -46,7 +46,7 @@ std = ["scale/std", "scale-info/std"]
 
 # [dependencies.sp-runtime]
 # git = "https://github.com/paritytech/substrate.git"
-# branch = "polkadot-v0.9.12"
+# branch = "polkadot-v0.9.13"
 # package = "sp-runtime"
 
 # [dependencies.sugarfunge-runtime]
