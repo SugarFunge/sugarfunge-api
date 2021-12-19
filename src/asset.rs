@@ -15,6 +15,7 @@ pub struct CreateClassInput {
 #[derive(Serialize, Deserialize)]
 pub struct CreateClassArg {
     seed: String,
+    class_id: u64,
     metadata: serde_json::Value,
 }
 
@@ -36,7 +37,7 @@ pub async fn create_class(
     let result = api
         .tx()
         .asset()
-        .create_class(metadata)
+        .create_class(req.input.class_id, metadata)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;

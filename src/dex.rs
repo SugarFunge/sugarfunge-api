@@ -16,8 +16,10 @@ pub struct CreateDexInput {
 #[derive(Deserialize)]
 pub struct CreateDexArg {
     seed: String,
+    exchange_id: u32,
     currency_id: u64,
     asset_class_id: u64,
+    lp_class_id: u64, // liquidity pool id
 }
 
 #[derive(Serialize)]
@@ -38,7 +40,12 @@ pub async fn create(
     let result = api
         .tx()
         .dex()
-        .create_exchange(currency_id, req.input.asset_class_id)
+        .create_exchange(
+            req.input.exchange_id,
+            currency_id,
+            req.input.asset_class_id,
+            req.input.lp_class_id,
+        )
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
