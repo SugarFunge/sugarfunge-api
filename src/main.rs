@@ -1,4 +1,8 @@
-use actix_web::{middleware, web, App, HttpServer};
+use actix_web::{
+    middleware,
+    web::{self, Data},
+    App, HttpServer,
+};
 use command::*;
 use state::*;
 use std::sync::{Arc, Mutex};
@@ -34,10 +38,10 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .wrap(middleware::DefaultHeaders::new().header("X-Version", "0.2"))
+            .wrap(middleware::DefaultHeaders::new().add(("X-Version", "0.2")))
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
-            .data(state.clone())
+            .app_data(Data::new(state.clone()))
             .route("account/create", web::post().to(account::create))
             .route("account/fund", web::post().to(account::fund))
             .route("account/balance", web::post().to(account::balance))
@@ -55,7 +59,10 @@ async fn main() -> std::io::Result<()> {
             .route("dex/buy_assets", web::post().to(dex::buy_assets))
             .route("dex/sell_assets", web::post().to(dex::sell_assets))
             .route("dex/add_liquidity", web::post().to(dex::add_liquidity))
-            .route("dex/remove_liquidity", web::post().to(dex::remove_liquidity))
+            .route(
+                "dex/remove_liquidity",
+                web::post().to(dex::remove_liquidity),
+            )
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()

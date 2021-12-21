@@ -43,6 +43,8 @@ pub struct FundAccountArg {
 
 #[derive(Serialize, Deserialize)]
 pub struct FundAccountOutput {
+    from: String,
+    to: String,
     amount: u128,
 }
 
@@ -70,7 +72,11 @@ pub async fn fund(
         .find_event::<sugarfunge::balances::events::Transfer>()
         .map_err(map_scale_err)?;
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(FundAccountOutput { amount: event.2 })),
+        Some(event) => Ok(HttpResponse::Ok().json(FundAccountOutput {
+            from: event.from.to_string(),
+            to: event.to.to_string(),
+            amount: event.amount,
+        })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::balances::events::Transfer"),
         })),
