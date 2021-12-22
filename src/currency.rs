@@ -10,11 +10,6 @@ use sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
 
 #[derive(Deserialize)]
 pub struct IssueCurrencyInput {
-    input: IssueCurrencyArg,
-}
-
-#[derive(Deserialize)]
-pub struct IssueCurrencyArg {
     seed: String,
     account: String,
     currency_id: u64,
@@ -42,13 +37,12 @@ pub async fn issue(
     data: web::Data<AppState>,
     req: web::Json<IssueCurrencyInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.input.seed)?;
+    let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account =
-        sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
+    let account = sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let account = subxt::sp_runtime::MultiAddress::Id(account);
-    let currency_id = CurrencyId::Id(req.input.currency_id);
+    let currency_id = CurrencyId::Id(req.currency_id);
     let api = data.api.lock().unwrap();
     let result = api
         .storage()
@@ -56,12 +50,12 @@ pub async fn issue(
         .total_issuance(currency_id, None)
         .await;
     let total_issuance = result.map_err(map_subxt_err)?;
-    let currency_id = CurrencyId::Id(req.input.currency_id);
+    let currency_id = CurrencyId::Id(req.currency_id);
     let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::OrmlCurrencies(
         sugarfunge::runtime_types::orml_currencies::module::Call::update_balance {
             who: account,
             currency_id,
-            amount: req.input.amount.saturating_add(total_issuance as i128),
+            amount: req.amount.saturating_add(total_issuance as i128),
         },
     );
     let result = api
@@ -88,11 +82,6 @@ pub async fn issue(
 
 #[derive(Serialize, Deserialize)]
 pub struct CurrencyIssuanceInput {
-    input: CurrencyIssuanceArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CurrencyIssuanceArg {
     currency_id: u64,
 }
 
@@ -107,7 +96,7 @@ pub async fn issuance(
     req: web::Json<CurrencyIssuanceInput>,
 ) -> error::Result<HttpResponse> {
     let api = data.api.lock().unwrap();
-    let currency_id = CurrencyId::Id(req.input.currency_id);
+    let currency_id = CurrencyId::Id(req.currency_id);
     let result = api
         .storage()
         .orml_tokens()
@@ -119,11 +108,6 @@ pub async fn issuance(
 
 #[derive(Serialize, Deserialize)]
 pub struct CurrencySupplyInput {
-    input: CurrencySupplyArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CurrencySupplyArg {
     currency_id: u64,
 }
 
@@ -138,7 +122,7 @@ pub async fn supply(
     req: web::Json<CurrencySupplyInput>,
 ) -> error::Result<HttpResponse> {
     let api = data.api.lock().unwrap();
-    let currency_id = CurrencyId::Id(req.input.currency_id);
+    let currency_id = CurrencyId::Id(req.currency_id);
     let result = api
         .storage()
         .currency()
@@ -155,11 +139,6 @@ pub async fn supply(
 
 #[derive(Serialize, Deserialize)]
 pub struct MintCurrencyInput {
-    input: MintCurrencyArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct MintCurrencyArg {
     seed: String,
     currency_id: u64,
     amount: u128,
@@ -177,14 +156,14 @@ pub async fn mint(
     data: web::Data<AppState>,
     req: web::Json<MintCurrencyInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.input.seed)?;
+    let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let currency_id = CurrencyId::Id(req.input.currency_id);
+    let currency_id = CurrencyId::Id(req.currency_id);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .currency()
-        .mint(currency_id, req.input.amount)
+        .mint(currency_id, req.amount)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
@@ -205,11 +184,6 @@ pub async fn mint(
 
 #[derive(Serialize, Deserialize)]
 pub struct AssetBalanceInput {
-    input: AssetBalanceArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AssetBalanceArg {
     account: String,
     currency_id: u64,
 }
@@ -224,8 +198,7 @@ pub async fn balance(
     data: web::Data<AppState>,
     req: web::Json<AssetBalanceInput>,
 ) -> error::Result<HttpResponse> {
-    let account =
-        sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
+    let account = sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let api = data.api.lock().unwrap();
     let result = api.storage().currency().currency_class(None).await;
@@ -233,7 +206,7 @@ pub async fn balance(
     let result = api
         .storage()
         .asset()
-        .balances(account, currency_class, req.input.currency_id, None)
+        .balances(account, currency_class, req.currency_id, None)
         .await;
     let amount = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(AssetBalanceOutput { amount }))

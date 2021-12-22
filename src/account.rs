@@ -31,11 +31,6 @@ pub async fn create(_req: HttpRequest) -> error::Result<HttpResponse> {
 
 #[derive(Serialize, Deserialize)]
 pub struct FundAccountInput {
-    input: FundAccountArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct FundAccountArg {
     seed: String,
     account: String,
     amount: u128,
@@ -53,13 +48,13 @@ pub async fn fund(
     data: web::Data<AppState>,
     req: web::Json<FundAccountInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.input.seed)?;
+    let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let account =
-        sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
+        sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let account = subxt::sp_runtime::MultiAddress::Id(account);
-    let amount_input = req.input.amount;
+    let amount_input = req.amount;
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
@@ -85,11 +80,6 @@ pub async fn fund(
 
 #[derive(Serialize, Deserialize)]
 pub struct AccountBalanceInput {
-    input: AccountBalanceArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AccountBalanceArg {
     account: String,
 }
 
@@ -104,7 +94,7 @@ pub async fn balance(
     req: web::Json<AccountBalanceInput>,
 ) -> error::Result<HttpResponse> {
     let account =
-        sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
+        sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let api = data.api.lock().unwrap();
     let result = api.storage().system().account(account, None).await;

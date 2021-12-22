@@ -9,11 +9,6 @@ use subxt::PairSigner;
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateClassInput {
-    input: CreateClassArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateClassArg {
     seed: String,
     class_id: u64,
     metadata: serde_json::Value,
@@ -30,14 +25,14 @@ pub async fn create_class(
     data: web::Data<AppState>,
     req: web::Json<CreateClassInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.input.seed)?;
+    let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let metadata: Vec<u8> = serde_json::to_vec(&req.input.metadata).unwrap_or_default();
+    let metadata: Vec<u8> = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .asset()
-        .create_class(req.input.class_id, metadata)
+        .create_class(req.class_id, metadata)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
@@ -59,11 +54,6 @@ pub async fn create_class(
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateInput {
-    input: CreateArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateArg {
     seed: String,
     class_id: u64,
     asset_id: u64,
@@ -77,19 +67,19 @@ pub struct CreateOutput {
     account: String,
 }
 
-/// Create a asset for an account
+/// Create an asset for class
 pub async fn create(
     data: web::Data<AppState>,
     req: web::Json<CreateInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.input.seed)?;
+    let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let metadata: Vec<u8> = serde_json::to_vec(&req.input.metadata).unwrap_or_default();
+    let metadata: Vec<u8> = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .asset()
-        .create_asset(req.input.class_id, req.input.asset_id, metadata)
+        .create_asset(req.class_id, req.asset_id, metadata)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
@@ -112,11 +102,6 @@ pub async fn create(
 
 #[derive(Serialize, Deserialize)]
 pub struct MintInput {
-    input: MintArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct MintArg {
     seed: String,
     account: String,
     class_id: u64,
@@ -132,26 +117,20 @@ pub struct MintOutput {
     amount: u128,
 }
 
-/// Mint amount of asset id to account
+/// Mint amount of asset to account
 pub async fn mint(
     data: web::Data<AppState>,
     req: web::Json<MintInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.input.seed)?;
+    let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account =
-        sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
+    let account = sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .asset()
-        .mint(
-            account,
-            req.input.class_id,
-            req.input.asset_id,
-            req.input.amount,
-        )
+        .mint(account, req.class_id, req.asset_id, req.amount)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
@@ -173,11 +152,6 @@ pub async fn mint(
 
 #[derive(Serialize, Deserialize)]
 pub struct AssetBalanceInput {
-    input: AssetBalanceArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AssetBalanceArg {
     account: String,
     class_id: u64,
     asset_id: u64,
@@ -188,19 +162,18 @@ pub struct AssetBalanceOutput {
     amount: u128,
 }
 
-/// Get balance for given asset id
+/// Get balance for given asset
 pub async fn balance(
     data: web::Data<AppState>,
     req: web::Json<AssetBalanceInput>,
 ) -> error::Result<HttpResponse> {
-    let account =
-        sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
+    let account = sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let api = data.api.lock().unwrap();
     let result = api
         .storage()
         .asset()
-        .balances(account, req.input.class_id, req.input.asset_id, None)
+        .balances(account, req.class_id, req.asset_id, None)
         .await;
     let amount = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(AssetBalanceOutput { amount }))
@@ -208,11 +181,6 @@ pub async fn balance(
 
 #[derive(Serialize, Deserialize)]
 pub struct AssetBalancesInput {
-    input: AssetBalancesArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AssetBalancesArg {
     account: String,
     class_id: Option<u64>,
 }
@@ -235,25 +203,22 @@ pub struct AssetBalanceItemOutput {
 //     req: web::Json<AssetBalancesInput>,
 // ) -> error::Result<HttpResponse> {
 //     let account =
-//         sp_core::sr25519::Public::from_str(&req.input.account).map_err(map_account_err)?;
+//         sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
 //     let account = sp_core::crypto::AccountId32::from(account);
 //     let api = data.api.lock().unwrap();
-//     let result = api
-//         .storage()
-//         .asset()
-//         .balances(account, req.input.class_id, req.input.asset_id, None)
-//         .await;
+//     // let result = api
+//     //     .storage()
+//     //     .asset()
+//     //     .balances(account, req.class_id, req.asset_id, None)
+//     //     .await;
+//     let result = api.storage().asset().balances_iter(None).await.map_err(map_subxt_err)?;
+//     result.next()
 //     let amount = result.map_err(map_subxt_err)?;
 //     Ok(HttpResponse::Ok().json(AssetBalancesOutput { amount }))
 // }
 
 #[derive(Serialize, Deserialize)]
 pub struct TransferFromInput {
-    input: TransferFromArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct TransferFromArg {
     seed: String,
     from: String,
     to: String,
@@ -276,11 +241,10 @@ pub async fn transfer_from(
     data: web::Data<AppState>,
     req: web::Json<TransferFromInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.input.seed)?;
+    let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account_from =
-        sp_core::sr25519::Public::from_str(&req.input.from).map_err(map_account_err)?;
-    let account_to = sp_core::sr25519::Public::from_str(&req.input.to).map_err(map_account_err)?;
+    let account_from = sp_core::sr25519::Public::from_str(&req.from).map_err(map_account_err)?;
+    let account_to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
     let account_from = sp_core::crypto::AccountId32::from(account_from);
     let account_to = sp_core::crypto::AccountId32::from(account_to);
     let api = data.api.lock().unwrap();
@@ -290,9 +254,9 @@ pub async fn transfer_from(
         .transfer_from(
             account_from,
             account_to,
-            req.input.class_id,
-            req.input.asset_id,
-            req.input.amount,
+            req.class_id,
+            req.asset_id,
+            req.amount,
         )
         .sign_and_submit_then_watch(&signer)
         .await

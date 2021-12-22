@@ -10,11 +10,6 @@ use sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
 
 #[derive(Deserialize)]
 pub struct CreateDexInput {
-    input: CreateDexArg,
-}
-
-#[derive(Deserialize)]
-pub struct CreateDexArg {
     seed: String,
     exchange_id: u32,
     currency_id: u64,
@@ -33,18 +28,18 @@ pub async fn create(
     data: web::Data<AppState>,
     req: web::Json<CreateDexInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.input.seed)?;
+    let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let currency_id = CurrencyId::Id(req.input.currency_id);
+    let currency_id = CurrencyId::Id(req.currency_id);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .dex()
         .create_exchange(
-            req.input.exchange_id,
+            req.exchange_id,
             currency_id,
-            req.input.asset_class_id,
-            req.input.lp_class_id,
+            req.asset_class_id,
+            req.lp_class_id,
         )
         .sign_and_submit_then_watch(&signer)
         .await
@@ -65,11 +60,6 @@ pub async fn create(
 
 #[derive(Serialize, Deserialize)]
 pub struct BuyAssetsInput {
-    input: BuyAssetsArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct BuyAssetsArg {
     seed: String,
     exchange_id: u32,
     asset_ids: Vec<u64>,
@@ -93,19 +83,19 @@ pub async fn buy_assets(
     data: web::Data<AppState>,
     req: web::Json<BuyAssetsInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.input.seed)?;
+    let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.input.to).map_err(map_account_err)?;
+    let to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
     let to = sp_core::crypto::AccountId32::from(to);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .dex()
         .buy_assets(
-            req.input.exchange_id,
-            req.input.asset_ids.clone(),
-            req.input.asset_amounts_out.clone(),
-            req.input.max_currency,
+            req.exchange_id,
+            req.asset_ids.clone(),
+            req.asset_amounts_out.clone(),
+            req.max_currency,
             to,
         )
         .sign_and_submit_then_watch(&signer)
@@ -131,11 +121,6 @@ pub async fn buy_assets(
 
 #[derive(Serialize, Deserialize)]
 pub struct SellAssetsInput {
-    input: SellAssetsArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct SellAssetsArg {
     seed: String,
     exchange_id: u32,
     asset_ids: Vec<u64>,
@@ -159,19 +144,19 @@ pub async fn sell_assets(
     data: web::Data<AppState>,
     req: web::Json<SellAssetsInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.input.seed)?;
+    let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.input.to).map_err(map_account_err)?;
+    let to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
     let to = sp_core::crypto::AccountId32::from(to);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .dex()
         .sell_assets(
-            req.input.exchange_id,
-            req.input.asset_ids.clone(),
-            req.input.asset_amounts_in.clone(),
-            req.input.min_currency,
+            req.exchange_id,
+            req.asset_ids.clone(),
+            req.asset_amounts_in.clone(),
+            req.min_currency,
             to,
         )
         .sign_and_submit_then_watch(&signer)
@@ -197,11 +182,6 @@ pub async fn sell_assets(
 
 #[derive(Serialize, Deserialize)]
 pub struct AddLiquidityInput {
-    input: AddLiquidityArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AddLiquidityArg {
     seed: String,
     to: String,
     exchange_id: u32,
@@ -224,20 +204,20 @@ pub async fn add_liquidity(
     data: web::Data<AppState>,
     req: web::Json<AddLiquidityInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.input.seed)?;
+    let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.input.to).map_err(map_account_err)?;
+    let to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
     let to = sp_core::crypto::AccountId32::from(to);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .dex()
         .add_liquidity(
-            req.input.exchange_id,
+            req.exchange_id,
             to,
-            req.input.asset_ids.clone(),
-            req.input.asset_amounts.clone(),
-            req.input.max_currencies.clone(),
+            req.asset_ids.clone(),
+            req.asset_amounts.clone(),
+            req.max_currencies.clone(),
         )
         .sign_and_submit_then_watch(&signer)
         .await
@@ -261,11 +241,6 @@ pub async fn add_liquidity(
 
 #[derive(Serialize, Deserialize)]
 pub struct RemoveLiquidityInput {
-    input: RemoveLiquidityArg,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct RemoveLiquidityArg {
     seed: String,
     to: String,
     exchange_id: u32,
@@ -289,21 +264,21 @@ pub async fn remove_liquidity(
     data: web::Data<AppState>,
     req: web::Json<RemoveLiquidityInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.input.seed)?;
+    let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.input.to).map_err(map_account_err)?;
+    let to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
     let to = sp_core::crypto::AccountId32::from(to);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .dex()
         .remove_liquidity(
-            req.input.exchange_id,
+            req.exchange_id,
             to,
-            req.input.asset_ids.clone(),
-            req.input.liquidities.clone(),
-            req.input.min_currencies.clone(),
-            req.input.min_assets.clone(),
+            req.asset_ids.clone(),
+            req.liquidities.clone(),
+            req.min_currencies.clone(),
+            req.min_assets.clone(),
         )
         .sign_and_submit_then_watch(&signer)
         .await
