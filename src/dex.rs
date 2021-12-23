@@ -43,10 +43,13 @@ pub async fn create(
         )
         .sign_and_submit_then_watch(&signer)
         .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_event::<sugarfunge::dex::events::ExchangeCreated>()
-        .map_err(map_scale_err)?;
+        .find_first_event::<sugarfunge::dex::events::ExchangeCreated>()
+        .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateDexOutput {
             exchange_id: event.0,
@@ -100,10 +103,13 @@ pub async fn buy_assets(
         )
         .sign_and_submit_then_watch(&signer)
         .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_event::<sugarfunge::dex::events::CurrencyToAsset>()
-        .map_err(map_scale_err)?;
+        .find_first_event::<sugarfunge::dex::events::CurrencyToAsset>()
+        .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BuyAssetsOutput {
             exchange_id: event.0,
@@ -161,10 +167,13 @@ pub async fn sell_assets(
         )
         .sign_and_submit_then_watch(&signer)
         .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_event::<sugarfunge::dex::events::AssetToCurrency>()
-        .map_err(map_scale_err)?;
+        .find_first_event::<sugarfunge::dex::events::AssetToCurrency>()
+        .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(SellAssetsOutput {
             exchange_id: event.0,
@@ -221,10 +230,13 @@ pub async fn add_liquidity(
         )
         .sign_and_submit_then_watch(&signer)
         .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_event::<sugarfunge::dex::events::LiquidityAdded>()
-        .map_err(map_scale_err)?;
+        .find_first_event::<sugarfunge::dex::events::LiquidityAdded>()
+        .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(AddLiquidityOutput {
             who: event.0.to_string(),
@@ -282,10 +294,13 @@ pub async fn remove_liquidity(
         )
         .sign_and_submit_then_watch(&signer)
         .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_event::<sugarfunge::dex::events::LiquidityRemoved>()
-        .map_err(map_scale_err)?;
+        .find_first_event::<sugarfunge::dex::events::LiquidityRemoved>()
+        .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveLiquidityOutput {
             who: event.0.to_string(),

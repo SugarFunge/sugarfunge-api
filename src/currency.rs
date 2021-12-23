@@ -64,10 +64,13 @@ pub async fn issue(
         .sudo(call)
         .sign_and_submit_then_watch(&signer)
         .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_event::<sugarfunge::orml_currencies::events::BalanceUpdated>()
-        .map_err(map_scale_err)?;
+        .find_first_event::<sugarfunge::orml_currencies::events::BalanceUpdated>()
+        .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(IssueCurrencyOutput {
             asset_id: event.0.into(),
@@ -166,10 +169,13 @@ pub async fn mint(
         .mint(currency_id, req.amount)
         .sign_and_submit_then_watch(&signer)
         .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_event::<sugarfunge::currency::events::AssetMint>()
-        .map_err(map_scale_err)?;
+        .find_first_event::<sugarfunge::currency::events::AssetMint>()
+        .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintCurrencyOutput {
             currency_id: event.0.into(),

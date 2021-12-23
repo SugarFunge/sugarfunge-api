@@ -50,8 +50,7 @@ pub async fn fund(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account =
-        sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
+    let account = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let account = subxt::sp_runtime::MultiAddress::Id(account);
     let amount_input = req.amount;
@@ -62,10 +61,13 @@ pub async fn fund(
         .transfer(account, amount_input)
         .sign_and_submit_then_watch(&signer)
         .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_event::<sugarfunge::balances::events::Transfer>()
-        .map_err(map_scale_err)?;
+        .find_first_event::<sugarfunge::balances::events::Transfer>()
+        .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(FundAccountOutput {
             from: event.from.to_string(),
@@ -93,8 +95,7 @@ pub async fn balance(
     data: web::Data<AppState>,
     req: web::Json<AccountBalanceInput>,
 ) -> error::Result<HttpResponse> {
-    let account =
-        sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
+    let account = sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let api = data.api.lock().unwrap();
     let result = api.storage().system().account(account, None).await;

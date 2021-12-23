@@ -35,11 +35,14 @@ pub async fn create_class(
         .create_class(req.class_id, metadata)
         .sign_and_submit_then_watch(&signer)
         .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
         .map_err(map_subxt_err)?;
 
     let result = result
-        .find_event::<sugarfunge::asset::events::ClassCreated>()
-        .map_err(map_scale_err)?;
+        .find_first_event::<sugarfunge::asset::events::ClassCreated>()
+        .map_err(map_subxt_err)?;
 
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateClassOutput {
@@ -82,11 +85,14 @@ pub async fn create(
         .create_asset(req.class_id, req.asset_id, metadata)
         .sign_and_submit_then_watch(&signer)
         .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
         .map_err(map_subxt_err)?;
 
     let result = result
-        .find_event::<sugarfunge::asset::events::AssetCreated>()
-        .map_err(map_scale_err)?;
+        .find_first_event::<sugarfunge::asset::events::AssetCreated>()
+        .map_err(map_subxt_err)?;
 
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateOutput {
@@ -133,10 +139,13 @@ pub async fn mint(
         .mint(to, req.class_id, req.asset_id, req.amount)
         .sign_and_submit_then_watch(&signer)
         .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_event::<sugarfunge::asset::events::Mint>()
-        .map_err(map_scale_err)?;
+        .find_first_event::<sugarfunge::asset::events::Mint>()
+        .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintOutput {
             to: event.0.to_string(),
@@ -260,10 +269,13 @@ pub async fn transfer_from(
         )
         .sign_and_submit_then_watch(&signer)
         .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_event::<sugarfunge::asset::events::Transferred>()
-        .map_err(map_scale_err)?;
+        .find_first_event::<sugarfunge::asset::events::Transferred>()
+        .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(TransferFromOutput {
             from: event.0.to_string(),
