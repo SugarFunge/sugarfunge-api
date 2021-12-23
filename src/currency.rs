@@ -11,7 +11,7 @@ use sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
 #[derive(Deserialize)]
 pub struct IssueCurrencyInput {
     seed: String,
-    account: String,
+    to: String,
     currency_id: u64,
     amount: i128,
 }
@@ -28,7 +28,7 @@ impl Into<u64> for CurrencyId {
 #[derive(Serialize)]
 pub struct IssueCurrencyOutput {
     asset_id: u64,
-    account: String,
+    to: String,
     amount: i128,
 }
 
@@ -39,9 +39,9 @@ pub async fn issue(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account = sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
-    let account = sp_core::crypto::AccountId32::from(account);
-    let account = subxt::sp_runtime::MultiAddress::Id(account);
+    let to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
+    let to = sp_core::crypto::AccountId32::from(to);
+    let to = subxt::sp_runtime::MultiAddress::Id(to);
     let currency_id = CurrencyId::Id(req.currency_id);
     let api = data.api.lock().unwrap();
     let result = api
@@ -53,7 +53,7 @@ pub async fn issue(
     let currency_id = CurrencyId::Id(req.currency_id);
     let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::OrmlCurrencies(
         sugarfunge::runtime_types::orml_currencies::module::Call::update_balance {
-            who: account,
+            who: to,
             currency_id,
             amount: req.amount.saturating_add(total_issuance as i128),
         },
@@ -71,7 +71,7 @@ pub async fn issue(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(IssueCurrencyOutput {
             asset_id: event.0.into(),
-            account: event.1.to_string(),
+            to: event.1.to_string(),
             amount: event.2,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {

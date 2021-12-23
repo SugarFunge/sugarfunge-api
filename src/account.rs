@@ -32,7 +32,7 @@ pub async fn create(_req: HttpRequest) -> error::Result<HttpResponse> {
 #[derive(Serialize, Deserialize)]
 pub struct FundAccountInput {
     seed: String,
-    account: String,
+    to: String,
     amount: u128,
 }
 
@@ -51,7 +51,7 @@ pub async fn fund(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let account =
-        sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
+        sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let account = subxt::sp_runtime::MultiAddress::Id(account);
     let amount_input = req.amount;

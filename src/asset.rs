@@ -20,7 +20,7 @@ pub struct CreateClassOutput {
     account: String,
 }
 
-/// Create a asset class for an account
+/// Create an asset class for an account
 pub async fn create_class(
     data: web::Data<AppState>,
     req: web::Json<CreateClassInput>,
@@ -103,7 +103,7 @@ pub async fn create(
 #[derive(Serialize, Deserialize)]
 pub struct MintInput {
     seed: String,
-    account: String,
+    to: String,
     class_id: u64,
     asset_id: u64,
     amount: u128,
@@ -111,7 +111,7 @@ pub struct MintInput {
 
 #[derive(Serialize, Deserialize)]
 pub struct MintOutput {
-    account: String,
+    to: String,
     class_id: u64,
     asset_id: u64,
     amount: u128,
@@ -124,13 +124,13 @@ pub async fn mint(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account = sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
-    let account = sp_core::crypto::AccountId32::from(account);
+    let to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
+    let to = sp_core::crypto::AccountId32::from(to);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .asset()
-        .mint(account, req.class_id, req.asset_id, req.amount)
+        .mint(to, req.class_id, req.asset_id, req.amount)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?;
@@ -139,7 +139,7 @@ pub async fn mint(
         .map_err(map_scale_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintOutput {
-            account: event.0.to_string(),
+            to: event.0.to_string(),
             class_id: event.1,
             asset_id: event.2,
             amount: event.3,
