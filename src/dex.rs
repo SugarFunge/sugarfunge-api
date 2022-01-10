@@ -8,11 +8,17 @@ use std::str::FromStr;
 use subxt::PairSigner;
 use sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
 
+#[derive(Serialize, Deserialize)]
+pub struct Currency {
+    class_id: u64,
+    asset_id: u64,
+}
+
 #[derive(Deserialize)]
 pub struct CreateDexInput {
     seed: String,
     exchange_id: u32,
-    currency_id: u64,
+    currency: Currency,
     asset_class_id: u64,
     lp_class_id: u64, // liquidity pool id
 }
@@ -30,7 +36,7 @@ pub async fn create(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let currency_id = CurrencyId::Id(req.currency_id);
+    let currency_id = CurrencyId(req.currency.class_id, req.currency.asset_id);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
