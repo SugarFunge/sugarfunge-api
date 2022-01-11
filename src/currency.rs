@@ -174,7 +174,7 @@ pub async fn mint(
         .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_first_event::<sugarfunge::currency::events::AssetMint>()
+        .find_first_event::<sugarfunge::currency::events::CurrencyMint>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintCurrencyOutput {
@@ -186,7 +186,58 @@ pub async fn mint(
             account: event.2.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::currency::events::AssetMint"),
+            message: json!("Failed to find sugarfunge::currency::events::Mint"),
+        })),
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct BurnCurrencyInput {
+    seed: String,
+    currency: Currency,
+    amount: u128,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct BurnCurrencyOutput {
+    currency: Currency,
+    amount: u128,
+    account: String,
+}
+
+/// Burn amount of currency
+pub async fn burn(
+    data: web::Data<AppState>,
+    req: web::Json<BurnCurrencyInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed)?;
+    let signer = PairSigner::new(pair);
+    let currency_id = CurrencyId(req.currency.class_id, req.currency.asset_id);
+    let api = data.api.lock().unwrap();
+    let result = api
+        .tx()
+        .currency()
+        .burn(currency_id, req.amount)
+        .sign_and_submit_then_watch(&signer)
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_subxt_err)?;
+    let result = result
+        .find_first_event::<sugarfunge::currency::events::CurrencyBurn>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(BurnCurrencyOutput {
+            currency: Currency {
+                class_id: event.0 .0,
+                asset_id: event.0 .1,
+            },
+            amount: event.1,
+            account: event.2.to_string(),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::currency::events::Burn"),
         })),
     }
 }

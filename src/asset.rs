@@ -160,6 +160,59 @@ pub async fn mint(
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct BurnInput {
+    seed: String,
+    from: String,
+    class_id: u64,
+    asset_id: u64,
+    amount: u128,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct BurnOutput {
+    from: String,
+    class_id: u64,
+    asset_id: u64,
+    amount: u128,
+}
+
+/// Burn amount of asset from account
+pub async fn burn(
+    data: web::Data<AppState>,
+    req: web::Json<BurnInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed)?;
+    let signer = PairSigner::new(pair);
+    let from = sp_core::sr25519::Public::from_str(&req.from).map_err(map_account_err)?;
+    let from = sp_core::crypto::AccountId32::from(from);
+    let api = data.api.lock().unwrap();
+    let result = api
+        .tx()
+        .asset()
+        .burn(from, req.class_id, req.asset_id, req.amount)
+        .sign_and_submit_then_watch(&signer)
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_subxt_err)?;
+    let result = result
+        .find_first_event::<sugarfunge::asset::events::Burn>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(BurnOutput {
+            from: event.0.to_string(),
+            class_id: event.1,
+            asset_id: event.2,
+            amount: event.3,
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::currency::events::Burn"),
+        })),
+    }
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct AssetBalanceInput {
     account: String,
     class_id: u64,
