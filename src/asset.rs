@@ -18,7 +18,7 @@ pub struct CreateClassInput {
 #[derive(Serialize, Deserialize)]
 pub struct CreateClassOutput {
     class_id: u64,
-    account: String,
+    who: String,
 }
 
 /// Create an asset class for an account
@@ -49,8 +49,8 @@ pub async fn create_class(
 
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateClassOutput {
-            class_id: event.0,
-            account: event.1.to_string(),
+            class_id: event.class_id,
+            who: event.who.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
@@ -70,7 +70,7 @@ pub struct CreateInput {
 pub struct CreateOutput {
     class_id: u64,
     asset_id: u64,
-    account: String,
+    who: String,
 }
 
 /// Create an asset for class
@@ -99,9 +99,9 @@ pub async fn create(
 
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateOutput {
-            class_id: event.0,
-            asset_id: event.1,
-            account: event.2.to_string(),
+            class_id: event.class_id,
+            asset_id: event.asset_id,
+            who: event.who.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
@@ -124,6 +124,7 @@ pub struct MintOutput {
     class_id: u64,
     asset_id: u64,
     amount: u128,
+    who: String,
 }
 
 /// Mint amount of asset to account
@@ -151,10 +152,11 @@ pub async fn mint(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintOutput {
-            to: event.0.to_string(),
-            class_id: event.1,
-            asset_id: event.2,
-            amount: event.3,
+            to: event.to.to_string(),
+            class_id: event.class_id,
+            asset_id: event.asset_id,
+            amount: event.amount,
+            who: event.who.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::AssetMint"),
@@ -177,6 +179,7 @@ pub struct BurnOutput {
     class_id: u64,
     asset_id: u64,
     amount: u128,
+    who: String,
 }
 
 /// Burn amount of asset from account
@@ -204,10 +207,11 @@ pub async fn burn(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BurnOutput {
-            from: event.0.to_string(),
-            class_id: event.1,
-            asset_id: event.2,
-            amount: event.3,
+            from: event.from.to_string(),
+            class_id: event.class_id,
+            asset_id: event.asset_id,
+            amount: event.amount,
+            who: event.who.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::Burn"),
@@ -299,6 +303,7 @@ pub struct TransferFromOutput {
     class_id: u64,
     asset_id: u64,
     amount: u128,
+    who: String,
 }
 
 /// Transfer asset from to accounts
@@ -334,11 +339,12 @@ pub async fn transfer_from(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(TransferFromOutput {
-            from: event.0.to_string(),
-            to: event.1.to_string(),
-            class_id: event.2,
-            asset_id: event.3,
-            amount: event.4,
+            from: event.from.to_string(),
+            to: event.to.to_string(),
+            class_id: event.class_id,
+            asset_id: event.asset_id,
+            amount: event.amount,
+            who: event.who.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::Transferred"),

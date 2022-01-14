@@ -151,7 +151,7 @@ pub struct MintCurrencyInput {
 pub struct MintCurrencyOutput {
     currency: Currency,
     amount: u128,
-    account: String,
+    who: String,
 }
 
 /// Mint amount of currency
@@ -179,11 +179,11 @@ pub async fn mint(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintCurrencyOutput {
             currency: Currency {
-                class_id: event.0 .0,
-                asset_id: event.0 .1,
+                class_id: event.currency.class_id,
+                asset_id: event.currency.asset_id,
             },
-            amount: event.1,
-            account: event.2.to_string(),
+            amount: event.amount,
+            who: event.who.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::Mint"),
@@ -202,7 +202,7 @@ pub struct BurnCurrencyInput {
 pub struct BurnCurrencyOutput {
     currency: Currency,
     amount: u128,
-    account: String,
+    who: String,
 }
 
 /// Burn amount of currency
@@ -230,11 +230,11 @@ pub async fn burn(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BurnCurrencyOutput {
             currency: Currency {
-                class_id: event.0 .0,
-                asset_id: event.0 .1,
+                class_id: event.currency.class_id,
+                asset_id: event.currency.asset_id,
             },
-            amount: event.1,
-            account: event.2.to_string(),
+            amount: event.amount,
+            who: event.who.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::Burn"),

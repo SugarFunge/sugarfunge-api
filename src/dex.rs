@@ -26,7 +26,7 @@ pub struct CreateDexInput {
 #[derive(Serialize)]
 pub struct CreateDexOutput {
     exchange_id: u32,
-    account: String,
+    who: String,
 }
 
 /// Create dex for currency and asset class
@@ -58,8 +58,8 @@ pub async fn create(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateDexOutput {
-            exchange_id: event.0,
-            account: event.1.to_string(),
+            exchange_id: event.exchange_id,
+            who: event.who.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::balances::events::Transfer"),
@@ -84,7 +84,7 @@ pub struct BuyAssetsOutput {
     to: String,
     asset_ids: Vec<u64>,
     asset_amounts_out: Vec<u128>,
-    amounts_in: Vec<u128>,
+    currency_amounts_in: Vec<u128>,
 }
 
 /// Buy assets with currency
@@ -118,12 +118,12 @@ pub async fn buy_assets(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BuyAssetsOutput {
-            exchange_id: event.0,
-            who: event.1.to_string(),
-            to: event.2.to_string(),
-            asset_ids: event.3,
-            asset_amounts_out: event.4,
-            amounts_in: event.5,
+            exchange_id: event.exchange_id,
+            who: event.who.to_string(),
+            to: event.to.to_string(),
+            asset_ids: event.asset_ids,
+            asset_amounts_out: event.asset_amounts_out,
+            currency_amounts_in: event.currency_amounts_in,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::dex::events::CurrencyToAsset"),
@@ -148,7 +148,7 @@ pub struct SellAssetsOutput {
     to: String,
     asset_ids: Vec<u64>,
     asset_amounts_in: Vec<u128>,
-    amounts_out: Vec<u128>,
+    currency_amounts_out: Vec<u128>,
 }
 
 /// Sell assets for currency
@@ -182,12 +182,12 @@ pub async fn sell_assets(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(SellAssetsOutput {
-            exchange_id: event.0,
-            who: event.1.to_string(),
-            to: event.2.to_string(),
-            asset_ids: event.3,
-            asset_amounts_in: event.4,
-            amounts_out: event.5,
+            exchange_id: event.exchange_id,
+            who: event.who.to_string(),
+            to: event.to.to_string(),
+            asset_ids: event.asset_ids,
+            asset_amounts_in: event.asset_amounts_in,
+            currency_amounts_out: event.currency_amounts_out,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::dex::events::CurrencyToAsset"),
@@ -207,6 +207,7 @@ pub struct AddLiquidityInput {
 
 #[derive(Serialize, Deserialize)]
 pub struct AddLiquidityOutput {
+    exchange_id: u32,
     who: String,
     to: String,
     asset_ids: Vec<u64>,
@@ -245,11 +246,12 @@ pub async fn add_liquidity(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(AddLiquidityOutput {
-            who: event.0.to_string(),
-            to: event.1.to_string(),
-            asset_ids: event.2,
-            asset_amounts: event.3,
-            currency_amounts: event.4,
+            exchange_id: event.exchange_id,
+            who: event.who.to_string(),
+            to: event.to.to_string(),
+            asset_ids: event.asset_ids,
+            asset_amounts: event.asset_amounts,
+            currency_amounts: event.currency_amounts,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::dex::events::CurrencyToAsset"),
@@ -270,6 +272,7 @@ pub struct RemoveLiquidityInput {
 
 #[derive(Serialize, Deserialize)]
 pub struct RemoveLiquidityOutput {
+    exchange_id: u32,
     who: String,
     to: String,
     asset_ids: Vec<u64>,
@@ -309,11 +312,12 @@ pub async fn remove_liquidity(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveLiquidityOutput {
-            who: event.0.to_string(),
-            to: event.1.to_string(),
-            asset_ids: event.2,
-            asset_amounts: event.3,
-            currency_amounts: event.4,
+            exchange_id: event.exchange_id,
+            who: event.who.to_string(),
+            to: event.to.to_string(),
+            asset_ids: event.asset_ids,
+            asset_amounts: event.asset_amounts,
+            currency_amounts: event.currency_amounts,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::dex::events::CurrencyToAsset"),
