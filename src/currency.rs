@@ -179,8 +179,8 @@ pub async fn mint(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintCurrencyOutput {
             currency: Currency {
-                class_id: event.currency.class_id,
-                asset_id: event.currency.asset_id,
+                class_id: event.currency_id.0,
+                asset_id: event.currency_id.1,
             },
             amount: event.amount,
             who: event.who.to_string(),
@@ -230,8 +230,8 @@ pub async fn burn(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BurnCurrencyOutput {
             currency: Currency {
-                class_id: event.currency.class_id,
-                asset_id: event.currency.asset_id,
+                class_id: event.currency_id.0,
+                asset_id: event.currency_id.1,
             },
             amount: event.amount,
             who: event.who.to_string(),
