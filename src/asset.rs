@@ -12,6 +12,7 @@ pub struct CreateClassInput {
     seed: String,
     class_id: u64,
     metadata: serde_json::Value,
+    owner: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -27,12 +28,14 @@ pub async fn create_class(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
+    let to = sp_core::sr25519::Public::from_str(&req.owner).map_err(map_account_err)?;
+    let to = sp_core::crypto::AccountId32::from(to);
     let metadata: Vec<u8> = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .asset()
-        .create_class(req.class_id, metadata)
+        .create_class(to, req.class_id, metadata)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?

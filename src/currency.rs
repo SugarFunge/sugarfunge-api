@@ -174,7 +174,7 @@ pub async fn mint(
         .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_first_event::<sugarfunge::currency::events::CurrencyMint>()
+        .find_first_event::<sugarfunge::currency::events::Mint>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintCurrencyOutput {
@@ -225,7 +225,7 @@ pub async fn burn(
         .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_first_event::<sugarfunge::currency::events::CurrencyBurn>()
+        .find_first_event::<sugarfunge::currency::events::Burn>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BurnCurrencyOutput {
