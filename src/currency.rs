@@ -151,7 +151,7 @@ pub struct MintCurrencyInput {
 pub struct MintCurrencyOutput {
     currency: Currency,
     amount: u128,
-    account: String,
+    who: String,
 }
 
 /// Mint amount of currency
@@ -174,16 +174,16 @@ pub async fn mint(
         .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_first_event::<sugarfunge::currency::events::CurrencyMint>()
+        .find_first_event::<sugarfunge::currency::events::Mint>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintCurrencyOutput {
             currency: Currency {
-                class_id: event.0 .0,
-                asset_id: event.0 .1,
+                class_id: event.currency_id.0,
+                asset_id: event.currency_id.1,
             },
-            amount: event.1,
-            account: event.2.to_string(),
+            amount: event.amount,
+            who: event.who.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::Mint"),
@@ -202,7 +202,7 @@ pub struct BurnCurrencyInput {
 pub struct BurnCurrencyOutput {
     currency: Currency,
     amount: u128,
-    account: String,
+    who: String,
 }
 
 /// Burn amount of currency
@@ -225,16 +225,16 @@ pub async fn burn(
         .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_first_event::<sugarfunge::currency::events::CurrencyBurn>()
+        .find_first_event::<sugarfunge::currency::events::Burn>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BurnCurrencyOutput {
             currency: Currency {
-                class_id: event.0 .0,
-                asset_id: event.0 .1,
+                class_id: event.currency_id.0,
+                asset_id: event.currency_id.1,
             },
-            amount: event.1,
-            account: event.2.to_string(),
+            amount: event.amount,
+            who: event.who.to_string(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::Burn"),

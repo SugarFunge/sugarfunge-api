@@ -16,6 +16,7 @@ mod asset;
 mod command;
 mod currency;
 mod dex;
+mod escrow;
 mod state;
 mod util;
 
@@ -65,6 +66,9 @@ async fn main() -> std::io::Result<()> {
                 "dex/remove_liquidity",
                 web::post().to(dex::remove_liquidity),
             )
+            .route("escrow/create", web::post().to(escrow::create_escrow))
+            .route("escrow/refund", web::post().to(escrow::refund_assets))
+            .route("escrow/deposit", web::post().to(escrow::deposit_assets))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()
