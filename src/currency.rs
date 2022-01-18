@@ -4,7 +4,9 @@ use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use sp_core::Pair;
 use std::str::FromStr;
+use subxt::sp_runtime::traits::IdentifyAccount;
 use subxt::PairSigner;
 use sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
 
@@ -17,7 +19,6 @@ pub struct Currency {
 #[derive(Deserialize)]
 pub struct IssueCurrencyInput {
     seed: String,
-    to: String,
     currency: Currency,
     amount: i128,
 }
@@ -25,7 +26,7 @@ pub struct IssueCurrencyInput {
 #[derive(Serialize)]
 pub struct IssueCurrencyOutput {
     currency: Currency,
-    to: String,
+    who: String,
     amount: i128,
 }
 
@@ -35,11 +36,11 @@ pub async fn issue(
     req: web::Json<IssueCurrencyInput>,
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
-    let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::from(to);
-    let to = subxt::sp_runtime::MultiAddress::Id(to);
+    let who = pair.public().into_account();
+    let who = sp_core::crypto::AccountId32::from(who);
+    let who = subxt::sp_runtime::MultiAddress::Id(who);
     let currency_id = CurrencyId(req.currency.class_id, req.currency.asset_id);
+    let signer = PairSigner::new(pair);
     let api = data.api.lock().unwrap();
     let result = api
         .storage()
@@ -50,7 +51,7 @@ pub async fn issue(
     let currency_id = CurrencyId(req.currency.class_id, req.currency.asset_id);
     let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::OrmlCurrencies(
         sugarfunge::runtime_types::orml_currencies::module::Call::update_balance {
-            who: to,
+            who,
             currency_id,
             amount: req.amount.saturating_add(total_issuance as i128),
         },
@@ -71,11 +72,11 @@ pub async fn issue(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(IssueCurrencyOutput {
             currency: Currency {
-                class_id: event.0 .0,
-                asset_id: event.0 .1,
+                class_id: event.currency_id.0,
+                asset_id: event.currency_id.1,
             },
-            to: event.1.to_string(),
-            amount: event.2,
+            who: event.who.to_string(),
+            amount: event.amount,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::orml_currencies::events::BalanceUpdated"),
