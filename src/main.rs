@@ -15,6 +15,7 @@ use subxt::ClientBuilder;
 pub mod sugarfunge {}
 mod account;
 mod asset;
+mod bundle;
 mod command;
 mod currency;
 mod dex;
@@ -86,6 +87,8 @@ async fn main() -> std::io::Result<()> {
             .route("escrow/create", web::post().to(escrow::create_escrow))
             .route("escrow/refund", web::post().to(escrow::refund_assets))
             .route("escrow/deposit", web::post().to(escrow::deposit_assets))
+            .route("bundle/register", web::post().to(bundle::register_bundle))
+            
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()
