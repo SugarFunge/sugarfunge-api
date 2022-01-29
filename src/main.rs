@@ -88,6 +88,8 @@ async fn main() -> std::io::Result<()> {
             .route("escrow/refund", web::post().to(escrow::refund_assets))
             .route("escrow/deposit", web::post().to(escrow::deposit_assets))
             .route("bundle/register", web::post().to(bundle::register_bundle))
+            .route("bundle/mint", web::post().to(bundle::mint_bundle))
+            .route("bundle/burn", web::post().to(bundle::burn_bundle))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()
