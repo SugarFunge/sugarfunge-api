@@ -52,11 +52,6 @@ async fn main() -> std::io::Result<()> {
             .max_age(3600);
 
         App::new()
-            
-            //.wrap(middleware::DefaultHeaders::new().add(("X-Version", "0.2")))
-            //.wrap(middleware::DefaultHeaders::new().add(("Access-Control-Allow-Origin", "*")))
-            //.wrap(middleware::DefaultHeaders::new().add(("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Origin, Accept")))
-            //.wrap(middleware::DefaultHeaders::new().add(("Access-Control-Allow-Methods", "GET, OPTIONS, POST, PUT")))
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
             .wrap(cors)
@@ -75,7 +70,6 @@ async fn main() -> std::io::Result<()> {
             .route("currency/mint", web::post().to(currency::mint))
             .route("currency/burn", web::post().to(currency::burn))
             .route("currency/supply", web::post().to(currency::supply))
-            .route("currency/balance", web::post().to(currency::balance))
             .route("dex/create", web::post().to(dex::create))
             .route("dex/buy_assets", web::post().to(dex::buy_assets))
             .route("dex/sell_assets", web::post().to(dex::sell_assets))

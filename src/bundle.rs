@@ -19,7 +19,6 @@ pub struct BundleSchema {
 #[derive(Serialize, Deserialize)]
 pub struct RegisterBundleInput {
     seed: String,
-    creator: String,
     class_id: u64,
     asset_id: u64,
     bundle_id: String,
@@ -30,7 +29,7 @@ pub struct RegisterBundleInput {
 #[derive(Serialize, Deserialize)]
 pub struct RegisterBundleOutput {
     bundle_id: String,
-    creator: String,
+    who: String,
     class_id: u64,
     asset_id: u64,
 }
@@ -41,8 +40,6 @@ pub async fn register_bundle(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.creator).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::from(to);
     let bundle_id = sp_core::H256::from_str(&req.bundle_id).unwrap_or_default();
     let schema = (
         BoundedVec(req.schema.class_ids.to_vec()),
@@ -55,7 +52,6 @@ pub async fn register_bundle(
     .tx()
     .bundle()
     .register_bundle(
-        to,
         req.class_id,
         req.asset_id,
         bundle_id,
@@ -73,7 +69,7 @@ pub async fn register_bundle(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RegisterBundleOutput {            
-            creator: event.creator.to_string(),
+            who: event.who.to_string(),
             bundle_id: event.bundle_id.to_string(),
             class_id: event.class_id,
             asset_id: event.asset_id,
@@ -87,7 +83,8 @@ pub async fn register_bundle(
 #[derive(Serialize, Deserialize)]
 pub struct MintBundleInput {
     seed: String,
-    creator: String,
+    from: String,
+    to: String,
     bundle_id: String,
     amount: u128,
 }
@@ -95,6 +92,8 @@ pub struct MintBundleInput {
 #[derive(Serialize, Deserialize)]
 pub struct MintBundleOutput {
     who: String,
+    from: String,
+    to: String,
     bundle_id: String,
     amount: u128,
 }
@@ -105,15 +104,18 @@ pub async fn mint_bundle(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.creator).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::from(to);
+    let account_from = sp_core::sr25519::Public::from_str(&req.from).map_err(map_account_err)?;
+    let account_to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
+    let account_from = sp_core::crypto::AccountId32::from(account_from);
+    let account_to = sp_core::crypto::AccountId32::from(account_to);
     let bundle_id = sp_core::H256::from_str(&req.bundle_id).unwrap_or_default();
     let api = data.api.lock().unwrap();
     let result = api
     .tx()
     .bundle()
     .mint_bundle(
-        to,
+        account_from,
+        account_to,
         bundle_id,
         req.amount,
     )
@@ -129,6 +131,8 @@ pub async fn mint_bundle(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintBundleOutput {            
             who: event.who.to_string(),
+            from: event.from.to_string(),
+            to: event.to.to_string(),
             bundle_id: event.bundle_id.to_string(),
             amount: event.amount,
         })),
@@ -141,7 +145,8 @@ pub async fn mint_bundle(
 #[derive(Serialize, Deserialize)]
 pub struct BurnBundleInput {
     seed: String,
-    creator: String,
+    from: String,
+    to: String,
     bundle_id: String,
     amount: u128,
 }
@@ -149,6 +154,8 @@ pub struct BurnBundleInput {
 #[derive(Serialize, Deserialize)]
 pub struct BurnBundleOutput {
     who: String,
+    from: String,
+    to: String,
     bundle_id: String,
     amount: u128,
 }
@@ -159,15 +166,18 @@ pub async fn burn_bundle(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.creator).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::from(to);
+    let account_from = sp_core::sr25519::Public::from_str(&req.from).map_err(map_account_err)?;
+    let account_to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
+    let account_from = sp_core::crypto::AccountId32::from(account_from);
+    let account_to = sp_core::crypto::AccountId32::from(account_to);
     let bundle_id = sp_core::H256::from_str(&req.bundle_id).unwrap_or_default();
     let api = data.api.lock().unwrap();
     let result = api
     .tx()
     .bundle()
     .burn_bundle(
-        to,
+        account_from,
+        account_to,
         bundle_id,
         req.amount,
     )
@@ -183,6 +193,8 @@ pub async fn burn_bundle(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BurnBundleOutput {            
             who: event.who.to_string(),
+            from: event.from.to_string(),
+            to: event.to.to_string(),
             bundle_id: event.bundle_id.to_string(),
             amount: event.amount,
         })),
