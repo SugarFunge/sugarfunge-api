@@ -243,30 +243,3 @@ pub async fn burn(
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct AssetBalanceInput {
-    account: String,
-    currency: Currency,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AssetBalanceOutput {
-    amount: u128,
-}
-
-/// Get balance for given currency
-pub async fn balance(
-    data: web::Data<AppState>,
-    req: web::Json<AssetBalanceInput>,
-) -> error::Result<HttpResponse> {
-    let account = sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
-    let account = sp_core::crypto::AccountId32::from(account);
-    let api = data.api.lock().unwrap();
-    let result = api
-        .storage()
-        .asset()
-        .balances(account, req.currency.class_id, req.currency.asset_id, None)
-        .await;
-    let amount = result.map_err(map_subxt_err)?;
-    Ok(HttpResponse::Ok().json(AssetBalanceOutput { amount }))
-}
