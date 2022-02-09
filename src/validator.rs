@@ -26,11 +26,15 @@ pub async fn add_validator(
     let signer = PairSigner::new(pair);
     let validator_id = sp_core::sr25519::Public::from_str(&req.validator_id).map_err(map_account_err)?;
     let validator_id = sp_core::crypto::AccountId32::from(validator_id);
+    let call = sugarfunge::runtime_types::substrate_validator_set::pallet::Call::add_validator {
+        validator_id,
+    };
+    let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::ValidatorSet(call);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
-        .validator_set()
-        .add_validator(validator_id)
+        .sudo()
+        .sudo(call)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -71,11 +75,15 @@ pub async fn remove_validator(
     let signer = PairSigner::new(pair);
     let validator_id = sp_core::sr25519::Public::from_str(&req.validator_id).map_err(map_account_err)?;
     let validator_id = sp_core::crypto::AccountId32::from(validator_id);
+    let call = sugarfunge::runtime_types::substrate_validator_set::pallet::Call::remove_validator {
+        validator_id,
+    };
+    let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::ValidatorSet(call);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
-        .validator_set()
-        .remove_validator(validator_id)
+        .sudo()
+        .sudo(call)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
