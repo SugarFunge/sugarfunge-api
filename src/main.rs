@@ -22,6 +22,7 @@ mod dex;
 mod escrow;
 mod state;
 mod util;
+mod validator;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -84,6 +85,8 @@ async fn main() -> std::io::Result<()> {
             .route("bundle/register", web::post().to(bundle::register_bundle))
             .route("bundle/mint", web::post().to(bundle::mint_bundle))
             .route("bundle/burn", web::post().to(bundle::burn_bundle))
+            .route("validator/add_validator", web::post().to(validator::add_validator))
+            .route("validator/remove_validator", web::post().to(validator::remove_validator))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()
