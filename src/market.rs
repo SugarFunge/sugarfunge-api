@@ -4,7 +4,6 @@ use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::str::FromStr;
 use subxt::PairSigner;
 
 #[derive(Serialize, Deserialize)]
@@ -25,7 +24,7 @@ pub enum RateAction {
 }
 
 #[derive(Serialize, Deserialize)]
-pub enum RateAccount<String> {
+pub enum RateAccount {
     Market,
     Account(String),
     Buyer,
@@ -36,9 +35,9 @@ pub struct AssetRate {
     class_id: u64,
     asset_id: u64,
     action: RateAction,
-    amount: i128,
-    from: RateAccount<String>,
-    to: RateAccount<String>,
+    amount: u128,
+    from: RateAccount,
+    to: RateAccount,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -81,11 +80,11 @@ pub async fn create_market(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateMarketOutput {
+            who: event.who.to_string(),
             market_id: event.market_id,
-            who: event.who,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::bundle::events::Register"),
+            message: json!("Failed to find sugarfunge::market::events::Created"),
         })),
     }
 }
@@ -97,7 +96,6 @@ pub struct CreateMarketRateInput {
     market_rate_id: u64,
     market_rate: MarketRate,
 }
-
 #[derive(Serialize, Deserialize)]
 pub struct CreateMarketRateOutput {
     market_id: u64,
@@ -107,7 +105,7 @@ pub struct CreateMarketRateOutput {
 
 pub async fn create_market_rate(
     data: web::Data<AppState>,
-    req: web::Json<CreateMarketInput>,
+    req: web::Json<CreateMarketRateInput>,
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
@@ -115,7 +113,7 @@ pub async fn create_market_rate(
     let result = api
         .tx()
         .market()
-        .(req.market_id)
+        .create_market_rate(req.market_id, req.market_rate_id, req.market_rate)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -123,15 +121,16 @@ pub async fn create_market_rate(
         .await
         .map_err(map_subxt_err)?;
     let result = result
-        .find_first_event::<sugarfunge::market::events::Created>()
+        .find_first_event::<sugarfunge::market::events::RateCreated>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(CreateMarketOutput {
+        Some(event) => Ok(HttpResponse::Ok().json(CreateMarketRateOutput {
+            who: event.who.to_string(),
             market_id: event.market_id,
-            who: event.who,
+            market_rate_id: event.market_rate_id,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::bundle::events::Register"),
+            message: json!("Failed to find sugarfunge::market::events::RateCreated"),
         })),
     }
 }
@@ -154,36 +153,36 @@ pub struct DepositAssetsOutput {
     amount: u128,
 }
 
-pub async fn deposit_assets(
-    data: web::Data<AppState>,
-    req: web::Json<CreateMarketInput>,
-) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.seed)?;
-    let signer = PairSigner::new(pair);
-    let api = data.api.lock().unwrap();
-    let result = api
-        .tx()
-        .market()
-        .(req.market_id)
-        .sign_and_submit_then_watch(&signer)
-        .await
-        .map_err(map_subxt_err)?
-        .wait_for_finalized_success()
-        .await
-        .map_err(map_subxt_err)?;
-    let result = result
-        .find_first_event::<sugarfunge::market::events::Created>()
-        .map_err(map_subxt_err)?;
-    match result {
-        Some(event) => Ok(HttpResponse::Ok().json(CreateMarketOutput {
-            market_id: event.market_id,
-            who: event.who,
-        })),
-        None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::bundle::events::Register"),
-        })),
-    }
-}
+// pub async fn deposit_assets(
+//     data: web::Data<AppState>,
+//     req: web::Json<CreateMarketInput>,
+// ) -> error::Result<HttpResponse> {
+//     let pair = get_pair_from_seed(&req.seed)?;
+//     let signer = PairSigner::new(pair);
+//     let api = data.api.lock().unwrap();
+//     let result = api
+//         .tx()
+//         .market()
+//         .(req.market_id)
+//         .sign_and_submit_then_watch(&signer)
+//         .await
+//         .map_err(map_subxt_err)?
+//         .wait_for_finalized_success()
+//         .await
+//         .map_err(map_subxt_err)?;
+//     let result = result
+//         .find_first_event::<sugarfunge::market::events::Created>()
+//         .map_err(map_subxt_err)?;
+//     match result {
+//         Some(event) => Ok(HttpResponse::Ok().json(CreateMarketOutput {
+//             market_id: event.market_id,
+//             who: event.who,
+//         })),
+//         None => Ok(HttpResponse::BadRequest().json(RequestError {
+//             message: json!("Failed to find sugarfunge::bundle::events::Register"),
+//         })),
+//     }
+// }
 
 #[derive(Serialize, Deserialize)]
 pub struct ExchangeAssetsInput {
@@ -202,33 +201,33 @@ pub struct ExchangeAssetsOutput {
     amount: u128,
 }
 
-pub async fn exchange_assets(
-    data: web::Data<AppState>,
-    req: web::Json<CreateMarketInput>,
-) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.seed)?;
-    let signer = PairSigner::new(pair);
-    let api = data.api.lock().unwrap();
-    let result = api
-        .tx()
-        .market().
-        (req.market_id)
-        .sign_and_submit_then_watch(&signer)
-        .await
-        .map_err(map_subxt_err)?
-        .wait_for_finalized_success()
-        .await
-        .map_err(map_subxt_err)?;
-    let result = result
-        .find_first_event::<sugarfunge::market::events::Created>()
-        .map_err(map_subxt_err)?;
-    match result {
-        Some(event) => Ok(HttpResponse::Ok().json(CreateMarketOutput {
-            market_id: event.market_id,
-            who: event.who,
-        })),
-        None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::bundle::events::Register"),
-        })),
-    }
-}
+// pub async fn exchange_assets(
+//     data: web::Data<AppState>,
+//     req: web::Json<CreateMarketInput>,
+// ) -> error::Result<HttpResponse> {
+//     let pair = get_pair_from_seed(&req.seed)?;
+//     let signer = PairSigner::new(pair);
+//     let api = data.api.lock().unwrap();
+//     let result = api
+//         .tx()
+//         .market().
+//         (req.market_id)
+//         .sign_and_submit_then_watch(&signer)
+//         .await
+//         .map_err(map_subxt_err)?
+//         .wait_for_finalized_success()
+//         .await
+//         .map_err(map_subxt_err)?;
+//     let result = result
+//         .find_first_event::<sugarfunge::market::events::Created>()
+//         .map_err(map_subxt_err)?;
+//     match result {
+//         Some(event) => Ok(HttpResponse::Ok().json(CreateMarketOutput {
+//             market_id: event.market_id,
+//             who: event.who,
+//         })),
+//         None => Ok(HttpResponse::BadRequest().json(RequestError {
+//             message: json!("Failed to find sugarfunge::bundle::events::Register"),
+//         })),
+//     }
+// }
