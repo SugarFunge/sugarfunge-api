@@ -2953,6 +2953,7 @@ dependencies = [
  "serde_json",
  "sp-core",
  "sp-keyring",
+ "sp-std",
  "structopt",
  "subxt",
  "url",
