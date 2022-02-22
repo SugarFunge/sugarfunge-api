@@ -5,7 +5,6 @@ use actix_web::{error, web, HttpResponse};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sp_core::Pair;
-use std::str::FromStr;
 use subxt::sp_runtime::traits::IdentifyAccount;
 use subxt::PairSigner;
 use sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
@@ -242,4 +241,3 @@ pub async fn burn(
         })),
     }
 }
-

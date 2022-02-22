@@ -1,9 +1,8 @@
 use actix_cors::Cors;
 use actix_web::{
-    middleware,
+    http, middleware,
     web::{self, Data},
     App, HttpServer,
-    get, http, HttpRequest, HttpResponse,
 };
 use command::*;
 use state::*;
@@ -20,8 +19,10 @@ mod command;
 mod currency;
 mod dex;
 mod escrow;
+mod market;
 mod state;
 mod util;
+mod validator;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -40,7 +41,7 @@ async fn main() -> std::io::Result<()> {
         api: Arc::new(Mutex::new(api)),
     };
 
-    HttpServer::new(move || {        
+    HttpServer::new(move || {
         let cors = Cors::default()
             .allowed_origin("http://localhost:8080")
             .allowed_origin_fn(|origin, _req_head| {
@@ -84,6 +85,30 @@ async fn main() -> std::io::Result<()> {
             .route("bundle/register", web::post().to(bundle::register_bundle))
             .route("bundle/mint", web::post().to(bundle::mint_bundle))
             .route("bundle/burn", web::post().to(bundle::burn_bundle))
+            .route(
+                "validator/add_validator",
+                web::post().to(validator::add_validator),
+            )
+            .route(
+                "validator/remove_validator",
+                web::post().to(validator::remove_validator),
+            )
+            .route(
+                "market/create_market",
+                web::post().to(market::create_market),
+            )
+            .route(
+                "market/create_market_rate",
+                web::post().to(market::create_market_rate),
+            )
+            .route(
+                "market/deposit_assets",
+                web::post().to(market::deposit_assets),
+            )
+            .route(
+                "market/exchange_assets",
+                web::post().to(market::exchange_assets),
+            )
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()
