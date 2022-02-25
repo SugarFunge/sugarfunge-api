@@ -244,7 +244,7 @@ pub struct CreateMarketRateInput {
     seed: String,
     market_id: u64,
     market_rate_id: u64,
-    // rates: Rates,
+    rates: Rates,
 }
 #[derive(Serialize, Deserialize)]
 pub struct CreateMarketRateOutput {
@@ -260,15 +260,7 @@ pub async fn create_market_rate(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let api = data.api.lock().unwrap();
-    let rates = vec![AssetRate {
-        class_id: 1,
-        asset_id: 1,
-        action: RateAction::Has(AmountOp::Equal),
-        amount: 100,
-        from: RateAccount::Market,
-        to: RateAccount::Buyer,
-    }];
-    let rates = extrinsinc_rates(&rates);
+    let rates = extrinsinc_rates(&req.rates.rates);
 
     let result = api
         .tx()
