@@ -94,7 +94,7 @@ impl Into<RateAccount> for sugarfunge_market::RateAccount<subxt::sp_runtime::Acc
             sugarfunge_market::RateAccount::Market => RateAccount::Market,
             sugarfunge_market::RateAccount::Account(account) => {
                 let account = account.to_string();
-                RateAccount::Account(account) 
+                RateAccount::Account(account)
             }
         }
     }
@@ -149,7 +149,9 @@ impl Into<AssetRate> for sugarfunge_market::AssetRate<subxt::sp_runtime::Account
     }
 }
 
-impl Into<RateBalance> for sugarfunge_market::RateBalance<subxt::sp_runtime::AccountId32, u64, u64> {
+impl Into<RateBalance>
+    for sugarfunge_market::RateBalance<subxt::sp_runtime::AccountId32, u64, u64>
+{
     fn into(self) -> RateBalance {
         RateBalance {
             rate: self.rate.into(),
@@ -184,7 +186,7 @@ fn transform_balances(
                 RateBalance,
             >>::into(*rate_balance.clone())
         })
-        .collect()    
+        .collect()
 }
 */
 
@@ -242,7 +244,7 @@ pub struct CreateMarketRateInput {
     seed: String,
     market_id: u64,
     market_rate_id: u64,
-    rates: Rates,
+    // rates: Rates,
 }
 #[derive(Serialize, Deserialize)]
 pub struct CreateMarketRateOutput {
@@ -258,8 +260,15 @@ pub async fn create_market_rate(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let api = data.api.lock().unwrap();
-
-    let rates = extrinsinc_rates(&req.rates.rates);
+    let rates = vec![AssetRate {
+        class_id: 1,
+        asset_id: 1,
+        action: RateAction::Has(AmountOp::Equal),
+        amount: 100,
+        from: RateAccount::Market,
+        to: RateAccount::Buyer,
+    }];
+    let rates = extrinsinc_rates(&rates);
 
     let result = api
         .tx()
