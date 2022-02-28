@@ -19,6 +19,18 @@ pub enum AmountOp {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+pub enum AmountOpInput {
+    Transfer,
+    Mint,
+    Burn,
+    HasEqual,
+    HasLessThan,
+    HasLessEqualThan,
+    HasGreaterThan,
+    HasGreaterEqualThan,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub enum RateAction {
     Transfer,
     Mint,
@@ -31,6 +43,22 @@ pub enum RateAccount {
     Market,
     Account(String),
     Buyer,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct AssetRateInput {
+    class_id: u64,
+    asset_id: u64,
+    action: AmountOpInput,
+    amount: i128,
+    from: String,
+    to: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct RatesInput {
+    rates: Vec<AssetRateInput>,
+    metadata: Vec<u8>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -149,6 +177,19 @@ impl Into<AssetRate> for sugarfunge_market::AssetRate<subxt::sp_runtime::Account
     }
 }
 
+impl Into<AssetRate> for AssetRateInput {
+    fn into(self) -> AssetRate {
+        AssetRate {
+            class_id: self.class_id,
+            asset_id: self.asset_id,
+            action: self.action.into(),
+            amount: self.amount,
+            from: self.from.into(),
+            to: self.to.into(),
+        }
+    }
+}
+
 impl Into<RateBalance>
     for sugarfunge_market::RateBalance<subxt::sp_runtime::AccountId32, u64, u64>
 {
@@ -156,6 +197,31 @@ impl Into<RateBalance>
         RateBalance {
             rate: self.rate.into(),
             balance: self.balance,
+        }
+    }
+}
+
+impl Into<RateAction> for AmountOpInput {
+    fn into(self) -> RateAction {
+        match self {
+            AmountOpInput::Transfer => RateAction::Transfer,
+            AmountOpInput::Mint => RateAction::Mint,
+            AmountOpInput::Burn => RateAction::Burn,
+            AmountOpInput::HasEqual => RateAction::Has(AmountOp::Equal),
+            AmountOpInput::HasLessThan => RateAction::Has(AmountOp::LessThan),
+            AmountOpInput::HasLessEqualThan => RateAction::Has(AmountOp::LessEqualThan),
+            AmountOpInput::HasGreaterThan => RateAction::Has(AmountOp::GreaterThan),
+            AmountOpInput::HasGreaterEqualThan => RateAction::Has(AmountOp::GreaterEqualThan),
+        }
+    }
+}
+
+impl Into<RateAccount> for String {
+    fn into(self) -> RateAccount {
+        match self.as_str() {
+            "Buyer" => RateAccount::Buyer,
+            "Market" => RateAccount::Market,
+            _ => RateAccount::Account(self),
         }
     }
 }
@@ -173,6 +239,13 @@ fn extrinsinc_rates(
             })
             .collect(),
     )
+}
+
+fn transform_input(in_rates: &Vec<AssetRateInput>) -> Vec<AssetRate> {
+    in_rates
+        .iter()
+        .map(|rate| <AssetRateInput as Into<AssetRate>>::into(rate.clone()))
+        .collect()
 }
 
 /*
@@ -244,7 +317,7 @@ pub struct CreateMarketRateInput {
     seed: String,
     market_id: u64,
     market_rate_id: u64,
-    rates: Rates,
+    rates: RatesInput,
 }
 #[derive(Serialize, Deserialize)]
 pub struct CreateMarketRateOutput {
@@ -260,7 +333,9 @@ pub async fn create_market_rate(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let api = data.api.lock().unwrap();
-    let rates = extrinsinc_rates(&req.rates.rates);
+
+    let rates = transform_input(&req.rates.rates);
+    let rates = extrinsinc_rates(&rates);
 
     let result = api
         .tx()
