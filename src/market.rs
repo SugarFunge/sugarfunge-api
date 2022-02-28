@@ -56,7 +56,7 @@ pub struct AssetRateInput {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct RatesInput{
+pub struct RatesInput {
     rates: Vec<AssetRateInput>,
     metadata: Vec<u8>,
 }
@@ -122,7 +122,7 @@ impl Into<RateAccount> for sugarfunge_market::RateAccount<subxt::sp_runtime::Acc
             sugarfunge_market::RateAccount::Market => RateAccount::Market,
             sugarfunge_market::RateAccount::Account(account) => {
                 let account = account.to_string();
-                RateAccount::Account(account) 
+                RateAccount::Account(account)
             }
         }
     }
@@ -190,7 +190,9 @@ impl Into<AssetRate> for AssetRateInput {
     }
 }
 
-impl Into<RateBalance> for sugarfunge_market::RateBalance<subxt::sp_runtime::AccountId32, u64, u64> {
+impl Into<RateBalance>
+    for sugarfunge_market::RateBalance<subxt::sp_runtime::AccountId32, u64, u64>
+{
     fn into(self) -> RateBalance {
         RateBalance {
             rate: self.rate.into(),
@@ -206,7 +208,7 @@ impl Into<RateAction> for AmountOpInput {
             AmountOpInput::Mint => RateAction::Mint,
             AmountOpInput::Burn => RateAction::Burn,
             AmountOpInput::HasEqual => RateAction::Has(AmountOp::Equal),
-            AmountOpInput::HasLessThan=> RateAction::Has(AmountOp::LessThan),
+            AmountOpInput::HasLessThan => RateAction::Has(AmountOp::LessThan),
             AmountOpInput::HasLessEqualThan => RateAction::Has(AmountOp::LessEqualThan),
             AmountOpInput::HasGreaterThan => RateAction::Has(AmountOp::GreaterThan),
             AmountOpInput::HasGreaterEqualThan => RateAction::Has(AmountOp::GreaterEqualThan),
@@ -219,9 +221,7 @@ impl Into<RateAccount> for String {
         match self.as_str() {
             "Buyer" => RateAccount::Buyer,
             "Market" => RateAccount::Market,
-            _ => {                
-                RateAccount::Account(self)
-            }
+            _ => RateAccount::Account(self),
         }
     }
 }
@@ -241,33 +241,24 @@ fn extrinsinc_rates(
     )
 }
 
-fn transform_input(
-    in_rates: &Vec<AssetRateInput>,
-) -> Vec<AssetRate> {
+fn transform_input(in_rates: &Vec<AssetRateInput>) -> Vec<AssetRate> {
     in_rates
         .iter()
-        .map(|rate| {
-            <AssetRateInput as Into<
-                AssetRate,
-            >>::into(rate.clone())
-        })
+        .map(|rate| <AssetRateInput as Into<AssetRate>>::into(rate.clone()))
         .collect()
 }
 
-/*
 fn transform_balances(
-    in_balances: &Vec<sugarfunge_market::RateBalance::<subxt::sp_runtime::AccountId32, u64, u64>>,
+    in_balances: Vec<sugarfunge_market::RateBalance<subxt::sp_runtime::AccountId32, u64, u64>>,
 ) -> Vec<RateBalance> {
     in_balances
-        .iter()
-        .map(|rate_balance| {
-            <sugarfunge_market::RateBalance::<subxt::sp_runtime::AccountId32, u64, u64> as Into<
-                RateBalance,
-            >>::into(*rate_balance.clone())
+        .into_iter()
+        .map(|rate_balance| RateBalance {
+            rate: rate_balance.rate.into(),
+            balance: rate_balance.balance,
         })
-        .collect()    
+        .collect()
 }
-*/
 
 #[derive(Serialize, Deserialize)]
 pub struct Rates {
@@ -382,7 +373,7 @@ pub struct DepositAssetsOutput {
     market_id: u64,
     market_rate_id: u64,
     amount: u128,
-    //balances: Vec<RateBalance>,
+    balances: Vec<RateBalance>,
     success: bool,
 }
 
@@ -412,7 +403,7 @@ pub async fn deposit_assets(
             market_id: event.market_id,
             market_rate_id: event.market_rate_id,
             amount: event.amount,
-            //balances: transform_balances(&event.balances),
+            balances: transform_balances(event.balances),
             success: true,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -435,7 +426,7 @@ pub struct ExchangeAssetsOutput {
     market_id: u64,
     market_rate_id: u64,
     amount: u128,
-    //balances: Vec<RateBalance>,
+    balances: Vec<RateBalance>,
     success: bool,
 }
 
@@ -465,7 +456,7 @@ pub async fn exchange_assets(
             market_id: event.market_id,
             market_rate_id: event.market_rate_id,
             amount: event.amount,
-            //balances: transform_balances(&event.balances),
+            balances: transform_balances(event.balances),
             success: true,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
