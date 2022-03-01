@@ -248,20 +248,17 @@ fn transform_input(in_rates: &Vec<AssetRateInput>) -> Vec<AssetRate> {
         .collect()
 }
 
-/*
 fn transform_balances(
-    in_balances: &Vec<sugarfunge_market::RateBalance::<subxt::sp_runtime::AccountId32, u64, u64>>,
+    in_balances: Vec<sugarfunge_market::RateBalance<subxt::sp_runtime::AccountId32, u64, u64>>,
 ) -> Vec<RateBalance> {
     in_balances
-        .iter()
-        .map(|rate_balance| {
-            <sugarfunge_market::RateBalance::<subxt::sp_runtime::AccountId32, u64, u64> as Into<
-                RateBalance,
-            >>::into(*rate_balance.clone())
+        .into_iter()
+        .map(|rate_balance| RateBalance {
+            rate: rate_balance.rate.into(),
+            balance: rate_balance.balance,
         })
         .collect()
 }
-*/
 
 #[derive(Serialize, Deserialize)]
 pub struct Rates {
@@ -376,7 +373,7 @@ pub struct DepositAssetsOutput {
     market_id: u64,
     market_rate_id: u64,
     amount: u128,
-    //balances: Vec<RateBalance>,
+    balances: Vec<RateBalance>,
     success: bool,
 }
 
@@ -406,7 +403,7 @@ pub async fn deposit_assets(
             market_id: event.market_id,
             market_rate_id: event.market_rate_id,
             amount: event.amount,
-            //balances: transform_balances(&event.balances),
+            balances: transform_balances(event.balances),
             success: true,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -429,7 +426,7 @@ pub struct ExchangeAssetsOutput {
     market_id: u64,
     market_rate_id: u64,
     amount: u128,
-    //balances: Vec<RateBalance>,
+    balances: Vec<RateBalance>,
     success: bool,
 }
 
@@ -459,7 +456,7 @@ pub async fn exchange_assets(
             market_id: event.market_id,
             market_rate_id: event.market_rate_id,
             amount: event.amount,
-            //balances: transform_balances(&event.balances),
+            balances: transform_balances(event.balances),
             success: true,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
