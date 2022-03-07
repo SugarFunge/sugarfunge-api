@@ -1,5 +1,6 @@
 use crate::state::*;
 use crate::sugarfunge;
+use crate::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde::{Deserialize, Serialize};
@@ -30,7 +31,8 @@ pub async fn create_class(
     let signer = PairSigner::new(pair);
     let to = sp_core::sr25519::Public::from_str(&req.owner).map_err(map_account_err)?;
     let to = sp_core::crypto::AccountId32::from(to);
-    let metadata: Vec<u8> = serde_json::to_vec(&req.metadata).unwrap_or_default();
+    let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
+    let metadata = BoundedVec(metadata);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
@@ -42,11 +44,9 @@ pub async fn create_class(
         .wait_for_finalized_success()
         .await
         .map_err(map_subxt_err)?;
-
     let result = result
         .find_first_event::<sugarfunge::asset::events::ClassCreated>()
         .map_err(map_subxt_err)?;
-
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateClassOutput {
             class_id: event.class_id,
@@ -81,6 +81,7 @@ pub async fn create(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let metadata: Vec<u8> = serde_json::to_vec(&req.metadata).unwrap_or_default();
+    let metadata = BoundedVec(metadata);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
@@ -92,11 +93,9 @@ pub async fn create(
         .wait_for_finalized_success()
         .await
         .map_err(map_subxt_err)?;
-
     let result = result
         .find_first_event::<sugarfunge::asset::events::AssetCreated>()
         .map_err(map_subxt_err)?;
-
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateOutput {
             class_id: event.class_id,

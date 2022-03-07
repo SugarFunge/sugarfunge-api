@@ -9,7 +9,7 @@ use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum AmountOp {
     Equal,
     LessThan,
@@ -30,7 +30,7 @@ pub enum AmountOpInput {
     HasGreaterEqualThan,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum RateAction {
     Transfer,
     Mint,
@@ -38,7 +38,7 @@ pub enum RateAction {
     Has(AmountOp),
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum RateAccount {
     Market,
     Account(String),
@@ -61,7 +61,7 @@ pub struct RatesInput {
     metadata: Vec<u8>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AssetRate {
     class_id: u64,
     asset_id: u64,
@@ -71,7 +71,7 @@ pub struct AssetRate {
     to: RateAccount,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RateBalance {
     rate: AssetRate,
     balance: i128,
@@ -464,4 +464,3 @@ pub async fn exchange_assets(
         })),
     }
 }
-//*/

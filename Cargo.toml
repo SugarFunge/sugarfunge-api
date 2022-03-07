@@ -21,21 +21,21 @@ derive_more = { version = "0.99.0", default-features = false }
 [dependencies.subxt]
 # path = "../subxt"
 git = "https://github.com/SugarFunge/subxt.git"
-rev = "c1279cfea1935eefd2451d4d5d28d62ded35604e"
+rev = "15b4f70c40d72ceb259a63bf8c62fb3022e29a86"
 
 [dependencies.sp-keyring]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.15"
+branch = "polkadot-v0.9.17"
 package = "sp-keyring"
 
 [dependencies.sp-std]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.15"
+branch = "polkadot-v0.9.17"
 package = "sp-std"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.15"
+branch = "polkadot-v0.9.17"
 package = "sp-core"
 features = ["full_crypto"]
 

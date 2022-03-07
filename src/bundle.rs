@@ -58,6 +58,7 @@ pub async fn register_bundle(
         ),
     );
     let metadata: Vec<u8> = serde_json::to_vec(&req.metadata).unwrap_or_default();
+    let metadata = BoundedVec(metadata);
     let api = data.api.lock().unwrap();
     let result = api
         .tx()

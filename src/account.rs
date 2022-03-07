@@ -7,8 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sp_core::Pair;
 use std::str::FromStr;
-use subxt::sp_runtime::traits::IdentifyAccount;
-use subxt::PairSigner;
+use subxt::{PairSigner, sp_runtime::traits::IdentifyAccount};
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateAccountOutput {
