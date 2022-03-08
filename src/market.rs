@@ -404,7 +404,7 @@ pub async fn deposit_assets(
             market_rate_id: event.market_rate_id,
             amount: event.amount,
             balances: transform_balances(event.balances),
-            success: true,
+            success: event.success,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::Deposit"),
@@ -457,7 +457,7 @@ pub async fn exchange_assets(
             market_rate_id: event.market_rate_id,
             amount: event.amount,
             balances: transform_balances(event.balances),
-            success: true,
+            success: event.success,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::Exchange"),
