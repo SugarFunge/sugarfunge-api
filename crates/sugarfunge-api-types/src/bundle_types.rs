@@ -2,61 +2,61 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct BundleSchema {
-    class_ids: Vec<u64>,
-    asset_ids: Vec<Vec<u64>>,
-    amounts: Vec<Vec<u128>>,
+    pub class_ids: Vec<u64>,
+    pub asset_ids: Vec<Vec<u64>>,
+    pub amounts: Vec<Vec<u128>>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct RegisterBundleInput {
-    seed: String,
-    class_id: u64,
-    asset_id: u64,
-    bundle_id: String,
-    schema: BundleSchema,
-    metadata: serde_json::Value,
+    pub seed: String,
+    pub class_id: u64,
+    pub asset_id: u64,
+    pub bundle_id: String,
+    pub schema: BundleSchema,
+    pub metadata: serde_json::Value,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct RegisterBundleOutput {
-    bundle_id: String,
-    who: String,
-    class_id: u64,
-    asset_id: u64,
+    pub bundle_id: String,
+    pub who: String,
+    pub class_id: u64,
+    pub asset_id: u64,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct MintBundleInput {
-    seed: String,
-    from: String,
-    to: String,
-    bundle_id: String,
-    amount: u128,
+    pub seed: String,
+    pub from: String,
+    pub to: String,
+    pub bundle_id: String,
+    pub amount: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct MintBundleOutput {
-    who: String,
-    from: String,
-    to: String,
-    bundle_id: String,
-    amount: u128,
+    pub who: String,
+    pub from: String,
+    pub to: String,
+    pub bundle_id: String,
+    pub amount: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BurnBundleInput {
-    seed: String,
-    from: String,
-    to: String,
-    bundle_id: String,
-    amount: u128,
+    pub seed: String,
+    pub from: String,
+    pub to: String,
+    pub bundle_id: String,
+    pub amount: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BurnBundleOutput {
-    who: String,
-    from: String,
-    to: String,
-    bundle_id: String,
-    amount: u128,
+    pub who: String,
+    pub from: String,
+    pub to: String,
+    pub bundle_id: String,
+    pub amount: u128,
 }

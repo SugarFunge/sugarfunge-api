@@ -38,97 +38,97 @@ pub enum RateAccount {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct AssetRateInput {
-    class_id: u64,
-    asset_id: u64,
-    action: AmountOpInput,
-    amount: i128,
-    from: String,
-    to: String,
+    pub class_id: u64,
+    pub asset_id: u64,
+    pub action: AmountOpInput,
+    pub amount: i128,
+    pub from: String,
+    pub to: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RatesInput {
-    rates: Vec<AssetRateInput>,
-    metadata: Vec<u8>,
+    pub rates: Vec<AssetRateInput>,
+    pub metadata: Vec<u8>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AssetRate {
-    class_id: u64,
-    asset_id: u64,
-    action: RateAction,
-    amount: i128,
-    from: RateAccount,
-    to: RateAccount,
+    pub class_id: u64,
+    pub asset_id: u64,
+    pub action: RateAction,
+    pub amount: i128,
+    pub from: RateAccount,
+    pub to: RateAccount,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RateBalance {
-    rate: AssetRate,
-    balance: i128,
+    pub rate: AssetRate,
+    pub balance: i128,
 }
 #[derive(Serialize, Deserialize)]
 pub struct Rates {
-    rates: Vec<AssetRate>,
-    metadata: Vec<u8>,
+    pub rates: Vec<AssetRate>,
+    pub metadata: Vec<u8>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateMarketInput {
-    seed: String,
-    market_id: u64,
+    pub seed: String,
+    pub market_id: u64,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateMarketOutput {
-    market_id: u64,
-    who: String,
+    pub market_id: u64,
+    pub who: String,
 }
 #[derive(Serialize, Deserialize)]
 pub struct CreateMarketRateInput {
-    seed: String,
-    market_id: u64,
-    market_rate_id: u64,
-    rates: RatesInput,
+    pub seed: String,
+    pub market_id: u64,
+    pub market_rate_id: u64,
+    pub rates: RatesInput,
 }
 #[derive(Serialize, Deserialize)]
 pub struct CreateMarketRateOutput {
-    market_id: u64,
-    market_rate_id: u64,
-    who: String,
+    pub market_id: u64,
+    pub market_rate_id: u64,
+    pub who: String,
 }
 #[derive(Serialize, Deserialize)]
 pub struct DepositAssetsInput {
-    seed: String,
-    market_id: u64,
-    market_rate_id: u64,
-    amount: u128,
+    pub seed: String,
+    pub market_id: u64,
+    pub market_rate_id: u64,
+    pub amount: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct DepositAssetsOutput {
-    who: String,
-    market_id: u64,
-    market_rate_id: u64,
-    amount: u128,
-    balances: Vec<RateBalance>,
-    success: bool,
+    pub who: String,
+    pub market_id: u64,
+    pub market_rate_id: u64,
+    pub amount: u128,
+    pub balances: Vec<RateBalance>,
+    pub success: bool,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct ExchangeAssetsInput {
-    seed: String,
-    market_id: u64,
-    market_rate_id: u64,
-    amount: u128,
+    pub seed: String,
+    pub market_id: u64,
+    pub market_rate_id: u64,
+    pub amount: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct ExchangeAssetsOutput {
-    buyer: String,
-    market_id: u64,
-    market_rate_id: u64,
-    amount: u128,
-    balances: Vec<RateBalance>,
-    success: bool,
+    pub buyer: String,
+    pub market_id: u64,
+    pub market_rate_id: u64,
+    pub amount: u128,
+    pub balances: Vec<RateBalance>,
+    pub success: bool,
 }

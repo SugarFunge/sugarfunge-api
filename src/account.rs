@@ -8,6 +8,7 @@ use serde_json::json;
 use sp_core::Pair;
 use std::str::FromStr;
 use subxt::{sp_runtime::traits::IdentifyAccount, PairSigner};
+use sugarfunge_api_types::account_types::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateAccountOutput {
@@ -22,7 +23,7 @@ pub async fn create(_req: HttpRequest) -> error::Result<HttpResponse> {
     let seed = format!("//{}", seed);
     let pair = get_pair_from_seed(&seed)?;
     let account = pair.public().into_account();
-    Ok(HttpResponse::Ok().json(CreateAccountOutput {
+    Ok(HttpResponse::Ok().json(CreateAccountOutput1 {
         seed,
         account: format!("{}", account),
     }))

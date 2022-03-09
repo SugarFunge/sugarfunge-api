@@ -1,44 +1,43 @@
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Serialize, Deserialize)]
 pub struct CreateEscrowInput {
-    seed: String,
-    owner: String,
+    pub seed: String,
+    pub owner: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateEscrowOutput {
-    escrow: String,
-    operator: String,
-    owner: String,
+    pub escrow: String,
+    pub operator: String,
+    pub owner: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct RefundAssetsInput {
-    seed: String,
-    escrow: String,
+    pub seed: String,
+    pub escrow: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct RefundAssetsOutput {
-    escrow: String,
-    operator: String,
-    owner: String,
+    pub escrow: String,
+    pub operator: String,
+    pub owner: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct DepositAssetsInput {
-    seed: String,
-    escrow: String,
-    class_id: u64,
-    asset_ids: Vec<u64>,
-    amounts: Vec<u128>,
+    pub seed: String,
+    pub escrow: String,
+    pub class_id: u64,
+    pub asset_ids: Vec<u64>,
+    pub amounts: Vec<u128>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct DepositAssetsOutput {
-    escrow: String,
-    operator: String,
-    owner: String,
+    pub escrow: String,
+    pub operator: String,
+    pub owner: String,
 }
