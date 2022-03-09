@@ -6,14 +6,14 @@ pub struct Currency {
     asset_id: u64,
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct IssueCurrencyInput {
     seed: String,
     currency: Currency,
     amount: i128,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct IssueCurrencyOutput {
     currency: Currency,
     who: String,

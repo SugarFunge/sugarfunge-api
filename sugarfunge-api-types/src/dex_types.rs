@@ -6,16 +6,16 @@ pub struct Currency {
     asset_id: u64,
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct CreateDexInput {
     seed: String,
     exchange_id: u32,
     currency: Currency,
     asset_class_id: u64,
-    lp_class_id: u64, // liquidity pool id
+    lp_class_id: u64,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct CreateDexOutput {
     exchange_id: u32,
     who: String,
