@@ -2,32 +2,11 @@ use crate::state::*;
 use crate::sugarfunge;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
 use sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
-
-#[derive(Serialize, Deserialize)]
-pub struct Currency {
-    class_id: u64,
-    asset_id: u64,
-}
-
-#[derive(Deserialize)]
-pub struct CreateDexInput {
-    seed: String,
-    exchange_id: u32,
-    currency: Currency,
-    asset_class_id: u64,
-    lp_class_id: u64, // liquidity pool id
-}
-
-#[derive(Serialize)]
-pub struct CreateDexOutput {
-    exchange_id: u32,
-    who: String,
-}
+use sugarfunge_api_types::dex_types::*;
 
 /// Create dex for currency and asset class
 pub async fn create(
@@ -65,26 +44,6 @@ pub async fn create(
             message: json!("Failed to find sugarfunge::balances::events::Transfer"),
         })),
     }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct BuyAssetsInput {
-    seed: String,
-    exchange_id: u32,
-    asset_ids: Vec<u64>,
-    asset_amounts_out: Vec<u128>,
-    max_currency: u128,
-    to: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct BuyAssetsOutput {
-    exchange_id: u32,
-    who: String,
-    to: String,
-    asset_ids: Vec<u64>,
-    asset_amounts_out: Vec<u128>,
-    currency_amounts_in: Vec<u128>,
 }
 
 /// Buy assets with currency
@@ -131,26 +90,6 @@ pub async fn buy_assets(
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct SellAssetsInput {
-    seed: String,
-    exchange_id: u32,
-    asset_ids: Vec<u64>,
-    asset_amounts_in: Vec<u128>,
-    min_currency: u128,
-    to: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct SellAssetsOutput {
-    exchange_id: u32,
-    who: String,
-    to: String,
-    asset_ids: Vec<u64>,
-    asset_amounts_in: Vec<u128>,
-    currency_amounts_out: Vec<u128>,
-}
-
 /// Sell assets for currency
 pub async fn sell_assets(
     data: web::Data<AppState>,
@@ -195,26 +134,6 @@ pub async fn sell_assets(
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct AddLiquidityInput {
-    seed: String,
-    to: String,
-    exchange_id: u32,
-    asset_ids: Vec<u64>,
-    asset_amounts: Vec<u128>,
-    max_currencies: Vec<u128>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AddLiquidityOutput {
-    exchange_id: u32,
-    who: String,
-    to: String,
-    asset_ids: Vec<u64>,
-    asset_amounts: Vec<u128>,
-    currency_amounts: Vec<u128>,
-}
-
 /// Add liquidity to dex
 pub async fn add_liquidity(
     data: web::Data<AppState>,
@@ -257,27 +176,6 @@ pub async fn add_liquidity(
             message: json!("Failed to find sugarfunge::dex::events::CurrencyToAsset"),
         })),
     }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct RemoveLiquidityInput {
-    seed: String,
-    to: String,
-    exchange_id: u32,
-    asset_ids: Vec<u64>,
-    liquidities: Vec<u128>,
-    min_currencies: Vec<u128>,
-    min_assets: Vec<u128>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct RemoveLiquidityOutput {
-    exchange_id: u32,
-    who: String,
-    to: String,
-    asset_ids: Vec<u64>,
-    asset_amounts: Vec<u128>,
-    currency_amounts: Vec<u128>,
 }
 
 /// Remove liquidity from dex

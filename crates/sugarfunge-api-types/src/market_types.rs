@@ -67,12 +67,50 @@ pub struct RateBalance {
     pub rate: AssetRate,
     pub balance: i128,
 }
+
 #[derive(Serialize, Deserialize)]
 pub struct Rates {
     pub rates: Vec<AssetRate>,
     pub metadata: Vec<u8>,
 }
 
+impl Into<AssetRate> for AssetRateInput {
+    fn into(self) -> AssetRate {
+        AssetRate {
+            class_id: self.class_id,
+            asset_id: self.asset_id,
+            action: self.action.into(),
+            amount: self.amount,
+            from: self.from.into(),
+            to: self.to.into(),
+        }
+    }
+}
+
+impl Into<RateAction> for AmountOpInput {
+    fn into(self) -> RateAction {
+        match self {
+            AmountOpInput::Transfer => RateAction::Transfer,
+            AmountOpInput::Mint => RateAction::Mint,
+            AmountOpInput::Burn => RateAction::Burn,
+            AmountOpInput::HasEqual => RateAction::Has(AmountOp::Equal),
+            AmountOpInput::HasLessThan => RateAction::Has(AmountOp::LessThan),
+            AmountOpInput::HasLessEqualThan => RateAction::Has(AmountOp::LessEqualThan),
+            AmountOpInput::HasGreaterThan => RateAction::Has(AmountOp::GreaterThan),
+            AmountOpInput::HasGreaterEqualThan => RateAction::Has(AmountOp::GreaterEqualThan),
+        }
+    }
+}
+
+impl Into<RateAccount> for String {
+    fn into(self) -> RateAccount {
+        match self.as_str() {
+            "Buyer" => RateAccount::Buyer,
+            "Market" => RateAccount::Market,
+            _ => RateAccount::Account(self),
+        }
+    }
+}
 #[derive(Serialize, Deserialize)]
 pub struct CreateMarketInput {
     pub seed: String,
@@ -84,6 +122,7 @@ pub struct CreateMarketOutput {
     pub market_id: u64,
     pub who: String,
 }
+
 #[derive(Serialize, Deserialize)]
 pub struct CreateMarketRateInput {
     pub seed: String,
@@ -97,6 +136,7 @@ pub struct CreateMarketRateOutput {
     pub market_rate_id: u64,
     pub who: String,
 }
+
 #[derive(Serialize, Deserialize)]
 pub struct DepositAssetsInput {
     pub seed: String,

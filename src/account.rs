@@ -3,18 +3,11 @@ use crate::sugarfunge;
 use crate::util::*;
 use actix_web::{error, web, HttpRequest, HttpResponse};
 use rand::prelude::*;
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sp_core::Pair;
 use std::str::FromStr;
 use subxt::{sp_runtime::traits::IdentifyAccount, PairSigner};
 use sugarfunge_api_types::account_types::*;
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateAccountOutput {
-    seed: String,
-    account: String,
-}
 
 /// Generate a unique seed and its associated account
 pub async fn create(_req: HttpRequest) -> error::Result<HttpResponse> {
@@ -23,24 +16,10 @@ pub async fn create(_req: HttpRequest) -> error::Result<HttpResponse> {
     let seed = format!("//{}", seed);
     let pair = get_pair_from_seed(&seed)?;
     let account = pair.public().into_account();
-    Ok(HttpResponse::Ok().json(CreateAccountOutput1 {
+    Ok(HttpResponse::Ok().json(CreateAccountOutput {
         seed,
         account: format!("{}", account),
     }))
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct FundAccountInput {
-    seed: String,
-    to: String,
-    amount: u128,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct FundAccountOutput {
-    from: String,
-    to: String,
-    amount: u128,
 }
 
 /// Fund a given account with amount
@@ -78,16 +57,6 @@ pub async fn fund(
             message: json!("Failed to find sugarfunge::balances::events::Transfer"),
         })),
     }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AccountBalanceInput {
-    account: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AccountBalanceOutput {
-    balance: u128,
 }
 
 /// Get balance for given account

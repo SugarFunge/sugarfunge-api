@@ -2,24 +2,10 @@ use crate::state::*;
 use crate::sugarfunge;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
-
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateEscrowInput {
-    seed: String,
-    owner: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateEscrowOutput {
-    escrow: String,
-    operator: String,
-    owner: String,
-}
+use sugarfunge_api_types::escrow_types::*;
 
 pub async fn create_escrow(
     data: web::Data<AppState>,
@@ -31,12 +17,10 @@ pub async fn create_escrow(
     let to = sp_core::crypto::AccountId32::from(to);
     let api = data.api.lock().unwrap();
     let result = api
-    .tx()
-    .escrow()
-    .create_escrow(
-        to,
-    )
-    .sign_and_submit_then_watch(&signer)
+        .tx()
+        .escrow()
+        .create_escrow(to)
+        .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -57,19 +41,6 @@ pub async fn create_escrow(
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct RefundAssetsInput {
-    seed: String,
-    escrow: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct RefundAssetsOutput {
-    escrow: String,
-    operator: String,
-    owner: String,
-}
-
 pub async fn refund_assets(
     data: web::Data<AppState>,
     req: web::Json<RefundAssetsInput>,
@@ -80,12 +51,10 @@ pub async fn refund_assets(
     let to = sp_core::crypto::AccountId32::from(to);
     let api = data.api.lock().unwrap();
     let result = api
-    .tx()
-    .escrow()
-    .refund_assets(
-        to,
-    )
-    .sign_and_submit_then_watch(&signer)
+        .tx()
+        .escrow()
+        .refund_assets(to)
+        .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -106,22 +75,6 @@ pub async fn refund_assets(
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct DepositAssetsInput {
-    seed: String,
-    escrow: String,
-    class_id: u64,
-    asset_ids: Vec<u64>,
-    amounts: Vec<u128>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct DepositAssetsOutput {
-    escrow: String,
-    operator: String,
-    owner: String,
-}
-
 pub async fn deposit_assets(
     data: web::Data<AppState>,
     req: web::Json<DepositAssetsInput>,
@@ -132,15 +85,10 @@ pub async fn deposit_assets(
     let to = sp_core::crypto::AccountId32::from(to);
     let api = data.api.lock().unwrap();
     let result = api
-    .tx()
-    .escrow()
-    .deposit_assets(
-        to,
-        req.class_id,
-        req.asset_ids.clone(),
-        req.amounts.clone(),
-    )
-    .sign_and_submit_then_watch(&signer)
+        .tx()
+        .escrow()
+        .deposit_assets(to, req.class_id, req.asset_ids.clone(), req.amounts.clone())
+        .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()

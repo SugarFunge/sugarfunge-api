@@ -3,24 +3,10 @@ use crate::sugarfunge;
 use crate::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateClassInput {
-    seed: String,
-    class_id: u64,
-    metadata: serde_json::Value,
-    owner: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateClassOutput {
-    class_id: u64,
-    who: String,
-}
+use sugarfunge_api_types::asset_types::*;
 
 /// Create an asset class for an account
 pub async fn create_class(
@@ -58,21 +44,6 @@ pub async fn create_class(
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct CreateInput {
-    seed: String,
-    class_id: u64,
-    asset_id: u64,
-    metadata: serde_json::Value,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateOutput {
-    class_id: u64,
-    asset_id: u64,
-    who: String,
-}
-
 /// Create an asset for class
 pub async fn create(
     data: web::Data<AppState>,
@@ -106,24 +77,6 @@ pub async fn create(
             message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
         })),
     }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct MintInput {
-    seed: String,
-    to: String,
-    class_id: u64,
-    asset_id: u64,
-    amount: u128,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct MintOutput {
-    to: String,
-    class_id: u64,
-    asset_id: u64,
-    amount: u128,
-    who: String,
 }
 
 /// Mint amount of asset to account
@@ -163,24 +116,6 @@ pub async fn mint(
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct BurnInput {
-    seed: String,
-    from: String,
-    class_id: u64,
-    asset_id: u64,
-    amount: u128,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct BurnOutput {
-    from: String,
-    class_id: u64,
-    asset_id: u64,
-    amount: u128,
-    who: String,
-}
-
 /// Burn amount of asset from account
 pub async fn burn(
     data: web::Data<AppState>,
@@ -218,18 +153,6 @@ pub async fn burn(
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct AssetBalanceInput {
-    account: String,
-    class_id: u64,
-    asset_id: u64,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AssetBalanceOutput {
-    amount: u128,
-}
-
 /// Get balance for given asset
 pub async fn balance(
     data: web::Data<AppState>,
@@ -245,64 +168,6 @@ pub async fn balance(
         .await;
     let amount = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(AssetBalanceOutput { amount }))
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AssetBalancesInput {
-    account: String,
-    class_id: Option<u64>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AssetBalancesOutput {
-    balances: Vec<AssetBalanceItemOutput>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AssetBalanceItemOutput {
-    class_id: u64,
-    asset_id: u64,
-    amount: u128,
-}
-
-/// Get balances for given account
-// pub async fn balances(
-//     data: web::Data<AppState>,
-//     req: web::Json<AssetBalancesInput>,
-// ) -> error::Result<HttpResponse> {
-//     let account =
-//         sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
-//     let account = sp_core::crypto::AccountId32::from(account);
-//     let api = data.api.lock().unwrap();
-//     // let result = api
-//     //     .storage()
-//     //     .asset()
-//     //     .balances(account, req.class_id, req.asset_id, None)
-//     //     .await;
-//     let result = api.storage().asset().balances_iter(None).await.map_err(map_subxt_err)?;
-//     result.next()
-//     let amount = result.map_err(map_subxt_err)?;
-//     Ok(HttpResponse::Ok().json(AssetBalancesOutput { amount }))
-// }
-
-#[derive(Serialize, Deserialize)]
-pub struct TransferFromInput {
-    seed: String,
-    from: String,
-    to: String,
-    class_id: u64,
-    asset_id: u64,
-    amount: u128,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct TransferFromOutput {
-    from: String,
-    to: String,
-    class_id: u64,
-    asset_id: u64,
-    amount: u128,
-    who: String,
 }
 
 /// Transfer asset from to accounts

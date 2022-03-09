@@ -4,78 +4,10 @@ use crate::sugarfunge::runtime_types::frame_support::storage::bounded_vec::Bound
 use crate::sugarfunge::runtime_types::sugarfunge_market;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum AmountOp {
-    Equal,
-    LessThan,
-    LessEqualThan,
-    GreaterThan,
-    GreaterEqualThan,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub enum AmountOpInput {
-    Transfer,
-    Mint,
-    Burn,
-    HasEqual,
-    HasLessThan,
-    HasLessEqualThan,
-    HasGreaterThan,
-    HasGreaterEqualThan,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum RateAction {
-    Transfer,
-    Mint,
-    Burn,
-    Has(AmountOp),
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum RateAccount {
-    Market,
-    Account(String),
-    Buyer,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct AssetRateInput {
-    class_id: u64,
-    asset_id: u64,
-    action: AmountOpInput,
-    amount: i128,
-    from: String,
-    to: String,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct RatesInput {
-    rates: Vec<AssetRateInput>,
-    metadata: Vec<u8>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct AssetRate {
-    class_id: u64,
-    asset_id: u64,
-    action: RateAction,
-    amount: i128,
-    from: RateAccount,
-    to: RateAccount,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct RateBalance {
-    rate: AssetRate,
-    balance: i128,
-}
+use sugarfunge_api_types::market_types::*;
 
 impl Into<sugarfunge_market::AmountOp> for AmountOp {
     fn into(self) -> sugarfunge_market::AmountOp {
@@ -177,19 +109,6 @@ impl Into<AssetRate> for sugarfunge_market::AssetRate<subxt::sp_runtime::Account
     }
 }
 
-impl Into<AssetRate> for AssetRateInput {
-    fn into(self) -> AssetRate {
-        AssetRate {
-            class_id: self.class_id,
-            asset_id: self.asset_id,
-            action: self.action.into(),
-            amount: self.amount,
-            from: self.from.into(),
-            to: self.to.into(),
-        }
-    }
-}
-
 impl Into<RateBalance>
     for sugarfunge_market::RateBalance<subxt::sp_runtime::AccountId32, u64, u64>
 {
@@ -197,31 +116,6 @@ impl Into<RateBalance>
         RateBalance {
             rate: self.rate.into(),
             balance: self.balance,
-        }
-    }
-}
-
-impl Into<RateAction> for AmountOpInput {
-    fn into(self) -> RateAction {
-        match self {
-            AmountOpInput::Transfer => RateAction::Transfer,
-            AmountOpInput::Mint => RateAction::Mint,
-            AmountOpInput::Burn => RateAction::Burn,
-            AmountOpInput::HasEqual => RateAction::Has(AmountOp::Equal),
-            AmountOpInput::HasLessThan => RateAction::Has(AmountOp::LessThan),
-            AmountOpInput::HasLessEqualThan => RateAction::Has(AmountOp::LessEqualThan),
-            AmountOpInput::HasGreaterThan => RateAction::Has(AmountOp::GreaterThan),
-            AmountOpInput::HasGreaterEqualThan => RateAction::Has(AmountOp::GreaterEqualThan),
-        }
-    }
-}
-
-impl Into<RateAccount> for String {
-    fn into(self) -> RateAccount {
-        match self.as_str() {
-            "Buyer" => RateAccount::Buyer,
-            "Market" => RateAccount::Market,
-            _ => RateAccount::Account(self),
         }
     }
 }
@@ -260,24 +154,6 @@ fn transform_balances(
         .collect()
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct Rates {
-    rates: Vec<AssetRate>,
-    metadata: Vec<u8>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateMarketInput {
-    seed: String,
-    market_id: u64,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateMarketOutput {
-    market_id: u64,
-    who: String,
-}
-
 pub async fn create_market(
     data: web::Data<AppState>,
     req: web::Json<CreateMarketInput>,
@@ -307,20 +183,6 @@ pub async fn create_market(
             message: json!("Failed to find sugarfunge::market::events::Created"),
         })),
     }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CreateMarketRateInput {
-    seed: String,
-    market_id: u64,
-    market_rate_id: u64,
-    rates: RatesInput,
-}
-#[derive(Serialize, Deserialize)]
-pub struct CreateMarketRateOutput {
-    market_id: u64,
-    market_rate_id: u64,
-    who: String,
 }
 
 pub async fn create_market_rate(
@@ -359,24 +221,6 @@ pub async fn create_market_rate(
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct DepositAssetsInput {
-    seed: String,
-    market_id: u64,
-    market_rate_id: u64,
-    amount: u128,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct DepositAssetsOutput {
-    who: String,
-    market_id: u64,
-    market_rate_id: u64,
-    amount: u128,
-    balances: Vec<RateBalance>,
-    success: bool,
-}
-
 pub async fn deposit_assets(
     data: web::Data<AppState>,
     req: web::Json<DepositAssetsInput>,
@@ -410,24 +254,6 @@ pub async fn deposit_assets(
             message: json!("Failed to find sugarfunge::market::events::Deposit"),
         })),
     }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct ExchangeAssetsInput {
-    seed: String,
-    market_id: u64,
-    market_rate_id: u64,
-    amount: u128,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct ExchangeAssetsOutput {
-    buyer: String,
-    market_id: u64,
-    market_rate_id: u64,
-    amount: u128,
-    balances: Vec<RateBalance>,
-    success: bool,
 }
 
 pub async fn exchange_assets(

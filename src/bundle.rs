@@ -3,35 +3,10 @@ use crate::sugarfunge;
 use crate::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
-
-#[derive(Serialize, Deserialize)]
-pub struct BundleSchema {
-    class_ids: Vec<u64>,
-    asset_ids: Vec<Vec<u64>>,
-    amounts: Vec<Vec<u128>>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct RegisterBundleInput {
-    seed: String,
-    class_id: u64,
-    asset_id: u64,
-    bundle_id: String,
-    schema: BundleSchema,
-    metadata: serde_json::Value,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct RegisterBundleOutput {
-    bundle_id: String,
-    who: String,
-    class_id: u64,
-    asset_id: u64,
-}
+use sugarfunge_api_types::bundle_types::*;
 
 pub async fn register_bundle(
     data: web::Data<AppState>,
@@ -86,24 +61,6 @@ pub async fn register_bundle(
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct MintBundleInput {
-    seed: String,
-    from: String,
-    to: String,
-    bundle_id: String,
-    amount: u128,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct MintBundleOutput {
-    who: String,
-    from: String,
-    to: String,
-    bundle_id: String,
-    amount: u128,
-}
-
 pub async fn mint_bundle(
     data: web::Data<AppState>,
     req: web::Json<MintBundleInput>,
@@ -141,24 +98,6 @@ pub async fn mint_bundle(
             message: json!("Failed to find sugarfunge::bundle::events::Mint"),
         })),
     }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct BurnBundleInput {
-    seed: String,
-    from: String,
-    to: String,
-    bundle_id: String,
-    amount: u128,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct BurnBundleOutput {
-    who: String,
-    from: String,
-    to: String,
-    bundle_id: String,
-    amount: u128,
 }
 
 pub async fn burn_bundle(
