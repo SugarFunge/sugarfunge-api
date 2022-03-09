@@ -1,13 +1,13 @@
 use crate::state::*;
-use crate::sugarfunge;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use sp_core::Pair;
 use subxt::sp_runtime::traits::IdentifyAccount;
 use subxt::PairSigner;
-use sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
 use sugarfunge_api_types::currency_types::*;
+use sugarfunge_api_types::sugarfunge;
+use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
 
 /// Issue amount of currency
 pub async fn issue(

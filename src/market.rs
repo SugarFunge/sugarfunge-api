@@ -1,124 +1,13 @@
 use crate::state::*;
-use crate::sugarfunge;
-use crate::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
-use crate::sugarfunge::runtime_types::sugarfunge_market;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
 use sugarfunge_api_types::market_types::*;
-
-impl Into<sugarfunge_market::AmountOp> for AmountOp {
-    fn into(self) -> sugarfunge_market::AmountOp {
-        match self {
-            AmountOp::Equal => sugarfunge_market::AmountOp::Equal,
-            AmountOp::GreaterEqualThan => sugarfunge_market::AmountOp::GreaterEqualThan,
-            AmountOp::GreaterThan => sugarfunge_market::AmountOp::GreaterThan,
-            AmountOp::LessEqualThan => sugarfunge_market::AmountOp::LessEqualThan,
-            AmountOp::LessThan => sugarfunge_market::AmountOp::LessThan,
-        }
-    }
-}
-
-impl Into<AmountOp> for sugarfunge_market::AmountOp {
-    fn into(self) -> AmountOp {
-        match self {
-            sugarfunge_market::AmountOp::Equal => AmountOp::Equal,
-            sugarfunge_market::AmountOp::GreaterEqualThan => AmountOp::GreaterEqualThan,
-            sugarfunge_market::AmountOp::GreaterThan => AmountOp::GreaterThan,
-            sugarfunge_market::AmountOp::LessEqualThan => AmountOp::LessEqualThan,
-            sugarfunge_market::AmountOp::LessThan => AmountOp::LessThan,
-        }
-    }
-}
-
-impl Into<sugarfunge_market::RateAccount<subxt::sp_runtime::AccountId32>> for RateAccount {
-    fn into(self) -> sugarfunge_market::RateAccount<subxt::sp_runtime::AccountId32> {
-        match self {
-            RateAccount::Buyer => sugarfunge_market::RateAccount::Buyer,
-            RateAccount::Market => sugarfunge_market::RateAccount::Market,
-            RateAccount::Account(account) => {
-                let account = sp_core::sr25519::Public::from_str(&account).unwrap();
-                let account = sp_core::crypto::AccountId32::from(account);
-                sugarfunge_market::RateAccount::Account(account)
-            }
-        }
-    }
-}
-
-impl Into<RateAccount> for sugarfunge_market::RateAccount<subxt::sp_runtime::AccountId32> {
-    fn into(self) -> RateAccount {
-        match self {
-            sugarfunge_market::RateAccount::Buyer => RateAccount::Buyer,
-            sugarfunge_market::RateAccount::Market => RateAccount::Market,
-            sugarfunge_market::RateAccount::Account(account) => {
-                let account = account.to_string();
-                RateAccount::Account(account)
-            }
-        }
-    }
-}
-
-impl Into<sugarfunge_market::RateAction> for RateAction {
-    fn into(self) -> sugarfunge_market::RateAction {
-        match self {
-            RateAction::Transfer => sugarfunge_market::RateAction::Transfer,
-            RateAction::Mint => sugarfunge_market::RateAction::Mint,
-            RateAction::Burn => sugarfunge_market::RateAction::Burn,
-            RateAction::Has(op) => sugarfunge_market::RateAction::Has(op.into()),
-        }
-    }
-}
-
-impl Into<RateAction> for sugarfunge_market::RateAction {
-    fn into(self) -> RateAction {
-        match self {
-            sugarfunge_market::RateAction::Transfer => RateAction::Transfer,
-            sugarfunge_market::RateAction::Mint => RateAction::Mint,
-            sugarfunge_market::RateAction::Burn => RateAction::Burn,
-            sugarfunge_market::RateAction::Has(op) => RateAction::Has(op.into()),
-        }
-    }
-}
-
-impl Into<sugarfunge_market::AssetRate<subxt::sp_runtime::AccountId32, u64, u64>> for AssetRate {
-    fn into(self) -> sugarfunge_market::AssetRate<subxt::sp_runtime::AccountId32, u64, u64> {
-        sugarfunge_market::AssetRate::<subxt::sp_runtime::AccountId32, u64, u64> {
-            class_id: self.class_id,
-            asset_id: self.asset_id,
-            action: self.action.into(),
-            amount: self.amount,
-            from: self.from.into(),
-            to: self.to.into(),
-            __subxt_unused_type_params: Default::default(),
-        }
-    }
-}
-
-impl Into<AssetRate> for sugarfunge_market::AssetRate<subxt::sp_runtime::AccountId32, u64, u64> {
-    fn into(self) -> AssetRate {
-        AssetRate {
-            class_id: self.class_id,
-            asset_id: self.asset_id,
-            action: self.action.into(),
-            amount: self.amount,
-            from: self.from.into(),
-            to: self.to.into(),
-        }
-    }
-}
-
-impl Into<RateBalance>
-    for sugarfunge_market::RateBalance<subxt::sp_runtime::AccountId32, u64, u64>
-{
-    fn into(self) -> RateBalance {
-        RateBalance {
-            rate: self.rate.into(),
-            balance: self.balance,
-        }
-    }
-}
+use sugarfunge_api_types::sugarfunge;
+use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_market;
 
 fn extrinsinc_rates(
     in_rates: &Vec<AssetRate>,

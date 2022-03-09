@@ -1,10 +1,10 @@
 use crate::state::*;
-use crate::sugarfunge;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
+use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::validator_types::*;
 
 pub async fn add_validator(

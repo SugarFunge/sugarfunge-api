@@ -1,3 +1,5 @@
+#[subxt::subxt(runtime_metadata_path = "sugarfunge_metadata.scale")]
+pub mod sugarfunge {}
 pub mod account_types;
 pub mod asset_types;
 pub mod bundle_types;

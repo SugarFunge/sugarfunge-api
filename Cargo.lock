@@ -3006,8 +3006,23 @@ dependencies = [
 name = "sugarfunge-api-types"
 version = "0.1.0"
 dependencies = [
+ "actix-cors",
+ "actix-web",
+ "derive_more",
+ "env_logger",
+ "hex",
+ "jsonrpsee-types",
+ "parity-scale-codec",
+ "rand 0.8.5",
+ "scale-info",
  "serde",
  "serde_json",
+ "sp-core",
+ "sp-keyring",
+ "sp-std",
+ "structopt",
+ "subxt",
+ "url",
 ]
 
 [[package]]

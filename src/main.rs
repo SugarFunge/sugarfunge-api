@@ -9,9 +9,8 @@ use state::*;
 use std::sync::{Arc, Mutex};
 use structopt::StructOpt;
 use subxt::ClientBuilder;
+use sugarfunge_api_types::sugarfunge;
 
-#[subxt::subxt(runtime_metadata_path = "sugarfunge_metadata.scale")]
-pub mod sugarfunge {}
 mod account;
 mod asset;
 mod bundle;

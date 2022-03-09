@@ -1,5 +1,4 @@
 use crate::state::*;
-use crate::sugarfunge;
 use crate::util::*;
 use actix_web::{error, web, HttpRequest, HttpResponse};
 use rand::prelude::*;
@@ -8,6 +7,7 @@ use sp_core::Pair;
 use std::str::FromStr;
 use subxt::{sp_runtime::traits::IdentifyAccount, PairSigner};
 use sugarfunge_api_types::account_types::*;
+use sugarfunge_api_types::sugarfunge;
 
 /// Generate a unique seed and its associated account
 pub async fn create(_req: HttpRequest) -> error::Result<HttpResponse> {

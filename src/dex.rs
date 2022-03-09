@@ -1,12 +1,12 @@
 use crate::state::*;
-use crate::sugarfunge;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
-use sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
 use sugarfunge_api_types::dex_types::*;
+use sugarfunge_api_types::sugarfunge;
+use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
 
 /// Create dex for currency and asset class
 pub async fn create(

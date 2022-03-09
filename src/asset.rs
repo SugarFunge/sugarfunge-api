@@ -1,12 +1,12 @@
 use crate::state::*;
-use crate::sugarfunge;
-use crate::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
 use sugarfunge_api_types::asset_types::*;
+use sugarfunge_api_types::sugarfunge;
+use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 
 /// Create an asset class for an account
 pub async fn create_class(
