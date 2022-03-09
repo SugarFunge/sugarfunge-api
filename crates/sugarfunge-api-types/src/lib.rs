@@ -5,3 +5,4 @@ pub mod currency_types;
 pub mod dex_types;
 pub mod escrow_types;
 pub mod market_types;
+pub mod validator_types;
