@@ -2,30 +2,30 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateAccountOutput {
-    seed: String,
-    account: String,
+    pub seed: String,
+    pub account: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct FundAccountInput {
-    seed: String,
-    to: String,
-    amount: u128,
+    pub seed: String,
+    pub to: String,
+    pub amount: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct FundAccountOutput {
-    from: String,
-    to: String,
-    amount: u128,
+    pub from: String,
+    pub to: String,
+    pub amount: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct AccountBalanceInput {
-    account: String,
+    pub account: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct AccountBalanceOutput {
-    balance: u128,
+    pub balance: u128,
 }
