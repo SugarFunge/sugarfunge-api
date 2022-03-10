@@ -1,13 +1,11 @@
 [package]
-name = "sugarfunge-api"
+name = "sugarfunge-api-types"
 version = "0.1.0"
 edition = "2021"
 
-[workspace]
-members = ["crates/*"]
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sugarfunge-api-types = {path="crates/sugarfunge-api-types"}
 env_logger = "0.8"
 structopt = "0.3"
 rand = "0.8.3"
