@@ -4,7 +4,7 @@ use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
-use sugarfunge_api_types::escrow_types::*;
+use sugarfunge_api_types::escrow::*;
 use sugarfunge_api_types::sugarfunge;
 
 pub async fn create_escrow(

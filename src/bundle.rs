@@ -4,7 +4,7 @@ use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
-use sugarfunge_api_types::bundle_types::*;
+use sugarfunge_api_types::bundle::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 
