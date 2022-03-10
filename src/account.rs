@@ -6,7 +6,7 @@ use serde_json::json;
 use sp_core::Pair;
 use std::str::FromStr;
 use subxt::{sp_runtime::traits::IdentifyAccount, PairSigner};
-use sugarfunge_api_types::account_types::*;
+use sugarfunge_api_types::account::*;
 use sugarfunge_api_types::sugarfunge;
 
 /// Generate a unique seed and its associated account
