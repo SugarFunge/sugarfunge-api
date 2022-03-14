@@ -2998,7 +2998,20 @@ dependencies = [
  "sp-std",
  "structopt",
  "subxt",
+ "sugarfunge-api-types",
  "url",
+]
+
+[[package]]
+name = "sugarfunge-api-types"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "serde_json",
+ "sp-core",
+ "subxt",
 ]
 
 [[package]]

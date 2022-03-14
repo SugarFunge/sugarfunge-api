@@ -9,9 +9,8 @@ use state::*;
 use std::sync::{Arc, Mutex};
 use structopt::StructOpt;
 use subxt::ClientBuilder;
+use sugarfunge_api_types::sugarfunge;
 
-#[subxt::subxt(runtime_metadata_path = "sugarfunge_metadata.scale")]
-pub mod sugarfunge {}
 mod account;
 mod asset;
 mod bundle;
@@ -105,10 +104,6 @@ async fn main() -> std::io::Result<()> {
                 "market/deposit_assets",
                 web::post().to(market::deposit_assets),
             )
-            // .route(
-            //     "market/compute_exchange_assets",
-            //     web::post().to(market::compute_exchange_assets),
-            // )
             .route(
                 "market/exchange_assets",
                 web::post().to(market::exchange_assets),

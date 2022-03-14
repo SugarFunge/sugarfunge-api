@@ -1,22 +1,11 @@
 use crate::state::*;
-use crate::sugarfunge;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
-
-#[derive(Serialize, Deserialize)]
-pub struct AddValidatorInput {
-    seed: String,
-    validator_id: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AddValidatorOutput {
-    validator_id: String,
-}
+use sugarfunge_api_types::sugarfunge;
+use sugarfunge_api_types::validator::*;
 
 pub async fn add_validator(
     data: web::Data<AppState>,
@@ -55,17 +44,6 @@ pub async fn add_validator(
             message: json!("Failed to find sugarfunge::validator::events::AddValidator"),
         })),
     }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct RemoveValidatorInput {
-    seed: String,
-    validator_id: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct RemoveValidatorOutput {
-    validator_id: String,
 }
 
 pub async fn remove_validator(

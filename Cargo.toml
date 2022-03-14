@@ -3,7 +3,11 @@ name = "sugarfunge-api"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+members = ["crates/*"]
+
 [dependencies]
+sugarfunge-api-types = {path="crates/sugarfunge-api-types"}
 env_logger = "0.8"
 structopt = "0.3"
 rand = "0.8.3"

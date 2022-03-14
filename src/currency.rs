@@ -1,33 +1,13 @@
 use crate::state::*;
-use crate::sugarfunge;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sp_core::Pair;
 use subxt::sp_runtime::traits::IdentifyAccount;
 use subxt::PairSigner;
-use sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
-
-#[derive(Serialize, Deserialize)]
-pub struct Currency {
-    class_id: u64,
-    asset_id: u64,
-}
-
-#[derive(Deserialize)]
-pub struct IssueCurrencyInput {
-    seed: String,
-    currency: Currency,
-    amount: i128,
-}
-
-#[derive(Serialize)]
-pub struct IssueCurrencyOutput {
-    currency: Currency,
-    who: String,
-    amount: i128,
-}
+use sugarfunge_api_types::currency::*;
+use sugarfunge_api_types::sugarfunge;
+use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
 
 /// Issue amount of currency
 pub async fn issue(
@@ -83,16 +63,6 @@ pub async fn issue(
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct CurrencyIssuanceInput {
-    currency: Currency,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CurrencyIssuanceOutput {
-    amount: u128,
-}
-
 /// Get total issuance for given currency
 pub async fn issuance(
     data: web::Data<AppState>,
@@ -107,16 +77,6 @@ pub async fn issuance(
         .await;
     let amount = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(CurrencyIssuanceOutput { amount }))
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CurrencySupplyInput {
-    currency: Currency,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct CurrencySupplyOutput {
-    total_supply: u128,
 }
 
 /// Get total supply for given currency
@@ -138,20 +98,6 @@ pub async fn supply(
         0
     };
     Ok(HttpResponse::Ok().json(CurrencySupplyOutput { total_supply }))
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct MintCurrencyInput {
-    seed: String,
-    currency: Currency,
-    amount: u128,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct MintCurrencyOutput {
-    currency: Currency,
-    amount: u128,
-    who: String,
 }
 
 /// Mint amount of currency
@@ -189,20 +135,6 @@ pub async fn mint(
             message: json!("Failed to find sugarfunge::currency::events::Mint"),
         })),
     }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct BurnCurrencyInput {
-    seed: String,
-    currency: Currency,
-    amount: u128,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct BurnCurrencyOutput {
-    currency: Currency,
-    amount: u128,
-    who: String,
 }
 
 /// Burn amount of currency

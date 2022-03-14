@@ -1,5 +1,5 @@
-use crate::sugarfunge;
 use std::sync::{Arc, Mutex};
+use sugarfunge_api_types::sugarfunge;
 
 pub type ClientAPI = Arc<Mutex<sugarfunge::RuntimeApi<sugarfunge::DefaultConfig>>>;
 
