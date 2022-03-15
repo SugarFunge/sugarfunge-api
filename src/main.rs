@@ -78,8 +78,9 @@ async fn main() -> std::io::Result<()> {
                 "dex/remove_liquidity",
                 web::post().to(dex::remove_liquidity),
             )
+            .route("escrow/register", web::post().to(escrow::register))
             .route("escrow/create", web::post().to(escrow::create_escrow))
-            .route("escrow/refund", web::post().to(escrow::refund_assets))
+            .route("escrow/sweep", web::post().to(escrow::sweep_assets))
             .route("escrow/deposit", web::post().to(escrow::deposit_assets))
             .route("bundle/register", web::post().to(bundle::register_bundle))
             .route("bundle/mint", web::post().to(bundle::mint_bundle))
