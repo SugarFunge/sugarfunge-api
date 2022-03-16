@@ -1,14 +1,15 @@
+use crate::primitives::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct Currency {
-    pub class_id: u64,
-    pub asset_id: u64,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct IssueCurrencyInput {
-    pub seed: String,
+    pub seed: Seed,
     pub currency: Currency,
     pub amount: i128,
 }
@@ -16,7 +17,7 @@ pub struct IssueCurrencyInput {
 #[derive(Serialize, Deserialize)]
 pub struct IssueCurrencyOutput {
     pub currency: Currency,
-    pub who: String,
+    pub who: Account,
     pub amount: i128,
 }
 
@@ -27,7 +28,7 @@ pub struct CurrencyIssuanceInput {
 
 #[derive(Serialize, Deserialize)]
 pub struct CurrencyIssuanceOutput {
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -42,28 +43,28 @@ pub struct CurrencySupplyOutput {
 
 #[derive(Serialize, Deserialize)]
 pub struct MintCurrencyInput {
-    pub seed: String,
+    pub seed: Seed,
     pub currency: Currency,
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct MintCurrencyOutput {
     pub currency: Currency,
-    pub amount: u128,
-    pub who: String,
+    pub amount: Balance,
+    pub who: Account,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BurnCurrencyInput {
-    pub seed: String,
+    pub seed: Seed,
     pub currency: Currency,
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BurnCurrencyOutput {
     pub currency: Currency,
-    pub amount: u128,
-    pub who: String,
+    pub amount: Balance,
+    pub who: Account,
 }

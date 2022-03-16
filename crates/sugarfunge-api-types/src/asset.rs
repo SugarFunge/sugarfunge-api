@@ -1,80 +1,81 @@
+use crate::primitives::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateClassInput {
-    pub seed: String,
-    pub class_id: u64,
+    pub seed: Seed,
+    pub class_id: ClassId,
     pub metadata: serde_json::Value,
     pub owner: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateClassOutput {
-    pub class_id: u64,
-    pub who: String,
+    pub class_id: ClassId,
+    pub who: Account,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateInput {
-    pub seed: String,
-    pub class_id: u64,
-    pub asset_id: u64,
+    pub seed: Seed,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
     pub metadata: serde_json::Value,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateOutput {
-    pub class_id: u64,
-    pub asset_id: u64,
-    pub who: String,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+    pub who: Account,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct MintInput {
-    pub seed: String,
-    pub to: String,
-    pub class_id: u64,
-    pub asset_id: u64,
-    pub amount: u128,
+    pub seed: Seed,
+    pub to: Account,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct MintOutput {
-    pub to: String,
-    pub class_id: u64,
-    pub asset_id: u64,
-    pub amount: u128,
-    pub who: String,
+    pub to: Account,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+    pub amount: Balance,
+    pub who: Account,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BurnInput {
-    pub seed: String,
-    pub from: String,
-    pub class_id: u64,
-    pub asset_id: u64,
-    pub amount: u128,
+    pub seed: Seed,
+    pub from: Account,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BurnOutput {
-    pub from: String,
-    pub class_id: u64,
-    pub asset_id: u64,
-    pub amount: u128,
-    pub who: String,
+    pub from: Account,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+    pub amount: Balance,
+    pub who: Account,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct AssetBalanceInput {
     pub account: String,
-    pub class_id: u64,
-    pub asset_id: u64,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct AssetBalanceOutput {
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -90,27 +91,27 @@ pub struct AssetBalancesOutput {
 
 #[derive(Serialize, Deserialize)]
 pub struct AssetBalanceItemOutput {
-    pub class_id: u64,
-    pub asset_id: u64,
-    pub amount: u128,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct TransferFromInput {
-    pub seed: String,
-    pub from: String,
-    pub to: String,
-    pub class_id: u64,
-    pub asset_id: u64,
-    pub amount: u128,
+    pub seed: Seed,
+    pub from: Account,
+    pub to: Account,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct TransferFromOutput {
-    pub from: String,
-    pub to: String,
-    pub class_id: u64,
-    pub asset_id: u64,
-    pub amount: u128,
-    pub who: String,
+    pub from: Account,
+    pub to: Account,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+    pub amount: Balance,
+    pub who: Account,
 }

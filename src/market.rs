@@ -52,7 +52,7 @@ pub async fn create_market(
     let result = api
         .tx()
         .market()
-        .create_market(req.market_id)
+        .create_market(req.market_id.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -64,8 +64,8 @@ pub async fn create_market(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateMarketOutput {
-            who: event.who.to_string(),
-            market_id: event.market_id,
+            who: event.who.into(),
+            market_id: event.market_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::Created"),
@@ -87,7 +87,7 @@ pub async fn create_market_rate(
     let result = api
         .tx()
         .market()
-        .create_market_rate(req.market_id, req.market_rate_id, rates)
+        .create_market_rate(req.market_id.into(), req.market_rate_id, rates)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -99,8 +99,8 @@ pub async fn create_market_rate(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateMarketRateOutput {
-            who: event.who.to_string(),
-            market_id: event.market_id,
+            who: event.who.into(),
+            market_id: event.market_id.into(),
             market_rate_id: event.market_rate_id,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -119,7 +119,7 @@ pub async fn deposit_assets(
     let result = api
         .tx()
         .market()
-        .deposit_assets(req.market_id, req.market_rate_id, req.amount)
+        .deposit_assets(req.market_id.into(), req.market_rate_id, req.amount.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -131,10 +131,10 @@ pub async fn deposit_assets(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(DepositAssetsOutput {
-            who: event.who.to_string(),
-            market_id: event.market_id,
+            who: event.who.into(),
+            market_id: event.market_id.into(),
             market_rate_id: event.market_rate_id,
-            amount: event.amount,
+            amount: event.amount.into(),
             balances: transform_balances(event.balances),
             success: event.success,
         })),
@@ -154,7 +154,7 @@ pub async fn exchange_assets(
     let result = api
         .tx()
         .market()
-        .exchange_assets(req.market_id, req.market_rate_id, req.amount)
+        .exchange_assets(req.market_id.into(), req.market_rate_id, req.amount.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -166,10 +166,10 @@ pub async fn exchange_assets(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(ExchangeAssetsOutput {
-            buyer: event.buyer.to_string(),
-            market_id: event.market_id,
+            buyer: event.buyer.into(),
+            market_id: event.market_id.into(),
             market_rate_id: event.market_rate_id,
-            amount: event.amount,
+            amount: event.amount.into(),
             balances: transform_balances(event.balances),
             success: event.success,
         })),

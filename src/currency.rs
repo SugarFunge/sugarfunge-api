@@ -18,7 +18,7 @@ pub async fn issue(
     let who = pair.public().into_account();
     let who = sp_core::crypto::AccountId32::from(who);
     let who = subxt::sp_runtime::MultiAddress::Id(who);
-    let currency_id = CurrencyId(req.currency.class_id, req.currency.asset_id);
+    let currency_id = CurrencyId(req.currency.class_id.into(), req.currency.asset_id.into());
     let signer = PairSigner::new(pair);
     let api = data.api.lock().unwrap();
     let result = api
@@ -27,7 +27,7 @@ pub async fn issue(
         .total_issuance(currency_id, None)
         .await;
     let total_issuance = result.map_err(map_subxt_err)?;
-    let currency_id = CurrencyId(req.currency.class_id, req.currency.asset_id);
+    let currency_id = CurrencyId(req.currency.class_id.into(), req.currency.asset_id.into());
     let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::OrmlCurrencies(
         sugarfunge::runtime_types::orml_currencies::module::Call::update_balance {
             who,
@@ -51,10 +51,10 @@ pub async fn issue(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(IssueCurrencyOutput {
             currency: Currency {
-                class_id: event.currency_id.0,
-                asset_id: event.currency_id.1,
+                class_id: event.currency_id.0.into(),
+                asset_id: event.currency_id.1.into(),
             },
-            who: event.who.to_string(),
+            who: event.who.into(),
             amount: event.amount,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -69,14 +69,16 @@ pub async fn issuance(
     req: web::Json<CurrencyIssuanceInput>,
 ) -> error::Result<HttpResponse> {
     let api = data.api.lock().unwrap();
-    let currency_id = CurrencyId(req.currency.class_id, req.currency.asset_id);
+    let currency_id = CurrencyId(req.currency.class_id.into(), req.currency.asset_id.into());
     let result = api
         .storage()
         .orml_tokens()
         .total_issuance(currency_id, None)
         .await;
     let amount = result.map_err(map_subxt_err)?;
-    Ok(HttpResponse::Ok().json(CurrencyIssuanceOutput { amount }))
+    Ok(HttpResponse::Ok().json(CurrencyIssuanceOutput {
+        amount: amount.into(),
+    }))
 }
 
 /// Get total supply for given currency
@@ -85,7 +87,7 @@ pub async fn supply(
     req: web::Json<CurrencySupplyInput>,
 ) -> error::Result<HttpResponse> {
     let api = data.api.lock().unwrap();
-    let currency_id = CurrencyId(req.currency.class_id, req.currency.asset_id);
+    let currency_id = CurrencyId(req.currency.class_id.into(), req.currency.asset_id.into());
     let result = api
         .storage()
         .currency()
@@ -107,12 +109,12 @@ pub async fn mint(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let currency_id = CurrencyId(req.currency.class_id, req.currency.asset_id);
+    let currency_id = CurrencyId(req.currency.class_id.into(), req.currency.asset_id.into());
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .currency()
-        .mint(currency_id, req.amount)
+        .mint(currency_id, req.amount.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -125,11 +127,11 @@ pub async fn mint(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintCurrencyOutput {
             currency: Currency {
-                class_id: event.currency_id.0,
-                asset_id: event.currency_id.1,
+                class_id: event.currency_id.0.into(),
+                asset_id: event.currency_id.1.into(),
             },
-            amount: event.amount,
-            who: event.who.to_string(),
+            amount: event.amount.into(),
+            who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::Mint"),
@@ -144,12 +146,12 @@ pub async fn burn(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let currency_id = CurrencyId(req.currency.class_id, req.currency.asset_id);
+    let currency_id = CurrencyId(req.currency.class_id.into(), req.currency.asset_id.into());
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .currency()
-        .burn(currency_id, req.amount)
+        .burn(currency_id, req.amount.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -162,11 +164,11 @@ pub async fn burn(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BurnCurrencyOutput {
             currency: Currency {
-                class_id: event.currency_id.0,
-                asset_id: event.currency_id.1,
+                class_id: event.currency_id.0.into(),
+                asset_id: event.currency_id.1.into(),
             },
-            amount: event.amount,
-            who: event.who.to_string(),
+            amount: event.amount.into(),
+            who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::Burn"),

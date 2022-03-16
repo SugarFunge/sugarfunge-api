@@ -23,7 +23,7 @@ pub async fn create_class(
     let result = api
         .tx()
         .asset()
-        .create_class(to, req.class_id, metadata)
+        .create_class(to, req.class_id.into(), metadata)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -35,8 +35,8 @@ pub async fn create_class(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateClassOutput {
-            class_id: event.class_id,
-            who: event.who.to_string(),
+            class_id: event.class_id.into(),
+            who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
@@ -57,7 +57,7 @@ pub async fn create(
     let result = api
         .tx()
         .asset()
-        .create_asset(req.class_id, req.asset_id, metadata)
+        .create_asset(req.class_id.into(), req.asset_id.into(), metadata)
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -69,9 +69,9 @@ pub async fn create(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateOutput {
-            class_id: event.class_id,
-            asset_id: event.asset_id,
-            who: event.who.to_string(),
+            class_id: event.class_id.into(),
+            asset_id: event.asset_id.into(),
+            who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
@@ -86,13 +86,17 @@ pub async fn mint(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::from(to);
+    let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .asset()
-        .mint(to, req.class_id, req.asset_id, req.amount)
+        .mint(
+            to,
+            req.class_id.into(),
+            req.asset_id.into(),
+            req.amount.into(),
+        )
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -104,11 +108,11 @@ pub async fn mint(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintOutput {
-            to: event.to.to_string(),
-            class_id: event.class_id,
-            asset_id: event.asset_id,
-            amount: event.amount,
-            who: event.who.to_string(),
+            to: event.to.into(),
+            class_id: event.class_id.into(),
+            asset_id: event.asset_id.into(),
+            amount: event.amount.into(),
+            who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::AssetMint"),
@@ -123,13 +127,17 @@ pub async fn burn(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let from = sp_core::sr25519::Public::from_str(&req.from).map_err(map_account_err)?;
-    let from = sp_core::crypto::AccountId32::from(from);
+    let from = sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .asset()
-        .burn(from, req.class_id, req.asset_id, req.amount)
+        .burn(
+            from,
+            req.class_id.into(),
+            req.asset_id.into(),
+            req.amount.into(),
+        )
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -141,11 +149,11 @@ pub async fn burn(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BurnOutput {
-            from: event.from.to_string(),
-            class_id: event.class_id,
-            asset_id: event.asset_id,
-            amount: event.amount,
-            who: event.who.to_string(),
+            from: event.from.into(),
+            class_id: event.class_id.into(),
+            asset_id: event.asset_id.into(),
+            amount: event.amount.into(),
+            who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::Burn"),
@@ -164,10 +172,12 @@ pub async fn balance(
     let result = api
         .storage()
         .asset()
-        .balances(account, req.class_id, req.asset_id, None)
+        .balances(account, req.class_id.into(), req.asset_id.into(), None)
         .await;
     let amount = result.map_err(map_subxt_err)?;
-    Ok(HttpResponse::Ok().json(AssetBalanceOutput { amount }))
+    Ok(HttpResponse::Ok().json(AssetBalanceOutput {
+        amount: amount.into(),
+    }))
 }
 
 /// Transfer asset from to accounts
@@ -177,10 +187,9 @@ pub async fn transfer_from(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account_from = sp_core::sr25519::Public::from_str(&req.from).map_err(map_account_err)?;
-    let account_to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
-    let account_from = sp_core::crypto::AccountId32::from(account_from);
-    let account_to = sp_core::crypto::AccountId32::from(account_to);
+    let account_from =
+        sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
+    let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
@@ -188,9 +197,9 @@ pub async fn transfer_from(
         .transfer_from(
             account_from,
             account_to,
-            req.class_id,
-            req.asset_id,
-            req.amount,
+            req.class_id.into(),
+            req.asset_id.into(),
+            req.amount.into(),
         )
         .sign_and_submit_then_watch(&signer)
         .await
@@ -203,12 +212,12 @@ pub async fn transfer_from(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(TransferFromOutput {
-            from: event.from.to_string(),
-            to: event.to.to_string(),
-            class_id: event.class_id,
-            asset_id: event.asset_id,
-            amount: event.amount,
-            who: event.who.to_string(),
+            from: event.from.into(),
+            to: event.to.into(),
+            class_id: event.class_id.into(),
+            asset_id: event.asset_id.into(),
+            amount: event.amount.into(),
+            who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::Transferred"),

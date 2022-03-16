@@ -3,6 +3,7 @@ use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sp_core::Pair;
+use sugarfunge_api_types::primitives::*;
 
 #[derive(Serialize, Deserialize, Debug, Display)]
 pub struct RequestError {
@@ -39,8 +40,8 @@ pub fn map_account_err(_e: sp_core::crypto::PublicError) -> actix_web::Error {
     error::ErrorBadRequest(req_error)
 }
 
-pub fn get_pair_from_seed(seed: &str) -> error::Result<sp_core::sr25519::Pair> {
-    sp_core::sr25519::Pair::from_string(&seed, None).map_err(|e| {
+pub fn get_pair_from_seed(seed: &Seed) -> error::Result<sp_core::sr25519::Pair> {
+    sp_core::sr25519::Pair::from_string(seed.as_str(), None).map_err(|e| {
         let req_error = RequestError {
             message: json!(&format!("{:?}", e)),
         };

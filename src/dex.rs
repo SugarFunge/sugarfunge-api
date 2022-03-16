@@ -2,7 +2,6 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
-use std::str::FromStr;
 use subxt::PairSigner;
 use sugarfunge_api_types::dex::*;
 use sugarfunge_api_types::sugarfunge;
@@ -15,7 +14,7 @@ pub async fn create(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let currency_id = CurrencyId(req.currency.class_id, req.currency.asset_id);
+    let currency_id = CurrencyId(req.currency.class_id.into(), req.currency.asset_id.into());
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
@@ -38,7 +37,7 @@ pub async fn create(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateDexOutput {
             exchange_id: event.exchange_id,
-            who: event.who.to_string(),
+            who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::balances::events::Transfer"),
@@ -53,8 +52,7 @@ pub async fn buy_assets(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::from(to);
+    let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
@@ -78,8 +76,8 @@ pub async fn buy_assets(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BuyAssetsOutput {
             exchange_id: event.exchange_id,
-            who: event.who.to_string(),
-            to: event.to.to_string(),
+            who: event.who.into(),
+            to: event.to.into(),
             asset_ids: event.asset_ids,
             asset_amounts_out: event.asset_amounts_out,
             currency_amounts_in: event.currency_amounts_in,
@@ -97,8 +95,7 @@ pub async fn sell_assets(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::from(to);
+    let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
@@ -122,8 +119,8 @@ pub async fn sell_assets(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(SellAssetsOutput {
             exchange_id: event.exchange_id,
-            who: event.who.to_string(),
-            to: event.to.to_string(),
+            who: event.who.into(),
+            to: event.to.into(),
             asset_ids: event.asset_ids,
             asset_amounts_in: event.asset_amounts_in,
             currency_amounts_out: event.currency_amounts_out,
@@ -141,8 +138,7 @@ pub async fn add_liquidity(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::from(to);
+    let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
@@ -166,8 +162,8 @@ pub async fn add_liquidity(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(AddLiquidityOutput {
             exchange_id: event.exchange_id,
-            who: event.who.to_string(),
-            to: event.to.to_string(),
+            who: event.who.into(),
+            to: event.to.into(),
             asset_ids: event.asset_ids,
             asset_amounts: event.asset_amounts,
             currency_amounts: event.currency_amounts,
@@ -185,8 +181,7 @@ pub async fn remove_liquidity(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::from(to);
+    let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
@@ -211,8 +206,8 @@ pub async fn remove_liquidity(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveLiquidityOutput {
             exchange_id: event.exchange_id,
-            who: event.who.to_string(),
-            to: event.to.to_string(),
+            who: event.who.into(),
+            to: event.to.into(),
             asset_ids: event.asset_ids,
             asset_amounts: event.asset_amounts,
             currency_amounts: event.currency_amounts,
