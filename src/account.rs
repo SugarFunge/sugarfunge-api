@@ -37,7 +37,7 @@ pub async fn fund(
     let result = api
         .tx()
         .balances()
-        .transfer(account, amount_input)
+        .transfer(account, amount_input.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -51,7 +51,7 @@ pub async fn fund(
         Some(event) => Ok(HttpResponse::Ok().json(FundAccountOutput {
             from: event.from.into(),
             to: event.to.into(),
-            amount: event.amount,
+            amount: event.amount.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::balances::events::Transfer"),
@@ -69,6 +69,6 @@ pub async fn balance(
     let result = api.storage().system().account(account, None).await;
     let data = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(AccountBalanceOutput {
-        balance: data.data.free,
+        balance: data.data.free.into(),
     }))
 }

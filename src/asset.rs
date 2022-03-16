@@ -91,7 +91,12 @@ pub async fn mint(
     let result = api
         .tx()
         .asset()
-        .mint(to, req.class_id.into(), req.asset_id.into(), req.amount)
+        .mint(
+            to,
+            req.class_id.into(),
+            req.asset_id.into(),
+            req.amount.into(),
+        )
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -106,7 +111,7 @@ pub async fn mint(
             to: event.to.into(),
             class_id: event.class_id.into(),
             asset_id: event.asset_id.into(),
-            amount: event.amount,
+            amount: event.amount.into(),
             who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -127,7 +132,12 @@ pub async fn burn(
     let result = api
         .tx()
         .asset()
-        .burn(from, req.class_id.into(), req.asset_id.into(), req.amount)
+        .burn(
+            from,
+            req.class_id.into(),
+            req.asset_id.into(),
+            req.amount.into(),
+        )
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -142,7 +152,7 @@ pub async fn burn(
             from: event.from.into(),
             class_id: event.class_id.into(),
             asset_id: event.asset_id.into(),
-            amount: event.amount,
+            amount: event.amount.into(),
             who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -165,7 +175,9 @@ pub async fn balance(
         .balances(account, req.class_id.into(), req.asset_id.into(), None)
         .await;
     let amount = result.map_err(map_subxt_err)?;
-    Ok(HttpResponse::Ok().json(AssetBalanceOutput { amount }))
+    Ok(HttpResponse::Ok().json(AssetBalanceOutput {
+        amount: amount.into(),
+    }))
 }
 
 /// Transfer asset from to accounts
@@ -187,7 +199,7 @@ pub async fn transfer_from(
             account_to,
             req.class_id.into(),
             req.asset_id.into(),
-            req.amount,
+            req.amount.into(),
         )
         .sign_and_submit_then_watch(&signer)
         .await
@@ -204,7 +216,7 @@ pub async fn transfer_from(
             to: event.to.into(),
             class_id: event.class_id.into(),
             asset_id: event.asset_id.into(),
-            amount: event.amount,
+            amount: event.amount.into(),
             who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {

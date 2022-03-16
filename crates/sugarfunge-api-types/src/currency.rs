@@ -28,7 +28,7 @@ pub struct CurrencyIssuanceInput {
 
 #[derive(Serialize, Deserialize)]
 pub struct CurrencyIssuanceOutput {
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -45,13 +45,13 @@ pub struct CurrencySupplyOutput {
 pub struct MintCurrencyInput {
     pub seed: Seed,
     pub currency: Currency,
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct MintCurrencyOutput {
     pub currency: Currency,
-    pub amount: u128,
+    pub amount: Balance,
     pub who: Account,
 }
 
@@ -59,12 +59,12 @@ pub struct MintCurrencyOutput {
 pub struct BurnCurrencyInput {
     pub seed: Seed,
     pub currency: Currency,
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BurnCurrencyOutput {
     pub currency: Currency,
-    pub amount: u128,
+    pub amount: Balance,
     pub who: Account,
 }

@@ -119,7 +119,7 @@ pub async fn deposit_assets(
     let result = api
         .tx()
         .market()
-        .deposit_assets(req.market_id.into(), req.market_rate_id, req.amount)
+        .deposit_assets(req.market_id.into(), req.market_rate_id, req.amount.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -134,7 +134,7 @@ pub async fn deposit_assets(
             who: event.who.into(),
             market_id: event.market_id.into(),
             market_rate_id: event.market_rate_id,
-            amount: event.amount,
+            amount: event.amount.into(),
             balances: transform_balances(event.balances),
             success: event.success,
         })),
@@ -154,7 +154,7 @@ pub async fn exchange_assets(
     let result = api
         .tx()
         .market()
-        .exchange_assets(req.market_id.into(), req.market_rate_id, req.amount)
+        .exchange_assets(req.market_id.into(), req.market_rate_id, req.amount.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -169,7 +169,7 @@ pub async fn exchange_assets(
             buyer: event.buyer.into(),
             market_id: event.market_id.into(),
             market_rate_id: event.market_rate_id,
-            amount: event.amount,
+            amount: event.amount.into(),
             balances: transform_balances(event.balances),
             success: event.success,
         })),

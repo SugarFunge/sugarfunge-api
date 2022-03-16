@@ -107,3 +107,18 @@ impl From<AssetId> for u64 {
         id.0
     }
 }
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct Balance(u128);
+
+impl From<u128> for Balance {
+    fn from(id: u128) -> Balance {
+        Balance(id)
+    }
+}
+
+impl From<Balance> for u128 {
+    fn from(id: Balance) -> u128 {
+        id.0
+    }
+}

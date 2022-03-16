@@ -36,7 +36,7 @@ pub struct MintInput {
     pub to: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -44,7 +44,7 @@ pub struct MintOutput {
     pub to: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
-    pub amount: u128,
+    pub amount: Balance,
     pub who: Account,
 }
 
@@ -54,7 +54,7 @@ pub struct BurnInput {
     pub from: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -62,7 +62,7 @@ pub struct BurnOutput {
     pub from: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
-    pub amount: u128,
+    pub amount: Balance,
     pub who: Account,
 }
 
@@ -75,7 +75,7 @@ pub struct AssetBalanceInput {
 
 #[derive(Serialize, Deserialize)]
 pub struct AssetBalanceOutput {
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -93,7 +93,7 @@ pub struct AssetBalancesOutput {
 pub struct AssetBalanceItemOutput {
     pub class_id: ClassId,
     pub asset_id: AssetId,
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -103,7 +103,7 @@ pub struct TransferFromInput {
     pub to: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -112,6 +112,6 @@ pub struct TransferFromOutput {
     pub to: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
-    pub amount: u128,
+    pub amount: Balance,
     pub who: Account,
 }

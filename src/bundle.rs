@@ -82,7 +82,7 @@ pub async fn mint_bundle(
     let result = api
         .tx()
         .bundle()
-        .mint_bundle(account_from, account_to, bundle_id, req.amount)
+        .mint_bundle(account_from, account_to, bundle_id, req.amount.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -98,7 +98,7 @@ pub async fn mint_bundle(
             from: event.from.into(),
             to: event.to.into(),
             bundle_id: event.bundle_id.to_string(),
-            amount: event.amount,
+            amount: event.amount.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Mint"),
@@ -120,7 +120,7 @@ pub async fn burn_bundle(
     let result = api
         .tx()
         .bundle()
-        .burn_bundle(account_from, account_to, bundle_id, req.amount)
+        .burn_bundle(account_from, account_to, bundle_id, req.amount.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -136,7 +136,7 @@ pub async fn burn_bundle(
             from: event.from.into(),
             to: event.to.into(),
             bundle_id: event.bundle_id.to_string(),
-            amount: event.amount,
+            amount: event.amount.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Burn"),

@@ -76,7 +76,9 @@ pub async fn issuance(
         .total_issuance(currency_id, None)
         .await;
     let amount = result.map_err(map_subxt_err)?;
-    Ok(HttpResponse::Ok().json(CurrencyIssuanceOutput { amount }))
+    Ok(HttpResponse::Ok().json(CurrencyIssuanceOutput {
+        amount: amount.into(),
+    }))
 }
 
 /// Get total supply for given currency
@@ -112,7 +114,7 @@ pub async fn mint(
     let result = api
         .tx()
         .currency()
-        .mint(currency_id, req.amount)
+        .mint(currency_id, req.amount.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -128,7 +130,7 @@ pub async fn mint(
                 class_id: event.currency_id.0.into(),
                 asset_id: event.currency_id.1.into(),
             },
-            amount: event.amount,
+            amount: event.amount.into(),
             who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -149,7 +151,7 @@ pub async fn burn(
     let result = api
         .tx()
         .currency()
-        .burn(currency_id, req.amount)
+        .burn(currency_id, req.amount.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -165,7 +167,7 @@ pub async fn burn(
                 class_id: event.currency_id.0.into(),
                 asset_id: event.currency_id.1.into(),
             },
-            amount: event.amount,
+            amount: event.amount.into(),
             who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {

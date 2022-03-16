@@ -255,7 +255,7 @@ pub struct DepositAssetsInput {
     pub seed: Seed,
     pub market_id: MarketId,
     pub market_rate_id: u64,
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -263,7 +263,7 @@ pub struct DepositAssetsOutput {
     pub who: Account,
     pub market_id: MarketId,
     pub market_rate_id: u64,
-    pub amount: u128,
+    pub amount: Balance,
     pub balances: Vec<RateBalance>,
     pub success: bool,
 }
@@ -273,7 +273,7 @@ pub struct ExchangeAssetsInput {
     pub seed: Seed,
     pub market_id: MarketId,
     pub market_rate_id: u64,
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -281,7 +281,7 @@ pub struct ExchangeAssetsOutput {
     pub buyer: Account,
     pub market_id: MarketId,
     pub market_rate_id: u64,
-    pub amount: u128,
+    pub amount: Balance,
     pub balances: Vec<RateBalance>,
     pub success: bool,
 }

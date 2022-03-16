@@ -32,7 +32,7 @@ pub struct MintBundleInput {
     pub from: Account,
     pub to: Account,
     pub bundle_id: String,
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -41,7 +41,7 @@ pub struct MintBundleOutput {
     pub from: Account,
     pub to: Account,
     pub bundle_id: String,
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -50,7 +50,7 @@ pub struct BurnBundleInput {
     pub from: Account,
     pub to: Account,
     pub bundle_id: String,
-    pub amount: u128,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -59,5 +59,5 @@ pub struct BurnBundleOutput {
     pub from: Account,
     pub to: Account,
     pub bundle_id: String,
-    pub amount: u128,
+    pub amount: Balance,
 }
