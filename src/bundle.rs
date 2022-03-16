@@ -102,7 +102,7 @@ pub async fn mint_bundle(
             who: event.who.into(),
             from: event.from.into(),
             to: event.to.into(),
-            bundle_id: event.bundle_id.to_string(),
+            bundle_id: event.bundle_id.encode_hex(),
             amount: event.amount.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -140,7 +140,7 @@ pub async fn burn_bundle(
             who: event.who.into(),
             from: event.from.into(),
             to: event.to.into(),
-            bundle_id: event.bundle_id.to_string(),
+            bundle_id: event.bundle_id.encode_hex(),
             amount: event.amount.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
