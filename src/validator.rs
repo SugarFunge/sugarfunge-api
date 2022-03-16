@@ -5,7 +5,7 @@ use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::validator_types::*;
+use sugarfunge_api_types::validator::*;
 
 pub async fn add_validator(
     data: web::Data<AppState>,

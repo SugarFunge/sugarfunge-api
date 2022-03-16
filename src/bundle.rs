@@ -1,10 +1,11 @@
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
+use hex::ToHex;
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
-use sugarfunge_api_types::bundle_types::*;
+use sugarfunge_api_types::bundle::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 
@@ -38,7 +39,13 @@ pub async fn register_bundle(
     let result = api
         .tx()
         .bundle()
-        .register_bundle(req.class_id, req.asset_id, bundle_id, schema, metadata)
+        .register_bundle(
+            req.class_id.into(),
+            req.asset_id.into(),
+            bundle_id,
+            schema,
+            metadata,
+        )
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -50,10 +57,10 @@ pub async fn register_bundle(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RegisterBundleOutput {
-            who: event.who.to_string(),
-            bundle_id: event.bundle_id.to_string(),
-            class_id: event.class_id,
-            asset_id: event.asset_id,
+            who: event.who.into(),
+            bundle_id: event.bundle_id.encode_hex(),
+            class_id: event.class_id.into(),
+            asset_id: event.asset_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Register"),
@@ -67,16 +74,15 @@ pub async fn mint_bundle(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account_from = sp_core::sr25519::Public::from_str(&req.from).map_err(map_account_err)?;
-    let account_to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
-    let account_from = sp_core::crypto::AccountId32::from(account_from);
-    let account_to = sp_core::crypto::AccountId32::from(account_to);
+    let account_from =
+        sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
+    let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let bundle_id = sp_core::H256::from_str(&req.bundle_id).unwrap_or_default();
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .bundle()
-        .mint_bundle(account_from, account_to, bundle_id, req.amount)
+        .mint_bundle(account_from, account_to, bundle_id, req.amount.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -88,11 +94,11 @@ pub async fn mint_bundle(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintBundleOutput {
-            who: event.who.to_string(),
-            from: event.from.to_string(),
-            to: event.to.to_string(),
+            who: event.who.into(),
+            from: event.from.into(),
+            to: event.to.into(),
             bundle_id: event.bundle_id.to_string(),
-            amount: event.amount,
+            amount: event.amount.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Mint"),
@@ -106,16 +112,15 @@ pub async fn burn_bundle(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account_from = sp_core::sr25519::Public::from_str(&req.from).map_err(map_account_err)?;
-    let account_to = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
-    let account_from = sp_core::crypto::AccountId32::from(account_from);
-    let account_to = sp_core::crypto::AccountId32::from(account_to);
+    let account_from =
+        sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
+    let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let bundle_id = sp_core::H256::from_str(&req.bundle_id).unwrap_or_default();
     let api = data.api.lock().unwrap();
     let result = api
         .tx()
         .bundle()
-        .burn_bundle(account_from, account_to, bundle_id, req.amount)
+        .burn_bundle(account_from, account_to, bundle_id, req.amount.into())
         .sign_and_submit_then_watch(&signer)
         .await
         .map_err(map_subxt_err)?
@@ -127,11 +132,11 @@ pub async fn burn_bundle(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BurnBundleOutput {
-            who: event.who.to_string(),
-            from: event.from.to_string(),
-            to: event.to.to_string(),
+            who: event.who.into(),
+            from: event.from.into(),
+            to: event.to.into(),
             bundle_id: event.bundle_id.to_string(),
-            amount: event.amount,
+            amount: event.amount.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Burn"),
