@@ -12,7 +12,6 @@ pub struct RegisterBundleInput {
     pub seed: String,
     pub class_id: u64,
     pub asset_id: u64,
-    pub bundle_id: String,
     pub schema: BundleSchema,
     pub metadata: serde_json::Value,
 }

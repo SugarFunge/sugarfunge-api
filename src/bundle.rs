@@ -1,12 +1,17 @@
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
+use codec::Encode;
 use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
-use sugarfunge_api_types::bundle_types::*;
+use sugarfunge_api_types::bundle::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
+
+fn hash(s: &[u8]) -> sp_core::H256 {
+    sp_io::hashing::blake2_256(s).into()
+}
 
 pub async fn register_bundle(
     data: web::Data<AppState>,
@@ -14,7 +19,6 @@ pub async fn register_bundle(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let bundle_id = sp_core::H256::from_str(&req.bundle_id).unwrap_or_default();
     let schema = (
         BoundedVec(req.schema.class_ids.to_vec()),
         BoundedVec(
@@ -32,6 +36,7 @@ pub async fn register_bundle(
                 .collect(),
         ),
     );
+    let bundle_id = hash(&schema.encode());
     let metadata: Vec<u8> = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
     let api = data.api.lock().unwrap();

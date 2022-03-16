@@ -5,7 +5,7 @@ use serde_json::json;
 use sp_core::Pair;
 use subxt::sp_runtime::traits::IdentifyAccount;
 use subxt::PairSigner;
-use sugarfunge_api_types::currency_types::*;
+use sugarfunge_api_types::currency::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_primitives::CurrencyId;
 
