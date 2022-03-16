@@ -2994,7 +2994,6 @@ dependencies = [
  "serde",
  "serde_json",
  "sp-core",
- "sp-io",
  "sp-keyring",
  "sp-std",
  "structopt",

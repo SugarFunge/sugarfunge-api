@@ -71,6 +71,14 @@ pub async fn create_escrow(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let owners = transform_owners_input(req.owners.clone());
+    /*let owners = 
+        req.owners.clone()
+        .into_iter()
+        .map(|current_owner| 
+            sp_core::crypto::AccountId32::from(sp_core::sr25519::Public::from_str(&current_owner).unwrap())
+        )
+        .collect()
+    ;*/
 
     let api = data.api.lock().unwrap();
     let result = api
