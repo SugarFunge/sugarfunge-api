@@ -1,8 +1,9 @@
+use crate::primitives::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct AddValidatorInput {
-    pub seed: String,
+    pub seed: Seed,
     pub validator_id: String,
 }
 
@@ -13,7 +14,7 @@ pub struct AddValidatorOutput {
 
 #[derive(Serialize, Deserialize)]
 pub struct RemoveValidatorInput {
-    pub seed: String,
+    pub seed: Seed,
     pub validator_id: String,
 }
 

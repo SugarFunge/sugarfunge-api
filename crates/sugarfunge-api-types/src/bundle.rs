@@ -1,3 +1,4 @@
+use crate::primitives::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -9,9 +10,9 @@ pub struct BundleSchema {
 
 #[derive(Serialize, Deserialize)]
 pub struct RegisterBundleInput {
-    pub seed: String,
-    pub class_id: u64,
-    pub asset_id: u64,
+    pub seed: Seed,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
     pub bundle_id: String,
     pub schema: BundleSchema,
     pub metadata: serde_json::Value,
@@ -20,43 +21,43 @@ pub struct RegisterBundleInput {
 #[derive(Serialize, Deserialize)]
 pub struct RegisterBundleOutput {
     pub bundle_id: String,
-    pub who: String,
-    pub class_id: u64,
-    pub asset_id: u64,
+    pub who: Account,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct MintBundleInput {
-    pub seed: String,
-    pub from: String,
-    pub to: String,
+    pub seed: Seed,
+    pub from: Account,
+    pub to: Account,
     pub bundle_id: String,
     pub amount: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct MintBundleOutput {
-    pub who: String,
-    pub from: String,
-    pub to: String,
+    pub who: Account,
+    pub from: Account,
+    pub to: Account,
     pub bundle_id: String,
     pub amount: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BurnBundleInput {
-    pub seed: String,
-    pub from: String,
-    pub to: String,
+    pub seed: Seed,
+    pub from: Account,
+    pub to: Account,
     pub bundle_id: String,
     pub amount: u128,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BurnBundleOutput {
-    pub who: String,
-    pub from: String,
-    pub to: String,
+    pub who: Account,
+    pub from: Account,
+    pub to: Account,
     pub bundle_id: String,
     pub amount: u128,
 }

@@ -7,4 +7,5 @@ pub mod currency;
 pub mod dex;
 pub mod escrow;
 pub mod market;
+pub mod primitives;
 pub mod validator;
