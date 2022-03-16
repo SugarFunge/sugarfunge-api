@@ -1,6 +1,7 @@
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
+use codec::Encode;
 use hex::ToHex;
 use serde_json::json;
 use std::str::FromStr;
