@@ -15,7 +15,7 @@ pub async fn create(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let currency_id = CurrencyId(req.currency.class_id.into(), req.currency.asset_id.into());
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .dex()
@@ -53,7 +53,7 @@ pub async fn buy_assets(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .dex()
@@ -96,7 +96,7 @@ pub async fn sell_assets(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .dex()
@@ -139,7 +139,7 @@ pub async fn add_liquidity(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .dex()
@@ -182,7 +182,7 @@ pub async fn remove_liquidity(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .dex()

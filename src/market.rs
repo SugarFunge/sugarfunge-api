@@ -48,7 +48,7 @@ pub async fn create_market(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .market()
@@ -79,7 +79,7 @@ pub async fn create_market_rate(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
 
     let rates = transform_input(&req.rates.rates);
     let rates = extrinsinc_rates(&rates);
@@ -115,7 +115,7 @@ pub async fn deposit_assets(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .market()
@@ -150,7 +150,7 @@ pub async fn exchange_assets(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .market()

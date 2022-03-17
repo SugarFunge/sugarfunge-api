@@ -37,7 +37,7 @@ async fn main() -> std::io::Result<()> {
         .to_runtime_api::<sugarfunge::RuntimeApi<sugarfunge::DefaultConfig>>();
 
     let state = AppState {
-        api: Arc::new(Mutex::new(api)),
+        api: Arc::new(api),
     };
 
     HttpServer::new(move || {

@@ -20,7 +20,7 @@ pub async fn issue(
     let who = subxt::sp_runtime::MultiAddress::Id(who);
     let currency_id = CurrencyId(req.currency.class_id.into(), req.currency.asset_id.into());
     let signer = PairSigner::new(pair);
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .storage()
         .orml_tokens()
@@ -68,7 +68,7 @@ pub async fn issuance(
     data: web::Data<AppState>,
     req: web::Json<CurrencyIssuanceInput>,
 ) -> error::Result<HttpResponse> {
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let currency_id = CurrencyId(req.currency.class_id.into(), req.currency.asset_id.into());
     let result = api
         .storage()
@@ -86,7 +86,7 @@ pub async fn supply(
     data: web::Data<AppState>,
     req: web::Json<CurrencySupplyInput>,
 ) -> error::Result<HttpResponse> {
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let currency_id = CurrencyId(req.currency.class_id.into(), req.currency.asset_id.into());
     let result = api
         .storage()
@@ -110,7 +110,7 @@ pub async fn mint(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let currency_id = CurrencyId(req.currency.class_id.into(), req.currency.asset_id.into());
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .currency()
@@ -147,7 +147,7 @@ pub async fn burn(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let currency_id = CurrencyId(req.currency.class_id.into(), req.currency.asset_id.into());
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .currency()

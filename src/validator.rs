@@ -20,7 +20,7 @@ pub async fn add_validator(
         validator_id,
     };
     let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::ValidatorSet(call);
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .sudo()
@@ -59,7 +59,7 @@ pub async fn remove_validator(
         validator_id,
     };
     let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::ValidatorSet(call);
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .sudo()
