@@ -6,7 +6,7 @@ use actix_web::{
 };
 use command::*;
 use state::*;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
 use structopt::StructOpt;
 use subxt::ClientBuilder;
 use sugarfunge_api_types::sugarfunge;
