@@ -19,7 +19,7 @@ pub async fn create_class(
     let to = sp_core::crypto::AccountId32::from(to);
     let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .asset()
@@ -53,7 +53,7 @@ pub async fn create(
     let signer = PairSigner::new(pair);
     let metadata: Vec<u8> = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .asset()
@@ -87,7 +87,7 @@ pub async fn mint(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .asset()
@@ -128,7 +128,7 @@ pub async fn burn(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let from = sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .asset()
@@ -168,7 +168,7 @@ pub async fn balance(
 ) -> error::Result<HttpResponse> {
     let account = sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .storage()
         .asset()
@@ -190,7 +190,7 @@ pub async fn transfer_from(
     let account_from =
         sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .asset()

@@ -17,7 +17,7 @@ pub async fn register(
     let signer = PairSigner::new(pair);
     let metadata: Vec<u8> = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .escrow()
@@ -76,7 +76,7 @@ pub async fn create_escrow(
         .collect()
     ;*/
 
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .escrow()
@@ -112,7 +112,7 @@ pub async fn sweep_assets(
     let escrow = sp_core::sr25519::Public::from_str(&req.escrow).map_err(map_account_err)?;
     let escrow = sp_core::crypto::AccountId32::from(escrow);
     let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .escrow()
@@ -146,7 +146,7 @@ pub async fn deposit_assets(
     let signer = PairSigner::new(pair);
     let escrow = sp_core::sr25519::Public::from_str(&req.escrow).map_err(map_account_err)?;
     let escrow = sp_core::crypto::AccountId32::from(escrow);
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .escrow()

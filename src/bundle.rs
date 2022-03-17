@@ -40,7 +40,7 @@ pub async fn register_bundle(
     let bundle_id = hash(&schema.encode());
     let metadata: Vec<u8> = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .bundle()
@@ -83,7 +83,7 @@ pub async fn mint_bundle(
         sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let bundle_id = sp_core::H256::from_str(&req.bundle_id).unwrap_or_default();
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .bundle()
@@ -121,7 +121,7 @@ pub async fn burn_bundle(
         sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let bundle_id = sp_core::H256::from_str(&req.bundle_id).unwrap_or_default();
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .bundle()
