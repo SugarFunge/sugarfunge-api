@@ -6,7 +6,7 @@ use actix_web::{
 };
 use command::*;
 use state::*;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
 use structopt::StructOpt;
 use subxt::ClientBuilder;
 use sugarfunge_api_types::sugarfunge;
@@ -37,7 +37,7 @@ async fn main() -> std::io::Result<()> {
         .to_runtime_api::<sugarfunge::RuntimeApi<sugarfunge::DefaultConfig>>();
 
     let state = AppState {
-        api: Arc::new(Mutex::new(api)),
+        api: Arc::new(api),
     };
 
     HttpServer::new(move || {

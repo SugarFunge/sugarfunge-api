@@ -33,7 +33,7 @@ pub async fn fund(
     let account = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let account = subxt::sp_runtime::MultiAddress::Id(account);
     let amount_input = req.amount;
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api
         .tx()
         .balances()
@@ -65,7 +65,7 @@ pub async fn balance(
     req: web::Json<AccountBalanceInput>,
 ) -> error::Result<HttpResponse> {
     let account = sp_core::crypto::AccountId32::try_from(&req.account).map_err(map_account_err)?;
-    let api = data.api.lock().unwrap();
+    let api = &data.api;
     let result = api.storage().system().account(account, None).await;
     let data = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(AccountBalanceOutput {
