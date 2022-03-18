@@ -69,6 +69,7 @@ pub async fn create_market(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::Created"),
+            description: format!(""),
         })),
     }
 }
@@ -105,6 +106,7 @@ pub async fn create_market_rate(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::RateCreated"),
+            description: format!(""),
         })),
     }
 }
@@ -140,6 +142,7 @@ pub async fn deposit_assets(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::Deposit"),
+            description: format!(""),
         })),
     }
 }
@@ -175,6 +178,7 @@ pub async fn exchange_assets(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::Exchange"),
+            description: format!(""),
         })),
     }
 }

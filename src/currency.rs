@@ -59,6 +59,7 @@ pub async fn issue(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::orml_currencies::events::BalanceUpdated"),
+            description: format!(""),
         })),
     }
 }
@@ -135,6 +136,7 @@ pub async fn mint(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::Mint"),
+            description: format!(""),
         })),
     }
 }
@@ -172,6 +174,7 @@ pub async fn burn(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::Burn"),
+            description: format!(""),
         })),
     }
 }

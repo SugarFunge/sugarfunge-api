@@ -42,6 +42,7 @@ pub async fn add_validator(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::validator::events::AddValidator"),
+            description: format!(""),
         })),
     }
 }
@@ -81,6 +82,7 @@ pub async fn remove_validator(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::validator::events::RemoveValidator"),
+            description: format!(""),
         })),
     }
 }

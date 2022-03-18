@@ -55,6 +55,7 @@ pub async fn fund(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::balances::events::Transfer"),
+            description: format!("Error in account::fund"),
         })),
     }
 }

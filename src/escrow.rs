@@ -38,6 +38,7 @@ pub async fn register(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::escrow::events::Register"),
+            description: format!(""),
         })),
     }
 }
@@ -99,6 +100,7 @@ pub async fn create_escrow(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::escrow::events::AccountCreated"),
+            description: format!(""),
         })),
     }
 }
@@ -134,6 +136,7 @@ pub async fn sweep_assets(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::escrow::events::Sweep"),
+            description: format!(""),
         })),
     }
 }
@@ -172,6 +175,7 @@ pub async fn deposit_assets(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::escrow::events::Deposit"),
+            description: format!(""),
         })),
     }
 }

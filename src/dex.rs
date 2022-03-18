@@ -41,6 +41,7 @@ pub async fn create(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::balances::events::Transfer"),
+            description: format!(""),
         })),
     }
 }
@@ -84,6 +85,7 @@ pub async fn buy_assets(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::dex::events::CurrencyToAsset"),
+            description: format!(""),
         })),
     }
 }
@@ -127,6 +129,7 @@ pub async fn sell_assets(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::dex::events::CurrencyToAsset"),
+            description: format!(""),
         })),
     }
 }
@@ -170,6 +173,7 @@ pub async fn add_liquidity(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::dex::events::CurrencyToAsset"),
+            description: format!(""),
         })),
     }
 }
@@ -214,6 +218,7 @@ pub async fn remove_liquidity(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::dex::events::CurrencyToAsset"),
+            description: format!(""),
         })),
     }
 }

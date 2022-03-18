@@ -69,6 +69,7 @@ pub async fn register_bundle(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Register"),
+            description: format!(""),
         })),
     }
 }
@@ -107,6 +108,7 @@ pub async fn mint_bundle(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Mint"),
+            description: format!(""),
         })),
     }
 }
@@ -145,6 +147,7 @@ pub async fn burn_bundle(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Burn"),
+            description: format!(""),
         })),
     }
 }

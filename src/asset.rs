@@ -40,6 +40,7 @@ pub async fn create_class(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
+            description: format!(""),
         })),
     }
 }
@@ -75,6 +76,7 @@ pub async fn create(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
+            description: format!(""),
         })),
     }
 }
@@ -116,6 +118,7 @@ pub async fn mint(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::AssetMint"),
+            description: format!(""),
         })),
     }
 }
@@ -157,6 +160,7 @@ pub async fn burn(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::Burn"),
+            description: format!(""),
         })),
     }
 }
@@ -221,6 +225,7 @@ pub async fn transfer_from(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::Transferred"),
+            description: format!(""),
         })),
     }
 }
