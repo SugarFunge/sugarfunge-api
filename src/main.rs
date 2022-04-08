@@ -6,7 +6,7 @@ use actix_web::{
 };
 use command::*;
 use state::*;
-use std::sync::{Arc};
+use std::sync::Arc;
 use structopt::StructOpt;
 use subxt::ClientBuilder;
 use sugarfunge_api_types::sugarfunge;
@@ -36,9 +36,7 @@ async fn main() -> std::io::Result<()> {
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
         .to_runtime_api::<sugarfunge::RuntimeApi<sugarfunge::DefaultConfig>>();
 
-    let state = AppState {
-        api: Arc::new(api),
-    };
+    let state = AppState { api: Arc::new(api) };
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -64,6 +62,7 @@ async fn main() -> std::io::Result<()> {
             .route("asset/mint", web::post().to(asset::mint))
             .route("asset/burn", web::post().to(asset::burn))
             .route("asset/balance", web::post().to(asset::balance))
+            .route("asset/balances", web::post().to(asset::balances))
             .route("asset/transfer_from", web::post().to(asset::transfer_from))
             .route("currency/issue", web::post().to(currency::issue))
             .route("currency/issuance", web::post().to(currency::issuance))

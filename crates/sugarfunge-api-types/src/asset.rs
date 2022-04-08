@@ -81,7 +81,6 @@ pub struct AssetBalanceOutput {
 #[derive(Serialize, Deserialize)]
 pub struct AssetBalancesInput {
     pub account: String,
-    pub class_id: Option<u64>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -89,7 +88,7 @@ pub struct AssetBalancesOutput {
     pub balances: Vec<AssetBalanceItemOutput>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct AssetBalanceItemOutput {
     pub class_id: ClassId,
     pub asset_id: AssetId,
