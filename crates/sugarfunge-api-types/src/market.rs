@@ -12,7 +12,7 @@ pub enum AmountOp {
     GreaterEqualThan,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum AmountOpInput {
     Transfer,
     Mint,
@@ -39,7 +39,7 @@ pub enum RateAccount {
     Buyer,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AssetRateInput {
     pub class_id: ClassId,
     pub asset_id: AssetId,
@@ -49,7 +49,7 @@ pub struct AssetRateInput {
     pub to: Account,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RatesInput {
     pub rates: Vec<AssetRateInput>,
     pub metadata: serde_json::Value,
@@ -71,7 +71,7 @@ pub struct RateBalance {
     pub balance: i128,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Rates {
     pub rates: Vec<AssetRate>,
     pub metadata: serde_json::Value,
@@ -224,33 +224,33 @@ impl Into<RateAccount> for Account {
         }
     }
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketInput {
     pub seed: Seed,
     pub market_id: MarketId,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketOutput {
     pub market_id: MarketId,
     pub who: Account,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketRateInput {
     pub seed: Seed,
     pub market_id: MarketId,
     pub market_rate_id: u64,
     pub rates: RatesInput,
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketRateOutput {
     pub market_id: MarketId,
     pub market_rate_id: u64,
     pub who: Account,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DepositAssetsInput {
     pub seed: Seed,
     pub market_id: MarketId,
@@ -258,7 +258,7 @@ pub struct DepositAssetsInput {
     pub amount: Balance,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DepositAssetsOutput {
     pub who: Account,
     pub market_id: MarketId,
@@ -268,7 +268,7 @@ pub struct DepositAssetsOutput {
     pub success: bool,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ExchangeAssetsInput {
     pub seed: Seed,
     pub market_id: MarketId,
@@ -276,7 +276,7 @@ pub struct ExchangeAssetsInput {
     pub amount: Balance,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ExchangeAssetsOutput {
     pub buyer: Account,
     pub market_id: MarketId,

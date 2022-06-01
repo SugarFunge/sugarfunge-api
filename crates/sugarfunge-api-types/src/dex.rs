@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 use crate::primitives::*;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Currency {
     pub class_id: ClassId,
     pub asset_id: AssetId,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateDexInput {
     pub seed: Seed,
     pub exchange_id: u32,
@@ -16,13 +16,13 @@ pub struct CreateDexInput {
     pub lp_class_id: u64,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateDexOutput {
     pub exchange_id: u32,
     pub who: Account,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct BuyAssetsInput {
     pub seed: Seed,
     pub exchange_id: u32,
@@ -32,7 +32,7 @@ pub struct BuyAssetsInput {
     pub to: Account,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct BuyAssetsOutput {
     pub exchange_id: u32,
     pub who: Account,
@@ -42,7 +42,7 @@ pub struct BuyAssetsOutput {
     pub currency_amounts_in: Vec<u128>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct SellAssetsInput {
     pub seed: Seed,
     pub exchange_id: u32,
@@ -52,7 +52,7 @@ pub struct SellAssetsInput {
     pub to: Account,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct SellAssetsOutput {
     pub exchange_id: u32,
     pub who: Account,
@@ -62,7 +62,7 @@ pub struct SellAssetsOutput {
     pub currency_amounts_out: Vec<u128>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct AddLiquidityInput {
     pub seed: Seed,
     pub to: Account,
@@ -72,7 +72,7 @@ pub struct AddLiquidityInput {
     pub max_currencies: Vec<u128>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct AddLiquidityOutput {
     pub exchange_id: u32,
     pub who: Account,
@@ -82,7 +82,7 @@ pub struct AddLiquidityOutput {
     pub currency_amounts: Vec<u128>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct RemoveLiquidityInput {
     pub seed: Seed,
     pub to: Account,
@@ -93,7 +93,7 @@ pub struct RemoveLiquidityInput {
     pub min_assets: Vec<u128>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct RemoveLiquidityOutput {
     pub exchange_id: u32,
     pub who: Account,

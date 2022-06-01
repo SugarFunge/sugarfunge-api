@@ -1,20 +1,20 @@
 use serde::{Deserialize, Serialize};
 use crate::primitives::*;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct RegisterEscrowInput {
     pub seed: Seed,
     pub class_id: ClassId,
     pub metadata: serde_json::Value,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct RegisterEscrowOutput {
     pub who: Account,
     pub class_id: ClassId,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateEscrowInput {
     pub seed: Seed,
     pub class_id: ClassId,
@@ -22,7 +22,7 @@ pub struct CreateEscrowInput {
     pub shares: Vec<u128>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateEscrowOutput {
     pub escrow: String,
     pub class_id: ClassId,
@@ -30,21 +30,21 @@ pub struct CreateEscrowOutput {
     pub owners: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct SweepAssetsInput {
     pub seed: Seed,
     pub to: Account,
     pub escrow: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct SweepAssetsOutput {
     pub escrow: String,
     pub who: Account,
     pub to: Account,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DepositAssetsInput {
     pub seed: Seed,
     pub escrow: String,
@@ -53,7 +53,7 @@ pub struct DepositAssetsInput {
     pub amounts: Vec<Vec<u128>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DepositAssetsOutput {
     pub escrow: String,
     pub who: Account,
