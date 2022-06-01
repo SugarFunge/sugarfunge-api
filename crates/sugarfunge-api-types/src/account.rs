@@ -30,3 +30,14 @@ pub struct AccountBalanceInput {
 pub struct AccountBalanceOutput {
     pub balance: Balance,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AccountExistsInput {
+    pub account: Account,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AccountExistsOutput {
+    pub account: Account,
+    pub exists: bool,
+}

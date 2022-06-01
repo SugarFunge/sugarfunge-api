@@ -73,3 +73,19 @@ pub async fn balance(
         balance: data.data.free.into(),
     }))
 }
+
+/// Check if account exists and is active
+pub async fn exists(
+    data: web::Data<AppState>,
+    req: web::Json<AccountExistsInput>,
+) -> error::Result<HttpResponse> {
+    let account = sp_core::crypto::AccountId32::try_from(&req.account).map_err(map_account_err)?;
+    let account_out = account.clone();
+    let api = &data.api;
+    let result = api.storage().system().account(account, None).await;
+    let data = result.map_err(map_subxt_err)?;
+    Ok(HttpResponse::Ok().json(AccountExistsOutput {
+        account: account_out.into(),
+        exists: data.providers > 0,
+    }))
+}
