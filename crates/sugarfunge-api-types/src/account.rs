@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateAccountOutput {
     pub seed: Seed,
-    pub account: String,
+    pub account: Account,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -40,4 +40,15 @@ pub struct AccountExistsInput {
 pub struct AccountExistsOutput {
     pub account: Account,
     pub exists: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SeededAccountInput {
+    pub seed: Seed,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SeededAccountOutput {
+    pub seed: Seed,
+    pub account: Account,
 }

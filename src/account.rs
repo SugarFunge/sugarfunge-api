@@ -19,7 +19,17 @@ pub async fn create(_req: HttpRequest) -> error::Result<HttpResponse> {
     let account = pair.public().into_account();
     Ok(HttpResponse::Ok().json(CreateAccountOutput {
         seed,
-        account: format!("{}", account),
+        account: Account::from(format!("{}", account)),
+    }))
+}
+
+/// Compute account from seed
+pub async fn seeded(req: web::Json<SeededAccountInput>) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed)?;
+    let account = pair.public().into_account();
+    Ok(HttpResponse::Ok().json(SeededAccountOutput {
+        seed: req.seed.clone(),
+        account: Account::from(format!("{}", account)),
     }))
 }
 

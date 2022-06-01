@@ -54,6 +54,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(cors)
             .app_data(Data::new(state.clone()))
+            .route("account/seeded", web::post().to(account::seeded))
             .route("account/exists", web::post().to(account::exists))
             .route("account/create", web::post().to(account::create))
             .route("account/fund", web::post().to(account::fund))
