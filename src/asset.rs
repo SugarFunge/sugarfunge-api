@@ -81,6 +81,43 @@ pub async fn create(
     }
 }
 
+/// Update asset class metadata
+pub async fn update_metadata(
+    data: web::Data<AppState>,
+    req: web::Json<UpdateMetadataInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed)?;
+    let signer = PairSigner::new(pair);
+    let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
+    let metadata = BoundedVec(metadata);
+    let api = &data.api;
+    let result = api
+        .tx()
+        .asset()
+        .update_asset_metadata(req.class_id.into(), req.asset_id.into(), metadata)
+        .sign_and_submit_then_watch(&signer)
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_subxt_err)?;
+    let result = result
+        .find_first_event::<sugarfunge::asset::events::AssetMetadataUpdated>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(UpdateMetadataOutput {
+            class_id: event.class_id.into(),
+            asset_id: event.asset_id.into(),
+            who: event.who.into(),
+            metadata: serde_json::from_slice(event.metadata.as_slice()).unwrap_or_default(),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
+            description: format!(""),
+        })),
+    }
+}
+
 /// Mint amount of asset to account
 pub async fn mint(
     data: web::Data<AppState>,

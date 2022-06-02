@@ -16,7 +16,7 @@ pub async fn add_validator(
     let validator_id =
         sp_core::sr25519::Public::from_str(&req.validator_id).map_err(map_account_err)?;
     let validator_id = sp_core::crypto::AccountId32::from(validator_id);
-    let call = sugarfunge::runtime_types::substrate_validator_set::pallet::Call::add_validator {
+    let call = sugarfunge::runtime_types::sugarfunge_validator_set::pallet::Call::add_validator {
         validator_id,
     };
     let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::ValidatorSet(call);
@@ -56,7 +56,7 @@ pub async fn remove_validator(
     let validator_id =
         sp_core::sr25519::Public::from_str(&req.validator_id).map_err(map_account_err)?;
     let validator_id = sp_core::crypto::AccountId32::from(validator_id);
-    let call = sugarfunge::runtime_types::substrate_validator_set::pallet::Call::remove_validator {
+    let call = sugarfunge::runtime_types::sugarfunge_validator_set::pallet::Call::remove_validator {
         validator_id,
     };
     let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::ValidatorSet(call);

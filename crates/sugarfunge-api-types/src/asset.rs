@@ -31,6 +31,22 @@ pub struct CreateOutput {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateMetadataInput {
+    pub seed: Seed,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+    pub metadata: serde_json::Value,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateMetadataOutput {
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+    pub who: Account,
+    pub metadata: serde_json::Value,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct MintInput {
     pub seed: Seed,
     pub to: Account,
