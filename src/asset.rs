@@ -106,7 +106,7 @@ pub async fn create(
 }
 
 /// Get asset info
-pub async fn asset_info(
+pub async fn info(
     data: web::Data<AppState>,
     req: web::Json<AssetInfoInput>,
 ) -> error::Result<HttpResponse> {

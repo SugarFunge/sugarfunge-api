@@ -62,7 +62,7 @@ async fn main() -> std::io::Result<()> {
             .route("asset/create_class", web::post().to(asset::create_class))
             .route("asset/class_info", web::post().to(asset::class_info))
             .route("asset/create", web::post().to(asset::create))
-            .route("asset/asset_info", web::post().to(asset::asset_info))
+            .route("asset/info", web::post().to(asset::info))
             .route(
                 "asset/update_metadata",
                 web::post().to(asset::update_metadata),
