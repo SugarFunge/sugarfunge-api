@@ -15,8 +15,6 @@ mod account;
 mod asset;
 mod bundle;
 mod command;
-mod currency;
-mod dex;
 mod escrow;
 mod market;
 mod state;
@@ -71,19 +69,6 @@ async fn main() -> std::io::Result<()> {
             .route("asset/burn", web::post().to(asset::burn))
             .route("asset/balance", web::post().to(asset::balance))
             .route("asset/transfer_from", web::post().to(asset::transfer_from))
-            .route("currency/issue", web::post().to(currency::issue))
-            .route("currency/issuance", web::post().to(currency::issuance))
-            .route("currency/mint", web::post().to(currency::mint))
-            .route("currency/burn", web::post().to(currency::burn))
-            .route("currency/supply", web::post().to(currency::supply))
-            .route("dex/create", web::post().to(dex::create))
-            .route("dex/buy_assets", web::post().to(dex::buy_assets))
-            .route("dex/sell_assets", web::post().to(dex::sell_assets))
-            .route("dex/add_liquidity", web::post().to(dex::add_liquidity))
-            .route(
-                "dex/remove_liquidity",
-                web::post().to(dex::remove_liquidity),
-            )
             .route("escrow/register", web::post().to(escrow::register))
             .route("escrow/create", web::post().to(escrow::create_escrow))
             .route("escrow/sweep", web::post().to(escrow::sweep_assets))
