@@ -45,6 +45,30 @@ pub async fn create_class(
     }
 }
 
+/// Get class info
+pub async fn class_info(
+    data: web::Data<AppState>,
+    req: web::Json<ClassInfoInput>,
+) -> error::Result<HttpResponse> {
+    let api = &data.api;
+    let result = api
+        .storage()
+        .asset()
+        .classes(req.class_id.into(), None)
+        .await;
+    let info = result.map_err(map_subxt_err)?;
+    Ok(HttpResponse::Ok().json(ClassInfoOutput {
+        info: match info {
+            Some(info) => Some(ClassInfo {
+                class_id: req.class_id.clone(),
+                owner: info.owner.into(),
+                metadata: serde_json::from_slice(info.metadata.0.as_slice()).unwrap_or_default(),
+            }),
+            None => None,
+        },
+    }))
+}
+
 /// Create an asset for class
 pub async fn create(
     data: web::Data<AppState>,
@@ -79,6 +103,31 @@ pub async fn create(
             description: format!(""),
         })),
     }
+}
+
+/// Get asset info
+pub async fn asset_info(
+    data: web::Data<AppState>,
+    req: web::Json<AssetInfoInput>,
+) -> error::Result<HttpResponse> {
+    let api = &data.api;
+    let result = api
+        .storage()
+        .asset()
+        .classes(req.class_id.into(), None)
+        .await;
+    let info = result.map_err(map_subxt_err)?;
+    Ok(HttpResponse::Ok().json(AssetInfoOutput {
+        info: match info {
+            Some(info) => Some(AssetInfo {
+                class_id: req.class_id.clone(),
+                asset_id: req.asset_id.clone(),
+                owner: info.owner.into(),
+                metadata: serde_json::from_slice(info.metadata.0.as_slice()).unwrap_or_default(),
+            }),
+            None => None,
+        },
+    }))
 }
 
 /// Update asset class metadata

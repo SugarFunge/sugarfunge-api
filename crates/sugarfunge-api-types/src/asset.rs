@@ -16,6 +16,23 @@ pub struct CreateClassOutput {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct ClassInfoInput {
+    pub class_id: ClassId,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ClassInfo {
+    pub class_id: ClassId,
+    pub owner: Account,
+    pub metadata: serde_json::Value,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ClassInfoOutput {
+    pub info: Option<ClassInfo>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateInput {
     pub seed: Seed,
     pub class_id: ClassId,
@@ -28,6 +45,25 @@ pub struct CreateOutput {
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub who: Account,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AssetInfoInput {
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AssetInfo {
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+    pub owner: Account,
+    pub metadata: serde_json::Value,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AssetInfoOutput {
+    pub info: Option<AssetInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
