@@ -23,13 +23,6 @@ fn extrinsinc_rates(
     )
 }
 
-// fn transform_input(in_rates: &Vec<AssetRateInput>) -> Vec<AssetRate> {
-//     in_rates
-//         .iter()
-//         .map(|rate| <AssetRateInput as Into<AssetRate>>::into(rate.clone()))
-//         .collect()
-// }
-
 fn transform_balances(
     in_balances: Vec<sugarfunge_market::RateBalance<subxt::sp_runtime::AccountId32, u64, u64>>,
 ) -> Vec<RateBalance> {

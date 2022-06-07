@@ -8,7 +8,7 @@ use command::*;
 use state::*;
 use std::sync::Arc;
 use structopt::StructOpt;
-use subxt::{ClientBuilder, DefaultConfig, SubstrateExtrinsicParams};
+use subxt::{ClientBuilder, DefaultConfig, PolkadotExtrinsicParams};
 use sugarfunge_api_types::sugarfunge;
 
 mod account;
@@ -32,7 +32,7 @@ async fn main() -> std::io::Result<()> {
         .build()
         .await
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
-        .to_runtime_api::<sugarfunge::RuntimeApi<DefaultConfig, SubstrateExtrinsicParams<DefaultConfig>>>();
+        .to_runtime_api::<sugarfunge::RuntimeApi<DefaultConfig, PolkadotExtrinsicParams<DefaultConfig>>>();
 
     let state = AppState { api: Arc::new(api) };
 

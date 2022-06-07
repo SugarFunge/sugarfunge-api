@@ -2,8 +2,8 @@
 pub mod sugarfunge {}
 pub mod account;
 pub mod asset;
-pub mod bundle;
 pub mod bag;
+pub mod bundle;
 pub mod market;
 pub mod primitives;
 pub mod validator;
