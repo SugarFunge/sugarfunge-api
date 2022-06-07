@@ -51,14 +51,15 @@ pub async fn register_bundle(
             schema,
             metadata,
         )
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::bundle::events::Register>()
+        .find_first::<sugarfunge::bundle::events::Register>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RegisterBundleOutput {
@@ -89,14 +90,15 @@ pub async fn mint_bundle(
         .tx()
         .bundle()
         .mint_bundle(account_from, account_to, bundle_id, req.amount.into())
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::bundle::events::Mint>()
+        .find_first::<sugarfunge::bundle::events::Mint>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintBundleOutput {
@@ -128,14 +130,15 @@ pub async fn burn_bundle(
         .tx()
         .bundle()
         .burn_bundle(account_from, account_to, bundle_id, req.amount.into())
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::bundle::events::Burn>()
+        .find_first::<sugarfunge::bundle::events::Burn>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BurnBundleOutput {

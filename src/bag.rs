@@ -5,13 +5,13 @@ use serde_json::json;
 use sp_core::crypto::AccountId32;
 use std::str::FromStr;
 use subxt::PairSigner;
-use sugarfunge_api_types::escrow::*;
+use sugarfunge_api_types::bag::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 
 pub async fn register(
     data: web::Data<AppState>,
-    req: web::Json<RegisterEscrowInput>,
+    req: web::Json<RegisterInput>,
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
@@ -20,24 +20,25 @@ pub async fn register(
     let api = &data.api;
     let result = api
         .tx()
-        .escrow()
-        .register_escrow(req.class_id.into(), metadata)
-        .sign_and_submit_then_watch(&signer)
+        .bag()
+        .register(req.class_id.into(), metadata)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::escrow::events::Register>()
+        .find_first::<sugarfunge::bag::events::Register>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(RegisterEscrowOutput {
+        Some(event) => Ok(HttpResponse::Ok().json(RegisterOutput {
             who: event.who.into(),
             class_id: event.class_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::escrow::events::Register"),
+            message: json!("Failed to find sugarfunge::bag::events::Register"),
             description: format!(""),
         })),
     }
@@ -61,9 +62,9 @@ fn transform_owners_output(in_owners: Vec<AccountId32>) -> Vec<String> {
         .collect()
 }
 
-pub async fn create_escrow(
+pub async fn create(
     data: web::Data<AppState>,
-    req: web::Json<CreateEscrowInput>,
+    req: web::Json<CreateInput>,
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
@@ -80,101 +81,102 @@ pub async fn create_escrow(
     let api = &data.api;
     let result = api
         .tx()
-        .escrow()
-        .create_account(req.class_id.into(), owners, req.shares.clone())
-        .sign_and_submit_then_watch(&signer)
+        .bag()
+        .create(req.class_id.into(), owners, req.shares.clone())
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::escrow::events::AccountCreated>()
+        .find_first::<sugarfunge::bag::events::Created>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(CreateEscrowOutput {
-            escrow: event.escrow.to_string(),
+        Some(event) => Ok(HttpResponse::Ok().json(CreateOutput {
+            bag: event.bag.into(),
             class_id: event.class_id.into(),
             asset_id: event.asset_id.into(),
             owners: transform_owners_output(event.owners),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::escrow::events::AccountCreated"),
+            message: json!("Failed to find sugarfunge::bag::events::AccountCreated"),
             description: format!(""),
         })),
     }
 }
 
-pub async fn sweep_assets(
+pub async fn sweep(
     data: web::Data<AppState>,
-    req: web::Json<SweepAssetsInput>,
+    req: web::Json<SweepInput>,
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let escrow = sp_core::sr25519::Public::from_str(&req.escrow).map_err(map_account_err)?;
-    let escrow = sp_core::crypto::AccountId32::from(escrow);
+    let bag = sp_core::crypto::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
     let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = &data.api;
     let result = api
         .tx()
-        .escrow()
-        .sweep_assets(to, escrow)
-        .sign_and_submit_then_watch(&signer)
+        .bag()
+        .sweep(to, bag)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::escrow::events::Sweep>()
+        .find_first::<sugarfunge::bag::events::Sweep>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(SweepAssetsOutput {
-            escrow: event.escrow.to_string(),
+        Some(event) => Ok(HttpResponse::Ok().json(SweepOutput {
+            bag: event.bag.into(),
             who: event.who.into(),
             to: event.to.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::escrow::events::Sweep"),
+            message: json!("Failed to find sugarfunge::bag::events::Sweep"),
             description: format!(""),
         })),
     }
 }
 
-pub async fn deposit_assets(
+pub async fn deposit(
     data: web::Data<AppState>,
-    req: web::Json<DepositAssetsInput>,
+    req: web::Json<DepositInput>,
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let escrow = sp_core::sr25519::Public::from_str(&req.escrow).map_err(map_account_err)?;
-    let escrow = sp_core::crypto::AccountId32::from(escrow);
+    let bag = sp_core::crypto::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
     let api = &data.api;
     let result = api
         .tx()
-        .escrow()
-        .deposit_assets(
-            escrow,
+        .bag()
+        .deposit(
+            bag,
             req.class_ids.clone(),
             req.asset_ids.clone(),
             req.amounts.clone(),
         )
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::escrow::events::Deposit>()
+        .find_first::<sugarfunge::bag::events::Deposit>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(DepositAssetsOutput {
-            escrow: event.escrow.to_string(),
+        Some(event) => Ok(HttpResponse::Ok().json(DepositOutput {
+            bag: event.bag.into(),
             who: event.who.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::escrow::events::Deposit"),
+            message: json!("Failed to find sugarfunge::bag::events::Deposit"),
             description: format!(""),
         })),
     }

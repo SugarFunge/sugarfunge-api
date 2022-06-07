@@ -3,7 +3,7 @@ pub mod sugarfunge {}
 pub mod account;
 pub mod asset;
 pub mod bundle;
-pub mod escrow;
+pub mod bag;
 pub mod market;
 pub mod primitives;
 pub mod validator;

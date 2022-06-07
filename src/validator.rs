@@ -25,15 +25,16 @@ pub async fn add_validator(
         .tx()
         .sudo()
         .sudo(call)
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
 
     let result = result
-        .find_first_event::<sugarfunge::validator_set::events::ValidatorAdditionInitiated>()
+        .find_first::<sugarfunge::validator_set::events::ValidatorAdditionInitiated>()
         .map_err(map_subxt_err)?;
 
     match result {
@@ -56,24 +57,26 @@ pub async fn remove_validator(
     let validator_id =
         sp_core::sr25519::Public::from_str(&req.validator_id).map_err(map_account_err)?;
     let validator_id = sp_core::crypto::AccountId32::from(validator_id);
-    let call = sugarfunge::runtime_types::sugarfunge_validator_set::pallet::Call::remove_validator {
-        validator_id,
-    };
+    let call =
+        sugarfunge::runtime_types::sugarfunge_validator_set::pallet::Call::remove_validator {
+            validator_id,
+        };
     let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::ValidatorSet(call);
     let api = &data.api;
     let result = api
         .tx()
         .sudo()
         .sudo(call)
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
 
     let result = result
-        .find_first_event::<sugarfunge::validator_set::events::ValidatorRemovalInitiated>()
+        .find_first::<sugarfunge::validator_set::events::ValidatorRemovalInitiated>()
         .map_err(map_subxt_err)?;
 
     match result {

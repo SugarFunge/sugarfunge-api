@@ -8,14 +8,14 @@ use command::*;
 use state::*;
 use std::sync::Arc;
 use structopt::StructOpt;
-use subxt::ClientBuilder;
+use subxt::{ClientBuilder, DefaultConfig, SubstrateExtrinsicParams};
 use sugarfunge_api_types::sugarfunge;
 
 mod account;
 mod asset;
+mod bag;
 mod bundle;
 mod command;
-mod escrow;
 mod market;
 mod state;
 mod util;
@@ -32,7 +32,7 @@ async fn main() -> std::io::Result<()> {
         .build()
         .await
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
-        .to_runtime_api::<sugarfunge::RuntimeApi<sugarfunge::DefaultConfig>>();
+        .to_runtime_api::<sugarfunge::RuntimeApi<DefaultConfig, SubstrateExtrinsicParams<DefaultConfig>>>();
 
     let state = AppState { api: Arc::new(api) };
 
@@ -69,10 +69,10 @@ async fn main() -> std::io::Result<()> {
             .route("asset/burn", web::post().to(asset::burn))
             .route("asset/balance", web::post().to(asset::balance))
             .route("asset/transfer_from", web::post().to(asset::transfer_from))
-            .route("escrow/register", web::post().to(escrow::register))
-            .route("escrow/create", web::post().to(escrow::create_escrow))
-            .route("escrow/sweep", web::post().to(escrow::sweep_assets))
-            .route("escrow/deposit", web::post().to(escrow::deposit_assets))
+            .route("bag/register", web::post().to(bag::register))
+            .route("bag/create", web::post().to(bag::create))
+            .route("bag/sweep", web::post().to(bag::sweep))
+            .route("bag/deposit", web::post().to(bag::deposit))
             .route("bundle/register", web::post().to(bundle::register_bundle))
             .route("bundle/mint", web::post().to(bundle::mint_bundle))
             .route("bundle/burn", web::post().to(bundle::burn_bundle))
