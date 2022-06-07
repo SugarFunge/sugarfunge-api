@@ -19,11 +19,11 @@ pub enum AMM {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum RateAction {
-    Transfer(i128),
+    Transfer(Amount),
     MarketTransfer(AMM, ClassId, AssetId),
-    Mint(i128),
-    Burn(i128),
-    Has(AmountOp, i128),
+    Mint(Amount),
+    Burn(Amount),
+    Has(AmountOp, Amount),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -45,7 +45,7 @@ pub struct AssetRate {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RateBalance {
     pub rate: AssetRate,
-    pub balance: i128,
+    pub balance: Balance,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -214,13 +214,13 @@ pub struct CreateMarketOutput {
 pub struct CreateMarketRateInput {
     pub seed: Seed,
     pub market_id: MarketId,
-    pub market_rate_id: u64,
+    pub market_rate_id: MarketId,
     pub rates: Rates,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketRateOutput {
     pub market_id: MarketId,
-    pub market_rate_id: u64,
+    pub market_rate_id: MarketId,
     pub who: Account,
 }
 
@@ -228,16 +228,16 @@ pub struct CreateMarketRateOutput {
 pub struct DepositAssetsInput {
     pub seed: Seed,
     pub market_id: MarketId,
-    pub market_rate_id: u64,
-    pub amount: Balance,
+    pub market_rate_id: MarketId,
+    pub amount: Amount,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DepositAssetsOutput {
     pub who: Account,
     pub market_id: MarketId,
-    pub market_rate_id: u64,
-    pub amount: Balance,
+    pub market_rate_id: MarketId,
+    pub amount: Amount,
     pub balances: Vec<RateBalance>,
     pub success: bool,
 }
@@ -246,16 +246,16 @@ pub struct DepositAssetsOutput {
 pub struct ExchangeAssetsInput {
     pub seed: Seed,
     pub market_id: MarketId,
-    pub market_rate_id: u64,
-    pub amount: Balance,
+    pub market_rate_id: MarketId,
+    pub amount: Amount,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExchangeAssetsOutput {
     pub buyer: Account,
     pub market_id: MarketId,
-    pub market_rate_id: u64,
-    pub amount: Balance,
+    pub market_rate_id: MarketId,
+    pub amount: Amount,
     pub balances: Vec<RateBalance>,
     pub success: bool,
 }

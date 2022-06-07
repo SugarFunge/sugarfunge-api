@@ -18,8 +18,8 @@ pub struct RegisterOutput {
 pub struct CreateInput {
     pub seed: Seed,
     pub class_id: ClassId,
-    pub owners: Vec<String>,
-    pub shares: Vec<u128>,
+    pub owners: Vec<Account>,
+    pub shares: Vec<Balance>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -27,7 +27,7 @@ pub struct CreateOutput {
     pub bag: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
-    pub owners: Vec<String>,
+    pub owners: Vec<Account>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -48,9 +48,9 @@ pub struct SweepOutput {
 pub struct DepositInput {
     pub seed: Seed,
     pub bag: Account,
-    pub class_ids: Vec<u64>,
-    pub asset_ids: Vec<Vec<u64>>,
-    pub amounts: Vec<Vec<u128>>,
+    pub class_ids: Vec<ClassId>,
+    pub asset_ids: Vec<Vec<AssetId>>,
+    pub amounts: Vec<Vec<Amount>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

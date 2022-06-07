@@ -122,3 +122,60 @@ impl From<Balance> for u128 {
         id.0
     }
 }
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct Amount(i128);
+
+impl From<i128> for Amount {
+    fn from(id: i128) -> Amount {
+        Amount(id)
+    }
+}
+
+impl From<Amount> for i128 {
+    fn from(id: Amount) -> i128 {
+        id.0
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct BundleId(String);
+
+impl From<String> for BundleId {
+    fn from(bundleid: String) -> BundleId {
+        BundleId(bundleid.clone())
+    }
+}
+
+impl From<&BundleId> for String {
+    fn from(bundleid: &BundleId) -> String {
+        bundleid.0.clone()
+    }
+}
+
+impl BundleId {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ValidatorId(String);
+
+impl From<String> for ValidatorId {
+    fn from(validatorid: String) -> ValidatorId {
+        ValidatorId(validatorid.clone())
+    }
+}
+
+impl From<&ValidatorId> for String {
+    fn from(validatorid: &ValidatorId) -> String {
+        validatorid.0.clone()
+    }
+}
+
+impl ValidatorId {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}

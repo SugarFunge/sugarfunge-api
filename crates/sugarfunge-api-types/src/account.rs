@@ -18,7 +18,7 @@ pub struct FundAccountInput {
 pub struct FundAccountOutput {
     pub from: Account,
     pub to: Account,
-    pub amount: Balance,
+    pub amount: Amount,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
