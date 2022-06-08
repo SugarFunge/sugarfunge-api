@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 pub struct BundleSchema {
     pub class_ids: Vec<ClassId>,
     pub asset_ids: Vec<Vec<AssetId>>,
-    pub amounts: Vec<Vec<Amount>>,
+    pub amounts: Vec<Vec<Balance>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -31,7 +31,7 @@ pub struct MintBundleInput {
     pub from: Account,
     pub to: Account,
     pub bundle_id: BundleId,
-    pub amount: Amount,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -40,7 +40,7 @@ pub struct MintBundleOutput {
     pub from: Account,
     pub to: Account,
     pub bundle_id: BundleId,
-    pub amount: Amount,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -49,7 +49,7 @@ pub struct BurnBundleInput {
     pub from: Account,
     pub to: Account,
     pub bundle_id: BundleId,
-    pub amount: Amount,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -58,5 +58,5 @@ pub struct BurnBundleOutput {
     pub from: Account,
     pub to: Account,
     pub bundle_id: BundleId,
-    pub amount: Amount,
+    pub amount: Balance,
 }

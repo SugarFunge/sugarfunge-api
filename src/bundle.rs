@@ -7,6 +7,7 @@ use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
 use sugarfunge_api_types::bundle::*;
+use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 
@@ -21,19 +22,19 @@ pub async fn register_bundle(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let schema = (
-        BoundedVec(req.schema.class_ids.to_vec()),
+        BoundedVec(transform_vec_classid_to_u64(req.schema.class_ids.to_vec())),
         BoundedVec(
             req.schema
                 .asset_ids
                 .iter()
-                .map(|x| BoundedVec(x.to_vec()))
+                .map(|x| BoundedVec(transform_vec_assetid_to_u64(x.to_vec())))
                 .collect(),
         ),
         BoundedVec(
             req.schema
                 .amounts
                 .iter()
-                .map(|x| BoundedVec(x.to_vec()))
+                .map(|x| BoundedVec(transform_vec_balance_to_u128(&x.to_vec())))
                 .collect(),
         ),
     );
@@ -84,7 +85,7 @@ pub async fn mint_bundle(
     let account_from =
         sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let bundle_id = sp_core::H256::from_str(&req.bundle_id).unwrap_or_default();
+    let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;
     let result = api
         .tx()
@@ -124,7 +125,7 @@ pub async fn burn_bundle(
     let account_from =
         sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let bundle_id = sp_core::H256::from_str(&req.bundle_id).unwrap_or_default();
+    let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;
     let result = api
         .tx()

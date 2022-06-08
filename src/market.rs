@@ -4,6 +4,7 @@ use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use subxt::PairSigner;
 use sugarfunge_api_types::market::*;
+use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_market;
@@ -30,7 +31,7 @@ fn transform_balances(
         .into_iter()
         .map(|rate_balance| RateBalance {
             rate: rate_balance.rate.into(),
-            balance: rate_balance.balance,
+            balance: Amount::from(rate_balance.balance),
         })
         .collect()
 }
@@ -82,7 +83,7 @@ pub async fn create_market_rate(
     let result = api
         .tx()
         .market()
-        .create_market_rate(req.market_id.into(), req.market_rate_id, rates)
+        .create_market_rate(req.market_id.into(), u64::from(req.market_rate_id), rates)
         .map_err(map_subxt_err)?
         .sign_and_submit_then_watch(&signer, Default::default())
         .await
@@ -97,7 +98,7 @@ pub async fn create_market_rate(
         Some(event) => Ok(HttpResponse::Ok().json(CreateMarketRateOutput {
             who: event.who.into(),
             market_id: event.market_id.into(),
-            market_rate_id: event.market_rate_id,
+            market_rate_id: MarketId::from(event.market_rate_id),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::RateCreated"),
@@ -116,7 +117,11 @@ pub async fn deposit_assets(
     let result = api
         .tx()
         .market()
-        .deposit(req.market_id.into(), req.market_rate_id, req.amount.into())
+        .deposit(
+            req.market_id.into(),
+            u64::from(req.market_rate_id),
+            req.amount.into(),
+        )
         .map_err(map_subxt_err)?
         .sign_and_submit_then_watch(&signer, Default::default())
         .await
@@ -131,7 +136,7 @@ pub async fn deposit_assets(
         Some(event) => Ok(HttpResponse::Ok().json(DepositAssetsOutput {
             who: event.who.into(),
             market_id: event.market_id.into(),
-            market_rate_id: event.market_rate_id,
+            market_rate_id: MarketId::from(event.market_rate_id),
             amount: event.amount.into(),
             balances: transform_balances(event.balances),
             success: event.success,
@@ -153,7 +158,11 @@ pub async fn exchange_assets(
     let result = api
         .tx()
         .market()
-        .exchange_assets(req.market_id.into(), req.market_rate_id, req.amount.into())
+        .exchange_assets(
+            req.market_id.into(),
+            u64::from(req.market_rate_id),
+            req.amount.into(),
+        )
         .map_err(map_subxt_err)?
         .sign_and_submit_then_watch(&signer, Default::default())
         .await
@@ -168,7 +177,7 @@ pub async fn exchange_assets(
         Some(event) => Ok(HttpResponse::Ok().json(ExchangeAssetsOutput {
             buyer: event.buyer.into(),
             market_id: event.market_id.into(),
-            market_rate_id: event.market_rate_id,
+            market_rate_id: MarketId::from(event.market_rate_id),
             amount: event.amount.into(),
             balances: transform_balances(event.balances),
             success: event.success,

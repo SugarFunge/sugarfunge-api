@@ -50,7 +50,7 @@ pub struct DepositInput {
     pub bag: Account,
     pub class_ids: Vec<ClassId>,
     pub asset_ids: Vec<Vec<AssetId>>,
-    pub amounts: Vec<Vec<Amount>>,
+    pub amounts: Vec<Vec<Balance>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
