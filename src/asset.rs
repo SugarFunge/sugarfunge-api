@@ -5,6 +5,7 @@ use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
 use sugarfunge_api_types::asset::*;
+// use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 
@@ -15,7 +16,7 @@ pub async fn create_class(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.owner).map_err(map_account_err)?;
+    let to = sp_core::sr25519::Public::from_str(&req.owner.as_str()).map_err(map_account_err)?;
     let to = sp_core::crypto::AccountId32::from(to);
     let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
@@ -261,7 +262,8 @@ pub async fn balance(
     data: web::Data<AppState>,
     req: web::Json<AssetBalanceInput>,
 ) -> error::Result<HttpResponse> {
-    let account = sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
+    let account =
+        sp_core::sr25519::Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let api = &data.api;
     let result = api

@@ -6,7 +6,7 @@ pub struct CreateClassInput {
     pub seed: Seed,
     pub class_id: ClassId,
     pub metadata: serde_json::Value,
-    pub owner: String,
+    pub owner: Account,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -120,7 +120,7 @@ pub struct BurnOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AssetBalanceInput {
-    pub account: String,
+    pub account: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
 }
@@ -132,8 +132,8 @@ pub struct AssetBalanceOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AssetBalancesInput {
-    pub account: String,
-    pub class_id: Option<u64>,
+    pub account: Account,
+    pub class_id: Option<ClassId>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

@@ -1,11 +1,13 @@
+use std::str::FromStr;
+
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use sp_core::crypto::AccountId32;
-use std::str::FromStr;
 use subxt::PairSigner;
 use sugarfunge_api_types::bag::*;
+use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 
@@ -43,8 +45,7 @@ pub async fn register(
         })),
     }
 }
-
-fn transform_owners_input(in_owners: Vec<String>) -> Vec<AccountId32> {
+pub fn transform_owners_input(in_owners: Vec<String>) -> Vec<AccountId32> {
     in_owners
         .into_iter()
         .map(|current_owner| {
@@ -55,7 +56,7 @@ fn transform_owners_input(in_owners: Vec<String>) -> Vec<AccountId32> {
         .collect()
 }
 
-fn transform_owners_output(in_owners: Vec<AccountId32>) -> Vec<String> {
+pub fn transform_owners_output(in_owners: Vec<AccountId32>) -> Vec<String> {
     in_owners
         .into_iter()
         .map(|current_owner| current_owner.to_string())
@@ -68,21 +69,16 @@ pub async fn create(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let owners = transform_owners_input(req.owners.clone());
-    /*let owners =
-        req.owners.clone()
-        .into_iter()
-        .map(|current_owner|
-            sp_core::crypto::AccountId32::from(sp_core::sr25519::Public::from_str(&current_owner).unwrap())
-        )
-        .collect()
-    ;*/
-
+    let owners = transform_owners_input(transform_vec_account_to_string(req.owners.clone()));
     let api = &data.api;
     let result = api
         .tx()
         .bag()
-        .create(req.class_id.into(), owners, req.shares.clone())
+        .create(
+            req.class_id.into(),
+            owners,
+            transform_vec_balance_to_u128(&req.shares),
+        )
         .map_err(map_subxt_err)?
         .sign_and_submit_then_watch(&signer, Default::default())
         .await
@@ -98,7 +94,7 @@ pub async fn create(
             bag: event.bag.into(),
             class_id: event.class_id.into(),
             asset_id: event.asset_id.into(),
-            owners: transform_owners_output(event.owners),
+            owners: transform_vec_string_to_account(transform_owners_output(event.owners)),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bag::events::AccountCreated"),
@@ -156,9 +152,9 @@ pub async fn deposit(
         .bag()
         .deposit(
             bag,
-            req.class_ids.clone(),
-            req.asset_ids.clone(),
-            req.amounts.clone(),
+            transform_vec_classid_to_u64(req.class_ids.clone()),
+            transform_doublevec_assetid_to_u64(req.asset_ids.clone()),
+            transform_doublevec_balance_to_u128(req.amounts.clone()),
         )
         .map_err(map_subxt_err)?
         .sign_and_submit_then_watch(&signer, Default::default())
