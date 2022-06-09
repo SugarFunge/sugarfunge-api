@@ -5,6 +5,7 @@ use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
 use sugarfunge_api_types::asset::*;
+// use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 
@@ -15,7 +16,7 @@ pub async fn create_class(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.owner).map_err(map_account_err)?;
+    let to = sp_core::sr25519::Public::from_str(&req.owner.as_str()).map_err(map_account_err)?;
     let to = sp_core::crypto::AccountId32::from(to);
     let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
@@ -24,14 +25,15 @@ pub async fn create_class(
         .tx()
         .asset()
         .create_class(to, req.class_id.into(), metadata)
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::asset::events::ClassCreated>()
+        .find_first::<sugarfunge::asset::events::ClassCreated>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateClassOutput {
@@ -54,7 +56,7 @@ pub async fn class_info(
     let result = api
         .storage()
         .asset()
-        .classes(req.class_id.into(), None)
+        .classes(&req.class_id.into(), None)
         .await;
     let info = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(ClassInfoOutput {
@@ -83,14 +85,15 @@ pub async fn create(
         .tx()
         .asset()
         .create_asset(req.class_id.into(), req.asset_id.into(), metadata)
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::asset::events::AssetCreated>()
+        .find_first::<sugarfunge::asset::events::AssetCreated>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreateOutput {
@@ -114,7 +117,7 @@ pub async fn info(
     let result = api
         .storage()
         .asset()
-        .classes(req.class_id.into(), None)
+        .classes(&req.class_id.into(), None)
         .await;
     let info = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(AssetInfoOutput {
@@ -144,14 +147,15 @@ pub async fn update_metadata(
         .tx()
         .asset()
         .update_asset_metadata(req.class_id.into(), req.asset_id.into(), metadata)
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::asset::events::AssetMetadataUpdated>()
+        .find_first::<sugarfunge::asset::events::AssetMetadataUpdated>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(UpdateMetadataOutput {
@@ -185,14 +189,15 @@ pub async fn mint(
             req.asset_id.into(),
             req.amount.into(),
         )
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::asset::events::Mint>()
+        .find_first::<sugarfunge::asset::events::Mint>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintOutput {
@@ -227,14 +232,15 @@ pub async fn burn(
             req.asset_id.into(),
             req.amount.into(),
         )
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::asset::events::Burn>()
+        .find_first::<sugarfunge::asset::events::Burn>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BurnOutput {
@@ -256,13 +262,14 @@ pub async fn balance(
     data: web::Data<AppState>,
     req: web::Json<AssetBalanceInput>,
 ) -> error::Result<HttpResponse> {
-    let account = sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
+    let account =
+        sp_core::sr25519::Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let api = &data.api;
     let result = api
         .storage()
         .asset()
-        .balances(account, req.class_id.into(), req.asset_id.into(), None)
+        .balances(&account, &req.class_id.into(), &req.asset_id.into(), None)
         .await;
     let amount = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(AssetBalanceOutput {
@@ -291,14 +298,15 @@ pub async fn transfer_from(
             req.asset_id.into(),
             req.amount.into(),
         )
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::asset::events::Transferred>()
+        .find_first::<sugarfunge::asset::events::Transferred>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(TransferFromOutput {

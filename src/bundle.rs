@@ -7,6 +7,7 @@ use serde_json::json;
 use std::str::FromStr;
 use subxt::PairSigner;
 use sugarfunge_api_types::bundle::*;
+use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 
@@ -21,19 +22,19 @@ pub async fn register_bundle(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let schema = (
-        BoundedVec(req.schema.class_ids.to_vec()),
+        BoundedVec(transform_vec_classid_to_u64(req.schema.class_ids.to_vec())),
         BoundedVec(
             req.schema
                 .asset_ids
                 .iter()
-                .map(|x| BoundedVec(x.to_vec()))
+                .map(|x| BoundedVec(transform_vec_assetid_to_u64(x.to_vec())))
                 .collect(),
         ),
         BoundedVec(
             req.schema
                 .amounts
                 .iter()
-                .map(|x| BoundedVec(x.to_vec()))
+                .map(|x| BoundedVec(transform_vec_balance_to_u128(&x.to_vec())))
                 .collect(),
         ),
     );
@@ -51,14 +52,15 @@ pub async fn register_bundle(
             schema,
             metadata,
         )
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::bundle::events::Register>()
+        .find_first::<sugarfunge::bundle::events::Register>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RegisterBundleOutput {
@@ -83,20 +85,21 @@ pub async fn mint_bundle(
     let account_from =
         sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let bundle_id = sp_core::H256::from_str(&req.bundle_id).unwrap_or_default();
+    let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;
     let result = api
         .tx()
         .bundle()
         .mint_bundle(account_from, account_to, bundle_id, req.amount.into())
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::bundle::events::Mint>()
+        .find_first::<sugarfunge::bundle::events::Mint>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(MintBundleOutput {
@@ -122,20 +125,21 @@ pub async fn burn_bundle(
     let account_from =
         sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let bundle_id = sp_core::H256::from_str(&req.bundle_id).unwrap_or_default();
+    let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;
     let result = api
         .tx()
         .bundle()
         .burn_bundle(account_from, account_to, bundle_id, req.amount.into())
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::bundle::events::Burn>()
+        .find_first::<sugarfunge::bundle::events::Burn>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BurnBundleOutput {

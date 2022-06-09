@@ -1,7 +1,9 @@
-use std::sync::{Arc};
+use std::sync::Arc;
+use subxt::{DefaultConfig, PolkadotExtrinsicParams};
 use sugarfunge_api_types::sugarfunge;
 
-pub type ClientAPI = Arc<sugarfunge::RuntimeApi<sugarfunge::DefaultConfig>>;
+pub type ClientAPI =
+    Arc<sugarfunge::RuntimeApi<DefaultConfig, PolkadotExtrinsicParams<DefaultConfig>>>;
 
 #[derive(Clone)]
 pub struct AppState {

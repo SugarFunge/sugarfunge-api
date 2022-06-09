@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sp_core::Pair;
 use sugarfunge_api_types::primitives::*;
+use sugarfunge_api_types::sugarfunge;
 
 #[derive(Serialize, Deserialize, Debug, Display)]
 #[display(fmt = "{:?} {:?}", message, description)]
@@ -12,24 +13,26 @@ pub struct RequestError {
     pub description: String,
 }
 
-pub fn map_subxt_err(e: subxt::Error) -> actix_web::Error {
-    let json_err: serde_json::Value = match &e {
-        subxt::Error::Rpc(rpc) => match rpc {
-            jsonrpsee_types::error::Error::Request(e) => {
-                serde_json::from_str(&e).unwrap_or(json!(&e))
-            }
-            _ => json!(rpc.to_string()),
-        },
-        subxt::Error::Runtime(e) => match e {
-            subxt::RuntimeError::Module(subxt::PalletError {
-                pallet: _,
-                error: e,
-                description: _,
-            }) => json!(e),
-            _ => json!(e.to_string()),
-        },
-        _ => json!(e.to_string()),
+pub fn map_subxt_err(e: subxt::GenericError<std::convert::Infallible>) -> actix_web::Error {
+    // TODO: json_err should be a json Value to improve UX
+    let json_err = json!(e.to_string());
+    let e = format!("{:#?}", e);
+    let req_error = RequestError {
+        message: json_err,
+        description: e.to_string(),
     };
+    let req_error = serde_json::to_string_pretty(&req_error).unwrap();
+    error::ErrorBadRequest(req_error)
+}
+
+pub fn map_sf_err(
+    e: subxt::GenericError<
+        subxt::RuntimeError<sugarfunge::runtime_types::sp_runtime::DispatchError>,
+    >,
+) -> actix_web::Error {
+    // TODO: json_err should be a json Value to improve UX
+    let json_err = json!(e.to_string());
+    let e = format!("{:#?}", e);
     let req_error = RequestError {
         message: json_err,
         description: e.to_string(),

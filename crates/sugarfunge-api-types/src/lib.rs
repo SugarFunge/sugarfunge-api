@@ -2,10 +2,8 @@
 pub mod sugarfunge {}
 pub mod account;
 pub mod asset;
+pub mod bag;
 pub mod bundle;
-pub mod currency;
-pub mod dex;
-pub mod escrow;
 pub mod market;
 pub mod primitives;
 pub mod validator;

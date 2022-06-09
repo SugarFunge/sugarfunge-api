@@ -48,14 +48,15 @@ pub async fn fund(
         .tx()
         .balances()
         .transfer(account, amount_input.into())
-        .sign_and_submit_then_watch(&signer)
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_subxt_err)?;
+        .map_err(map_sf_err)?;
     let result = result
-        .find_first_event::<sugarfunge::balances::events::Transfer>()
+        .find_first::<sugarfunge::balances::events::Transfer>()
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(FundAccountOutput {
@@ -77,7 +78,7 @@ pub async fn balance(
 ) -> error::Result<HttpResponse> {
     let account = sp_core::crypto::AccountId32::try_from(&req.account).map_err(map_account_err)?;
     let api = &data.api;
-    let result = api.storage().system().account(account, None).await;
+    let result = api.storage().system().account(&account, None).await;
     let data = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(AccountBalanceOutput {
         balance: data.data.free.into(),
@@ -92,7 +93,7 @@ pub async fn exists(
     let account = sp_core::crypto::AccountId32::try_from(&req.account).map_err(map_account_err)?;
     let account_out = account.clone();
     let api = &data.api;
-    let result = api.storage().system().account(account, None).await;
+    let result = api.storage().system().account(&account, None).await;
     let data = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(AccountExistsOutput {
         account: account_out.into(),

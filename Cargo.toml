@@ -18,37 +18,33 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 jsonrpsee-types = "0.5.1"
 url = { version = "2", features = ["serde"] }
-scale-info = { version = "1.0.0", default-features = false, features = [] }
-codec = { package = "parity-scale-codec", version = "2", default-features = false, features = [
-    "derive",
-    "full",
-] }
 derive_more = { version = "0.99.0", default-features = false }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive", "full", "bit-vec"] }
+scale-info = { version = "2.0.0", features = ["bit-vec"] }
 
 [dependencies.subxt]
-# path = "../subxt"
 git = "https://github.com/SugarFunge/subxt.git"
-rev = "15b4f70c40d72ceb259a63bf8c62fb3022e29a86"
+rev = "72bf373b7adc1b30afcf6d03f6c700215b995590"
 
 [dependencies.sp-keyring]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.17"
+branch = "polkadot-v0.9.23"
 package = "sp-keyring"
 
 [dependencies.sp-std]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.17"
+branch = "polkadot-v0.9.23"
 package = "sp-std"
 
 [dependencies.sp-io]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.17"
+branch = "polkadot-v0.9.23"
 package = "sp-io"
 features = []
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.17"
+branch = "polkadot-v0.9.23"
 package = "sp-core"
 features = ["full_crypto"]
 
