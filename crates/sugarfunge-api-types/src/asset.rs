@@ -133,7 +133,6 @@ pub struct AssetBalanceOutput {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AssetBalancesInput {
     pub account: String,
-    pub class_id: Option<u64>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

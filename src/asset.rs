@@ -270,6 +270,27 @@ pub async fn balance(
     }))
 }
 
+/// Get balance for given asset
+pub async fn balances(
+    data: web::Data<AppState>,
+    req: web::Json<AssetBalancesInput>,
+) -> error::Result<HttpResponse> {
+    let account = sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
+    let account = sp_core::crypto::AccountId32::from(account);
+    let api = &data.api;
+    let params = &[jsonrpsee_types::to_json_value(account.to_string())?];
+    let result = api
+        .client
+        .rpc()
+        .client
+        .request("asset_balancesOfOwner", params)
+        .await;
+
+    let balances = result.map_err(map_subxt_err)?;
+
+    Ok(HttpResponse::Ok().json(AssetBalancesOutput { balances }))
+}
+
 /// Transfer asset from to accounts
 pub async fn transfer_from(
     data: web::Data<AppState>,

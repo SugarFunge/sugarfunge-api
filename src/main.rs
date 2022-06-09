@@ -70,6 +70,7 @@ async fn main() -> std::io::Result<()> {
             .route("asset/mint", web::post().to(asset::mint))
             .route("asset/burn", web::post().to(asset::burn))
             .route("asset/balance", web::post().to(asset::balance))
+            .route("asset/balances", web::post().to(asset::balances))
             .route("asset/transfer_from", web::post().to(asset::transfer_from))
             .route("currency/issue", web::post().to(currency::issue))
             .route("currency/issuance", web::post().to(currency::issuance))
