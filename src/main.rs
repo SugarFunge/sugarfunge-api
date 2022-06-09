@@ -10,6 +10,11 @@ use std::sync::Arc;
 use structopt::StructOpt;
 use subxt::{ClientBuilder, DefaultConfig, PolkadotExtrinsicParams};
 use sugarfunge_api_types::sugarfunge;
+use actix_web_middleware_keycloak_auth::{
+    AlwaysReturnPolicy, DecodingKey, KeycloakAuth,
+};
+use dotenv::dotenv;
+use sugarfunge_api_types::config;
 
 mod account;
 mod asset;
@@ -18,12 +23,21 @@ mod bundle;
 mod command;
 mod market;
 mod state;
+mod user;
 mod util;
 mod validator;
 
+const KEYCLOAK_PK: &str = "-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu68Ezl12qOOTbFDpntHT5HMSyvq8l67lR4SSf0P9Z1NKk+pVBjNOssHyUU7SJgK1Y5X86OZwq5eGMxF/m4X5ECMGRqAogDdDZ49jwev7IA3o7u4fZQkTGpmZjscBj4at5Ks33cx1yqHfEhNbrB6yf92ruzQBpftxejlgbNZzjqjjREE305kgxvY3FrpARAPOaZRE6OIOFE3U6Mjj5/RUJdZWPatAHP14+vS985j7LDTjD/icEBa12nv3HAFsqS5rcoObNiAOltniKdRYd9LbboWWM7MpnMnh3NX5KY2nLTHlmb6CNXfCk16jFGNAlY1ypde1BlByOatTHLiJN4CjRwIDAQAB
+-----END PUBLIC KEY-----";
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenv().ok(); 
+    
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+
+    let env = config::init();
 
     let opt = Opt::from_args();
 
@@ -46,17 +60,27 @@ async fn main() -> std::io::Result<()> {
             .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
             .allowed_header(http::header::CONTENT_TYPE)
             .max_age(3600);
+        
+        let keycloak_auth = KeycloakAuth {
+            detailed_responses: true,
+            passthrough_policy: AlwaysReturnPolicy,
+            keycloak_oid_public_key: DecodingKey::from_rsa_pem(KEYCLOAK_PK.as_bytes()).unwrap(),
+            required_roles: vec![],
+        };
 
         App::new()
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
-            .wrap(cors)
             .app_data(Data::new(state.clone()))
+            .app_data(Data::new(env.clone()))
+            .wrap(keycloak_auth)
+            .wrap(cors)            
             .route("account/seeded", web::post().to(account::seeded))
             .route("account/exists", web::post().to(account::exists))
             .route("account/create", web::post().to(account::create))
             .route("account/fund", web::post().to(account::fund))
             .route("account/balance", web::post().to(account::balance))
+            //.route("account/transfer", web::post().to(account::transfer))
             .route("asset/create_class", web::post().to(asset::create_class))
             .route("asset/class_info", web::post().to(asset::class_info))
             .route("asset/create", web::post().to(asset::create))
@@ -76,6 +100,7 @@ async fn main() -> std::io::Result<()> {
             .route("bundle/register", web::post().to(bundle::register_bundle))
             .route("bundle/mint", web::post().to(bundle::mint_bundle))
             .route("bundle/burn", web::post().to(bundle::burn_bundle))
+            .route("user/verify_seed", web::get().to(user::verify_seed))
             .route(
                 "validator/add_validator",
                 web::post().to(validator::add_validator),

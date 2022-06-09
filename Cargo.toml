@@ -21,6 +21,8 @@ url = { version = "2", features = ["serde"] }
 derive_more = { version = "0.99.0", default-features = false }
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive", "full", "bit-vec"] }
 scale-info = { version = "2.0.0", features = ["bit-vec"] }
+awc = "3.0.0-beta.10"
+dotenv = "0.15.0"
 
 [dependencies.subxt]
 git = "https://github.com/SugarFunge/subxt.git"
@@ -47,6 +49,11 @@ git = "https://github.com/paritytech/substrate.git"
 branch = "polkadot-v0.9.23"
 package = "sp-core"
 features = ["full_crypto"]
+
+[dependencies.actix-web-middleware-keycloak-auth]
+git = "https://github.com/JonathanJFlores/actix-web-middleware-keycloak-auth.git"
+branch = "master"
+package = "actix-web-middleware-keycloak-auth"
 
 [features]
 default = ["std"]
