@@ -1,19 +1,22 @@
-use serde_json::json;
-use awc::{self};
-use actix_web_middleware_keycloak_auth::{KeycloakClaims};
+use crate::account;
+use crate::util::*;
 use actix_web::{
     web,
-    Responder,
     HttpRequest,
+    HttpResponse,
     body,
-    http::{header, StatusCode}
+    error,
+    http::{header, StatusCode}, 
 };
-use crate::account;
+use actix_web_middleware_keycloak_auth::{KeycloakClaims};
+use awc::{self};
+use serde_json::json;
 use sugarfunge_api_types::account::*;
-use sugarfunge_api_types::user::*;
 use sugarfunge_api_types::config::Config;
+use sugarfunge_api_types::user::*;
 
-pub async fn get_sugarfunge_token(env: web::Data<Config>) -> Result<SugarTokenOutput, impl Responder> {
+/// Generate admin token for sugarfunge-api client
+pub async fn get_sugarfunge_token(env: web::Data<Config>) -> error::Result<SugarTokenOutput, HttpResponse> {
     let config = &env;
     let endpoint = config.keycloak_host.to_string() + "/auth/realms/" + &config.keycloak_realm + "/protocol/openid-connect/token";
 
@@ -42,28 +45,25 @@ pub async fn get_sugarfunge_token(env: web::Data<Config>) -> Result<SugarTokenOu
                     Ok(body)
                 },
                 _ => {
-                    Err(web::Json(
-                        ErrorMessageOutput {
-                            error: "Error request".to_string(),
-                            message: "Error when requesting token".to_string()
-                        }
-                    ))
+                    Err(HttpResponse::BadRequest().json(RequestError {
+                        message: json!("Failed to get the sugarfunge token"),
+                        description: format!("Error in user::getSugarfungeToken"),
+                    }))
                 }
             }
         },
-        Err(_) => Err(web::Json(
-            ErrorMessageOutput {
-                error: "Unknown".to_string(),
-                message: "Error Unknown".to_string()
-            }
-        ))
+        Err(_) => Err(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to connect to keycloak"),
+            description: format!("Error in user::getSugarfungeToken"),
+        }))
     }
 }
 
+/// Checks if the user has a seed attribute
 pub async fn get_seed(
     user_id: &String,
     env: web::Data<Config>
-) -> Result<web::Json<UserSeedOutput>, web::Json<UserSeedOutput>> { 
+) -> error::Result<web::Json<UserSeedOutput>, HttpResponse> { 
     let config = env.clone();
 
     match get_sugarfunge_token(env).await {
@@ -79,8 +79,7 @@ pub async fn get_seed(
                 .await; 
 
             match user_response {
-                Ok(mut user_response) => {
-                    
+                Ok(mut user_response) => {                    
                     match user_response.status() {
                         StatusCode::OK => {
                             let body_str: String = std::str::from_utf8(&user_response.body().await.unwrap()).unwrap().to_string();
@@ -88,48 +87,40 @@ pub async fn get_seed(
 
                             if !user_info.attributes.clone().unwrap_or_default().user_seed.is_empty() {
                                 let user_seed = user_info.attributes.clone().unwrap_or_default().user_seed[0].clone();
-                                Ok(web::Json(
-                                    UserSeedOutput {
-                                        seed: Some(user_seed)
-                                    }
-                                ))
+                                Ok(web::Json(UserSeedOutput {
+                                    seed: Some(user_seed)
+                                }))
                             } else {
-                                Ok(web::Json(
-                                    UserSeedOutput {
-                                        seed: Some("".to_string())
-                                    }
-                                ))
+                                Ok(web::Json(UserSeedOutput {
+                                    seed: Some("".to_string())
+                                }))
                             }
                         },
-                        _ => Err(web::Json(
-                            UserSeedOutput {
-                                seed: None
-                            }
-                        ))
+                        _ => Err(HttpResponse::BadRequest().json(RequestError {
+                                message: json!("Failed to get the attributes"),
+                                description: format!("Error in user::getSeed"),
+                            }))
                     }
                 }
-                Err(_) => Err(web::Json(
-                        UserSeedOutput {
-                            seed: None
-                        }
-                    ))
-                }
-
-
-        }
-        Err(_e) => Err(web::Json(
-            UserSeedOutput {
-                seed: None
+                Err(_) => Err(HttpResponse::BadRequest().json(RequestError {
+                    message: json!("Failed to get the attributes"),
+                    description: format!("Error in user::getSeed"),
+                }))
             }
-        ))
+        }
+        Err(_e) => Err(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to get the sugarfunge token"),
+            description: format!("Error in user::getSugarfungeToken"),
+        }))
     }
 }
 
-pub async fn insert_seed_user(
+/// Inserts a seed attribute to the user
+pub async fn insert_seed(
     user_id: &String,
     req: HttpRequest,
     env: web::Data<Config>
-) -> Result<web::Json<InsertUserSeedOutput>, web::Json<InsertUserSeedOutput>> { 
+) -> error::Result<web::Json<InsertUserSeedOutput>, HttpResponse> { 
     let config = env.clone();
 
     match get_sugarfunge_token(env).await {
@@ -163,83 +154,73 @@ pub async fn insert_seed_user(
                         Ok(response) => {
                             match response.status() { 
                                 StatusCode::NO_CONTENT => {
-                                    Ok(web::Json(
-                                        InsertUserSeedOutput {
-                                            error: None,
-                                            message: "Attribute insert to user attributes".to_string()
-                                        }
-                                    ))
+                                    Ok(web::Json(InsertUserSeedOutput {
+                                        message: "User had no Seed, Seed inserted to user attributes".to_string()
+                                    }))
                                 }
                                 _ => {
-                                    Err(web::Json(
-                                        InsertUserSeedOutput {
-                                        error: Some("Error Insert Attribute".to_string()),
-                                        message: "Error when insert attribute to user".to_string()
-                                    }
-                                  ))
+                                    Err(HttpResponse::BadRequest().json(RequestError {
+                                        message: json!("Failed to insert seed"),
+                                        description: format!("Error in user::insertSeedUser"),
+                                    }))
                                 }
                             }
                         }
                         Err(_e) => {
-                            Err(web::Json(
-                                InsertUserSeedOutput {
-                                    error: Some("Error Insert Attribute".to_string()),
-                                    message: "Unknown Error".to_string()
-                                }
-                          ))
+                            Err(HttpResponse::BadRequest().json(RequestError {
+                                message: json!("Failed to get the sugarfunge token"),
+                                description: format!("Error in user::getSugarfungeToken"),
+                            }))
                         }
                     }
                 }
                 Err(_) => {
-                    Err(web::Json(
-                        InsertUserSeedOutput {
-                            error: Some("Error Insert Attribute".to_string()),
-                            message: "Unknown Error".to_string()
-                        }
-                    ))
+                    Err(HttpResponse::BadRequest().json(RequestError {
+                        message: json!("Failed to create account"),
+                        description: format!("Error in account::create"),
+                    }))
                 }
             }            
 
         }
         Err(_error) => {
-            Err(web::Json(
-                InsertUserSeedOutput {
-                    error: Some("Error Insert Attribute".to_string()),
-                    message: "Unknown Error".to_string()
-                }
-            ))
+            Err(HttpResponse::BadRequest().json(RequestError {
+                message: json!("Failed to get the sugarfunge token"),
+                description: format!("Error in user::getSugarfungeToken"),
+            }))
         }
     }
 }
 
+/// Check if user has a seed. If he doesn't, it is created and added
 pub async fn verify_seed(
     claims: KeycloakClaims<ClaimsWithEmail>,
     req: HttpRequest,
     env: web::Data<Config>
-) ->  impl Responder {
+) ->  error::Result<HttpResponse> {
     match get_seed(&claims.sub, env.clone()).await {
         Ok(response) => {
             if !response.seed.clone().unwrap_or_default().is_empty() {
-                web::Json(
-                    InsertUserSeedOutput {
-                        error: None,
-                        message: "User with atrribute".to_string()
-                    }
-                )
+                Ok(HttpResponse::Ok().json(InsertUserSeedOutput {
+                    message: "User already has a seed".to_string()
+                }))
             } else {
-                match insert_seed_user(&claims.sub, req, env).await {
-                    Ok(response) => { response }
-                    Err(error) => {error}
+                match insert_seed(&claims.sub, req, env).await {
+                    Ok(response) => {Ok(HttpResponse::Ok().json(response))}
+                    Err(_) => {
+                        Ok(HttpResponse::BadRequest().json(RequestError {
+                            message: json!("Failed to insert seed"),
+                            description: format!("Error in user::insertSeedUser"),
+                        }))
+                    }
                 }
             }
         },
         Err(_) => {
-            web::Json(
-                InsertUserSeedOutput {
-                    error: Some("Unknown Error".to_string()),
-                    message: "Unknown Error".to_string()
-                }
-            )
+            Ok(HttpResponse::BadRequest().json(RequestError {
+                message: json!("Failed to connect to keycloak"),
+                description: format!("Error in user::verifySeed"),
+            }))
         }
     }
 }
