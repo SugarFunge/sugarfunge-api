@@ -16,12 +16,6 @@ pub struct SugarTokenOutput {
     pub access_token: String,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct ErrorMessageOutput {
-    pub error: String,
-    pub message: String
-}
-
 #[derive(Debug,Serialize, Deserialize)]
 pub struct UserInfo {
     pub id: String,
@@ -43,7 +37,6 @@ pub struct UserSeedOutput {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InsertUserSeedOutput {
-    pub error: Option<String>,
     pub message: String
 }
 
