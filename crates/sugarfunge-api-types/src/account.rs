@@ -9,8 +9,6 @@ pub struct CreateAccountOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FundAccountInput {
-    pub seed: Seed,
-    pub to: Account,
     pub amount: Balance,
 }
 
@@ -22,29 +20,14 @@ pub struct FundAccountOutput {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct AccountBalanceInput {
-    pub account: Account,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 pub struct AccountBalanceOutput {
     pub balance: Balance,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AccountExistsInput {
-    pub account: Account,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AccountExistsOutput {
     pub account: Account,
     pub exists: bool,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct SeededAccountInput {
-    pub seed: Seed,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -55,7 +38,7 @@ pub struct SeededAccountOutput {
 
 #[derive(Serialize, Deserialize)]
 pub struct TransferAccountInput {
-    pub to: String,
+    pub to: Account,
 }
 
 #[derive(Serialize, Deserialize)]
