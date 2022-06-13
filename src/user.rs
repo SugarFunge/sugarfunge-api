@@ -19,7 +19,6 @@ use sugarfunge_api_types::user::*;
 pub async fn get_sugarfunge_token(env: web::Data<Config>) -> error::Result<SugarTokenOutput, HttpResponse> {
     let config = &env;
     let endpoint = config.keycloak_host.to_string() + "/auth/realms/" + &config.keycloak_realm + "/protocol/openid-connect/token";
-
     let credentials = web::Data::new(Credentials{
         client_id: config.keycloak_client_id.to_string(),
         grant_type: "password".to_string(),
@@ -28,14 +27,11 @@ pub async fn get_sugarfunge_token(env: web::Data<Config>) -> error::Result<Sugar
         client_secret: config.keycloak_client_secret.to_owned(),
         scope: "openid".to_string()
     });
-
     let awc_client = awc::Client::new();
-
     let response = awc_client.post(endpoint)
         .insert_header((header::CONTENT_TYPE, "application/x-www-form-urlencoded"))
         .send_form(&credentials)
         .await; 
-
     match response {
         Ok(mut response) => {
             match response.status() {
@@ -65,19 +61,16 @@ pub async fn get_seed(
     env: web::Data<Config>
 ) -> error::Result<web::Json<UserSeedOutput>, HttpResponse> { 
     let config = env.clone();
-
     match get_sugarfunge_token(env).await {
         Ok(response) => {
             let awc_client = awc::Client::new();
             let endpoint = format!("{}/auth/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, user_id); 
-
             let user_response = awc_client.get(endpoint)
                 .append_header((header::ACCEPT, "application/json"), )
                 .append_header((header::CONTENT_TYPE, "application/json"))
                 .append_header((header::AUTHORIZATION, "Bearer ".to_string() + &response.access_token))
                 .send()
                 .await; 
-
             match user_response {
                 Ok(mut user_response) => {                    
                     match user_response.status() {
@@ -122,34 +115,28 @@ pub async fn insert_seed(
     env: web::Data<Config>
 ) -> error::Result<web::Json<InsertUserSeedOutput>, HttpResponse> { 
     let config = env.clone();
-
     match get_sugarfunge_token(env).await {
         Ok(response) => {
             match account::create(req).await {
-                Ok(response_account) => {                    
-                    
+                Ok(response_account) => {                                        
                     let bytes = body::to_bytes(response_account.into_body()).await.unwrap();
                     let str_bytes = std::str::from_utf8(&bytes).unwrap().to_string();
-                    let body: CreateAccountOutput = serde_json::from_str(&str_bytes).unwrap();
-                    
+                    let body: CreateAccountOutput = serde_json::from_str(&str_bytes).unwrap();                    
                     let awc_client = awc::Client::new();
                     let endpoint = format!("{}/auth/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, user_id); 
-
                     let attributes = json!({
                         "attributes": {
                             "user-seed": [
                                 body.seed
                             ]
                         }
-                    });
-        
+                    });        
                     let response = awc_client.put(endpoint)
                         .append_header((header::ACCEPT, "application/json"), )
                         .append_header((header::CONTENT_TYPE, "application/json"))
                         .append_header((header::AUTHORIZATION, "Bearer ".to_string() + &response.access_token))
                         .send_json(&attributes)
-                        .await;
-        
+                        .await;        
                     match response {
                         Ok(response) => {
                             match response.status() { 

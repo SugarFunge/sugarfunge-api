@@ -10,7 +10,6 @@ pub struct BundleSchema {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RegisterBundleInput {
-    pub seed: Seed,
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub schema: BundleSchema,
@@ -27,9 +26,6 @@ pub struct RegisterBundleOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MintBundleInput {
-    pub seed: Seed,
-    pub from: Account,
-    pub to: Account,
     pub bundle_id: BundleId,
     pub amount: Balance,
 }
@@ -45,9 +41,6 @@ pub struct MintBundleOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BurnBundleInput {
-    pub seed: Seed,
-    pub from: Account,
-    pub to: Account,
     pub bundle_id: BundleId,
     pub amount: Balance,
 }

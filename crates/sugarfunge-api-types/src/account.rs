@@ -43,6 +43,5 @@ pub struct TransferAccountInput {
 
 #[derive(Serialize, Deserialize)]
 pub struct TransferAccountOutput {
-    pub error: Option<String>,
     pub message: String
 }

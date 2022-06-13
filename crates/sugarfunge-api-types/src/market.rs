@@ -208,7 +208,6 @@ impl Into<RateAccount> for Account {
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketInput {
-    pub seed: Seed,
     pub market_id: MarketId,
 }
 
@@ -220,7 +219,6 @@ pub struct CreateMarketOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketRateInput {
-    pub seed: Seed,
     pub market_id: MarketId,
     pub market_rate_id: MarketId,
     pub rates: Rates,
@@ -234,7 +232,6 @@ pub struct CreateMarketRateOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DepositAssetsInput {
-    pub seed: Seed,
     pub market_id: MarketId,
     pub market_rate_id: MarketId,
     pub amount: Balance,
@@ -252,7 +249,6 @@ pub struct DepositAssetsOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExchangeAssetsInput {
-    pub seed: Seed,
     pub market_id: MarketId,
     pub market_rate_id: MarketId,
     pub amount: Balance,

@@ -3,10 +3,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateClassInput {
-    pub seed: Seed,
     pub class_id: ClassId,
     pub metadata: serde_json::Value,
-    pub owner: Account,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -34,7 +32,6 @@ pub struct ClassInfoOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateInput {
-    pub seed: Seed,
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub metadata: serde_json::Value,
@@ -68,7 +65,6 @@ pub struct AssetInfoOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateMetadataInput {
-    pub seed: Seed,
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub metadata: serde_json::Value,
@@ -84,8 +80,6 @@ pub struct UpdateMetadataOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MintInput {
-    pub seed: Seed,
-    pub to: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub amount: Balance,
@@ -102,8 +96,6 @@ pub struct MintOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BurnInput {
-    pub seed: Seed,
-    pub from: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub amount: Balance,
@@ -120,7 +112,6 @@ pub struct BurnOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AssetBalanceInput {
-    pub account: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
 }
@@ -132,7 +123,6 @@ pub struct AssetBalanceOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AssetBalancesInput {
-    pub account: Account,
     pub class_id: Option<ClassId>,
 }
 
@@ -150,8 +140,6 @@ pub struct AssetBalanceItemOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TransferFromInput {
-    pub seed: Seed,
-    pub from: Account,
     pub to: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,

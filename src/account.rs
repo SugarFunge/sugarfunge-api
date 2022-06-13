@@ -1,13 +1,12 @@
-use std::str::FromStr;
-
 use crate::state::*;
 use crate::user;
 use crate::util::*;
-use actix_web::{error, web, HttpRequest, HttpResponse};
+use actix_web::{error, web, HttpRequest, HttpResponse/*, http::header, http::StatusCode*/};
 use actix_web_middleware_keycloak_auth::KeycloakClaims;
 use rand::prelude::*;
 use serde_json::json;
 use sp_core::Pair;
+use std::str::FromStr;
 use subxt::{sp_runtime::traits::IdentifyAccount, PairSigner};
 use sugarfunge_api_types::account::*;
 use sugarfunge_api_types::config::Config;
@@ -187,11 +186,12 @@ pub async fn exists(
         }))
     }
 }
-/* 
+
+/*
 /// Transfers the seed from current user to other account
 pub async fn transfer(
     req: web::Json<TransferAccountInput>,
-    claims: KeycloakClaims<user::ClaimsWithEmail>,
+    claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
     env: web::Data<Config>
 ) -> error::Result<HttpResponse> {
     let config = env.clone();
@@ -200,97 +200,91 @@ pub async fn transfer(
         Ok(response) => {
             if !response.seed.clone().unwrap_or_default().is_empty() {
                 let user_seed = response.seed.clone().unwrap();
-
-                match get_sugarfunge_token(env_aux).await {
-                    Ok(response) => {
-                        
+                match user::get_sugarfunge_token(env_aux).await {
+                    Ok(response) => {                        
                         let awc_client = awc::Client::new();
-                        let endpoint = format!("{}/auth/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, &claims.sub); 
-
+                        let endpoint = format!("{}/auth/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, &claims.sub);
                         let attributes = json!({
                             "attributes": ""
                         });
-            
                         let user_response = awc_client.put(endpoint)
                             .append_header((header::ACCEPT, "application/json"), )
                             .append_header((header::CONTENT_TYPE, "application/json"))
                             .append_header((header::AUTHORIZATION, "Bearer ".to_string() + &response.access_token))
                             .send_json(&attributes)
-                            .await;
-            
+                            .await;            
                         match user_response {
                             Ok(user_response) => {
-                                if let StatusCode::NO_CONTENT = user_response.status() {
-                                    
+                                if let StatusCode::NO_CONTENT = user_response.status() {                                    
                                     let awc_client = awc::Client::new();
-                                    let endpoint = format!("{}/auth/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, req.to); 
-
+                                    let endpoint = format!("{}/auth/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, String::from(&req.to));
                                     let attributes = json!({
                                         "attributes": {
                                             "user-seed": [
                                                 user_seed
                                             ]
                                         }
-                                    });
-                        
+                                    });                        
                                     let receiver_response = awc_client.put(endpoint)
                                         .append_header((header::ACCEPT, "application/json"), )
                                         .append_header((header::CONTENT_TYPE, "application/json"))
                                         .append_header((header::AUTHORIZATION, "Bearer ".to_string() + &response.access_token))
                                         .send_json(&attributes)
                                         .await;
-
                                     match receiver_response {
                                         Ok(receiver_response) => {
                                             if let StatusCode::NO_CONTENT = receiver_response.status() {
-                                                Ok(HttpResponse::Ok().json(
-                                                    TransferAccountOutput {
-                                                        error: None,
-                                                        message: "Attribute insert to user attributes".to_string()
-                                                    }
-                                                ))
+                                                Ok(HttpResponse::Ok().json(TransferAccountOutput {
+                                                    message: "Attribute insert to user attributes".to_string()
+                                                }))
                                             } 
                                             else {
                                                 Ok(HttpResponse::BadRequest().json(RequestError {
-                                                    message: json!("Failed to find user::getAttributes"),
+                                                    message: json!("Failed to add the Attributes to receiver account"),
+                                                    description: format!("Error in account::transfer"),
                                                 }))
                                             }
                                         }
-                                        Err(_e) => {
+                                        Err(_) => {
                                             Ok(HttpResponse::BadRequest().json(RequestError {
-                                                    message: json!("Failed to find user::getAttributes"),
-                                                }))
-                                            }                                        
-                                    }    
-                                                                       
+                                                message: json!("Failed to add the Attributes to receiver account"),
+                                                description: format!("Error in account::transfer"),
+                                            }))
+                                        }                                        
+                                    }                                                                       
                                 } else {
                                     Ok(HttpResponse::BadRequest().json(RequestError {
-                                        message: json!("Failed to find user::getAttributes"),
+                                        message: json!("Failed to remove seed from account"),
+                                        description: format!("Error in account::transfer"),
                                     }))
                                 }
                             }                
-                            Err(_e) => {
-                            Ok(HttpResponse::BadRequest().json(RequestError {
-                                    message: json!("Failed to find user::getAttributes"),
+                            Err(_) => {
+                                Ok(HttpResponse::BadRequest().json(RequestError {
+                                    message: json!("Not found user Attributes"),
+                                    description: format!("Error in account::transfer"),
                                 }))
                             }
                         }
 
                     }
-                    Err(_e) => {
+                    Err(_) => {
                         Ok(HttpResponse::BadRequest().json(RequestError {
-                                message: json!("Failed to find user::getAttributes"),
-                            }))
-                        }
+                            message: json!("Not found user Attributes"),
+                            description: format!("Error in account::transfer"),
+                        }))
+                    }
                 }
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
+                    description: format!("Error in account::transfer"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find user::getAttributes"),
+            message: json!("Not found user Attributes"),
+            description: format!("Error in account::transfer"),
         }))
     }
 }

@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RegisterInput {
-    pub seed: Seed,
     pub class_id: ClassId,
     pub metadata: serde_json::Value,
 }
@@ -16,7 +15,6 @@ pub struct RegisterOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateInput {
-    pub seed: Seed,
     pub class_id: ClassId,
     pub owners: Vec<Account>,
     pub shares: Vec<Balance>,
@@ -32,9 +30,7 @@ pub struct CreateOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SweepInput {
-    pub seed: Seed,
     pub bag: Account,
-    pub to: Account,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -46,7 +42,6 @@ pub struct SweepOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DepositInput {
-    pub seed: Seed,
     pub bag: Account,
     pub class_ids: Vec<ClassId>,
     pub asset_ids: Vec<Vec<AssetId>>,
