@@ -1,5 +1,15 @@
 # SugarFunge API
 
+## Usage
+- Copy the environment file as **.env**
+```
+cp .env.example .env
+```
+
+- Update the KEYCLOAK_PK on the main file using the rsa-generated provider public key that can be found on Realms -> Sugarfunge -> Realm Settings -> Keys
+
+- Update the KEYCLOAK_CLIENT_SECRET on the .env file using the Secret that can be found on Realms -> Sugarfunge -> Clients -> Sugarfunge-api -> Credentials -> Regenerate Secret
+
 ## Launch API server
 ```
 cargo run
