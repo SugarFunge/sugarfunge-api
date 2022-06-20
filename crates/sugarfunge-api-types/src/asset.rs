@@ -57,7 +57,6 @@ pub struct AssetInfoInput {
 pub struct AssetInfo {
     pub class_id: ClassId,
     pub asset_id: AssetId,
-    pub owner: Account,
     pub metadata: serde_json::Value,
 }
 

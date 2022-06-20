@@ -117,7 +117,7 @@ pub async fn info(
     let result = api
         .storage()
         .asset()
-        .classes(&req.class_id.into(), None)
+        .assets(&req.class_id.into(), &req.asset_id.into(), None)
         .await;
     let info = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(AssetInfoOutput {
@@ -125,7 +125,6 @@ pub async fn info(
             Some(info) => Some(AssetInfo {
                 class_id: req.class_id.clone(),
                 asset_id: req.asset_id.clone(),
-                owner: info.owner.into(),
                 metadata: serde_json::from_slice(info.metadata.0.as_slice()).unwrap_or_default(),
             }),
             None => None,
