@@ -27,10 +27,6 @@ mod user;
 mod util;
 mod validator;
 
-const KEYCLOAK_PK: &str = "-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu68Ezl12qOOTbFDpntHT5HMSyvq8l67lR4SSf0P9Z1NKk+pVBjNOssHyUU7SJgK1Y5X86OZwq5eGMxF/m4X5ECMGRqAogDdDZ49jwev7IA3o7u4fZQkTGpmZjscBj4at5Ks33cx1yqHfEhNbrB6yf92ruzQBpftxejlgbNZzjqjjREE305kgxvY3FrpARAPOaZRE6OIOFE3U6Mjj5/RUJdZWPatAHP14+vS985j7LDTjD/icEBa12nv3HAFsqS5rcoObNiAOltniKdRYd9LbboWWM7MpnMnh3NX5KY2nLTHlmb6CNXfCk16jFGNAlY1ypde1BlByOatTHLiJN4CjRwIDAQAB
------END PUBLIC KEY-----";
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok(); 
@@ -38,6 +34,8 @@ async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     let env = config::init();
+
+    let keycloak_pk = format!("-----BEGIN PUBLIC KEY----- {} -----END PUBLIC KEY-----", env.keycloak_public_key);
 
     let opt = Opt::from_args();
 
@@ -64,7 +62,7 @@ async fn main() -> std::io::Result<()> {
         let keycloak_auth = KeycloakAuth {
             detailed_responses: true,
             passthrough_policy: AlwaysReturnPolicy,
-            keycloak_oid_public_key: DecodingKey::from_rsa_pem(KEYCLOAK_PK.as_bytes()).unwrap(),
+            keycloak_oid_public_key: DecodingKey::from_rsa_pem(keycloak_pk.as_bytes()).unwrap().into_static(),
             required_roles: vec![],
         };
 

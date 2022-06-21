@@ -2,6 +2,7 @@ use std::env;
 
 #[derive(Clone, Debug)]
 pub struct Config {
+    pub keycloak_public_key: String,
     pub keycloak_client_id: String,
     pub keycloak_username: String,
     pub keycloak_user_password: String,
@@ -12,9 +13,13 @@ pub struct Config {
 
 pub fn init() -> Config {
  
-    let panic_message: String = "enviroment variable is not set".to_string();
+    let panic_message: String = "environment variable is not set".to_string();
 
     Config {
+        keycloak_public_key: match env::var("KEYCLOAK_PUBLIC_KEY") {
+            Ok(var) => var,
+            Err(_) => panic!("KEYCLOAK_PUBLIC_KEY {}", panic_message)
+        },
         keycloak_client_id: match env::var("KEYCLOAK_CLIENT_ID") {
             Ok(var) => var,
             Err(_) => panic!("KEYCLOAK_CLIENT_ID {}", panic_message)
