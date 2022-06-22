@@ -52,7 +52,7 @@ pub async fn seeded(
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in account::seeded"),
         }))
     }
 }
@@ -118,13 +118,13 @@ pub async fn balance(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in account::balance"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in account::balance"),
         }))
     }
 }
@@ -154,13 +154,13 @@ pub async fn exists(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in account::exists"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in account::exists"),
         }))
     }
 }

@@ -55,13 +55,13 @@ pub async fn register(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in bag::register"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in bag::register"),
         }))
     } 
 }
@@ -130,13 +130,13 @@ pub async fn create(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in bag::create"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in bag::create"),
         }))
     } 
 }
@@ -186,13 +186,13 @@ pub async fn sweep(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in bag::sweep"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in bag::sweep"),
         }))
     } 
 }
@@ -243,13 +243,13 @@ pub async fn deposit(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in bag::deposit"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in bag::deposit"),
         }))
     } 
 }

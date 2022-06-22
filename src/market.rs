@@ -79,13 +79,13 @@ pub async fn create_market(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in market::create_market"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in market::create_market"),
         }))
     }  
 }
@@ -133,13 +133,13 @@ pub async fn create_market_rate(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in market::create_market_rate"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in market::create_market_rate"),
         }))
     }       
 }
@@ -192,13 +192,13 @@ pub async fn deposit_assets(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in market::deposit_assets"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in market::deposit_assets"),
         }))
     }  
 }
@@ -251,13 +251,13 @@ pub async fn exchange_assets(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in market::exchange_assets"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in market::exchange_assets"),
         }))
     }         
 }
