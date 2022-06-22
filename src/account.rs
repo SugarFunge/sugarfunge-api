@@ -46,7 +46,7 @@ pub async fn seeded(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in account::seeded"),
                 }))
             }
         },
