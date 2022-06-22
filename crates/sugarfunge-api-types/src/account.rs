@@ -9,6 +9,8 @@ pub struct CreateAccountOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FundAccountInput {
+    pub seed: Seed,
+    pub to: Account,
     pub amount: Balance,
 }
 
