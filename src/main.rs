@@ -78,7 +78,6 @@ async fn main() -> std::io::Result<()> {
             .route("account/create", web::post().to(account::create))
             .route("account/fund", web::post().to(account::fund))
             .route("account/balance", web::post().to(account::balance))
-            //.route("account/transfer", web::post().to(account::transfer))
             .route("asset/create_class", web::post().to(asset::create_class))
             .route("asset/class_info", web::post().to(asset::class_info))
             .route("asset/create", web::post().to(asset::create))

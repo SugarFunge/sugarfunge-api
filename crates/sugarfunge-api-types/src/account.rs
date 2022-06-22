@@ -35,13 +35,3 @@ pub struct SeededAccountOutput {
     pub seed: Seed,
     pub account: Account,
 }
-
-#[derive(Serialize, Deserialize)]
-pub struct TransferAccountInput {
-    pub to: Account,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct TransferAccountOutput {
-    pub message: String
-}
