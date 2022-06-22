@@ -46,13 +46,13 @@ pub async fn seeded(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in account::seeded"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in account::seeded"),
         }))
     }
 }
@@ -61,59 +61,37 @@ pub async fn seeded(
 pub async fn fund(
     data: web::Data<AppState>,
     req: web::Json<FundAccountInput>,
-    claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
-    env: web::Data<Config>
 ) -> error::Result<HttpResponse> {
-    match user::get_seed(&claims.sub, env).await {
-        Ok(response) => {
-            if !response.seed.clone().unwrap_or_default().is_empty() {
-                let user_seed = Seed::from(response.seed.clone().unwrap());
-                let pair = get_pair_from_seed(&user_seed)?;
-                let pair_account = pair.public().into_account().to_string();
-                let funder = Seed::from("//Alice".to_string());
-                let funder_pair = get_pair_from_seed(&funder)?;
-                let signer = PairSigner::new(funder_pair);
-                let account= sp_core::sr25519::Public::from_str(&pair_account).map_err(map_account_err)?;
-                let account = sp_core::crypto::AccountId32::from(account);
-                let account = subxt::sp_runtime::MultiAddress::Id(account);
-                let amount_input = req.amount;
-                let api = &data.api;
-                let result = api
-                    .tx()
-                    .balances()
-                    .transfer(account, amount_input.into())
-                    .map_err(map_subxt_err)?
-                    .sign_and_submit_then_watch(&signer, Default::default())
-                    .await
-                    .map_err(map_subxt_err)?
-                    .wait_for_finalized_success()
-                    .await
-                    .map_err(map_sf_err)?;
-                let result = result
-                    .find_first::<sugarfunge::balances::events::Transfer>()
-                    .map_err(map_subxt_err)?;
-                match result {
-                    Some(event) => Ok(HttpResponse::Ok().json(FundAccountOutput {
-                        from: event.from.into(),
-                        to: event.to.into(),
-                        amount: event.amount.into(),
-                    })),
-                    None => Ok(HttpResponse::BadRequest().json(RequestError {
-                        message: json!("Failed to find sugarfunge::balances::events::Transfer"),
-                        description: format!("Error in account::fund"),
-                    })),
-                } 
-            } else {
-                Ok(HttpResponse::BadRequest().json(RequestError {
-                    message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
-                }))
-            }
-        },
-        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find user::getAttributes"),
+    let pair = get_pair_from_seed(&req.seed)?;
+    let signer = PairSigner::new(pair);
+    let account = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let account = subxt::sp_runtime::MultiAddress::Id(account);
+    let amount_input = req.amount;
+    let api = &data.api;
+    let result = api
+        .tx()
+        .balances()
+        .transfer(account, amount_input.into())
+        .map_err(map_subxt_err)?
+        .sign_and_submit_then_watch(&signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_sf_err)?;
+    let result = result
+        .find_first::<sugarfunge::balances::events::Transfer>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(FundAccountOutput {
+            from: event.from.into(),
+            to: event.to.into(),
+            amount: event.amount.into(),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::balances::events::Transfer"),
             description: format!("Error in account::fund"),
-        }))
+        })),
     }
 }
 
@@ -140,13 +118,13 @@ pub async fn balance(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in account::balance"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in account::balance"),
         }))
     }
 }
@@ -176,116 +154,13 @@ pub async fn exists(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in account::exists"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in account::exists"),
         }))
     }
 }
-
-/*
-/// Transfers the seed from current user to other account
-pub async fn transfer(
-    req: web::Json<TransferAccountInput>,
-    claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
-    env: web::Data<Config>
-) -> error::Result<HttpResponse> {
-    let config = env.clone();
-    let env_aux = env.clone();
-    match user::get_seed(&claims.sub, env).await {
-        Ok(response) => {
-            if !response.seed.clone().unwrap_or_default().is_empty() {
-                let user_seed = response.seed.clone().unwrap();
-                match user::get_sugarfunge_token(env_aux).await {
-                    Ok(response) => {                        
-                        let awc_client = awc::Client::new();
-                        let endpoint = format!("{}/auth/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, &claims.sub);
-                        let attributes = json!({
-                            "attributes": ""
-                        });
-                        let user_response = awc_client.put(endpoint)
-                            .append_header((header::ACCEPT, "application/json"), )
-                            .append_header((header::CONTENT_TYPE, "application/json"))
-                            .append_header((header::AUTHORIZATION, "Bearer ".to_string() + &response.access_token))
-                            .send_json(&attributes)
-                            .await;            
-                        match user_response {
-                            Ok(user_response) => {
-                                if let StatusCode::NO_CONTENT = user_response.status() {                                    
-                                    let awc_client = awc::Client::new();
-                                    let endpoint = format!("{}/auth/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, String::from(&req.to));
-                                    let attributes = json!({
-                                        "attributes": {
-                                            "user-seed": [
-                                                user_seed
-                                            ]
-                                        }
-                                    });                        
-                                    let receiver_response = awc_client.put(endpoint)
-                                        .append_header((header::ACCEPT, "application/json"), )
-                                        .append_header((header::CONTENT_TYPE, "application/json"))
-                                        .append_header((header::AUTHORIZATION, "Bearer ".to_string() + &response.access_token))
-                                        .send_json(&attributes)
-                                        .await;
-                                    match receiver_response {
-                                        Ok(receiver_response) => {
-                                            if let StatusCode::NO_CONTENT = receiver_response.status() {
-                                                Ok(HttpResponse::Ok().json(TransferAccountOutput {
-                                                    message: "Attribute insert to user attributes".to_string()
-                                                }))
-                                            } 
-                                            else {
-                                                Ok(HttpResponse::BadRequest().json(RequestError {
-                                                    message: json!("Failed to add the Attributes to receiver account"),
-                                                    description: format!("Error in account::transfer"),
-                                                }))
-                                            }
-                                        }
-                                        Err(_) => {
-                                            Ok(HttpResponse::BadRequest().json(RequestError {
-                                                message: json!("Failed to add the Attributes to receiver account"),
-                                                description: format!("Error in account::transfer"),
-                                            }))
-                                        }                                        
-                                    }                                                                       
-                                } else {
-                                    Ok(HttpResponse::BadRequest().json(RequestError {
-                                        message: json!("Failed to remove seed from account"),
-                                        description: format!("Error in account::transfer"),
-                                    }))
-                                }
-                            }                
-                            Err(_) => {
-                                Ok(HttpResponse::BadRequest().json(RequestError {
-                                    message: json!("Not found user Attributes"),
-                                    description: format!("Error in account::transfer"),
-                                }))
-                            }
-                        }
-
-                    }
-                    Err(_) => {
-                        Ok(HttpResponse::BadRequest().json(RequestError {
-                            message: json!("Not found user Attributes"),
-                            description: format!("Error in account::transfer"),
-                        }))
-                    }
-                }
-            } else {
-                Ok(HttpResponse::BadRequest().json(RequestError {
-                    message: json!("Not found user Attributes"),
-                    description: format!("Error in account::transfer"),
-                }))
-            }
-        },
-        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Not found user Attributes"),
-            description: format!("Error in account::transfer"),
-        }))
-    }
-}
-*/

@@ -59,13 +59,13 @@ pub async fn create_class(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in asset::create_class"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in asset::create_class"),
         }))
     }               
 }
@@ -138,13 +138,13 @@ pub async fn create(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in asset::create"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in asset::create"),
         }))
     }   
 }
@@ -219,13 +219,13 @@ pub async fn update_metadata(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in asset::update_metadata"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in asset::update_metadata"),
         }))
     }
 }
@@ -282,13 +282,13 @@ pub async fn mint(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in asset::mint"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in asset::mint"),
         }))
     }    
 }
@@ -345,13 +345,13 @@ pub async fn burn(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in asset::burn"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in asset::burn"),
         }))
     }  
 }
@@ -384,13 +384,13 @@ pub async fn balance(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in asset::balance"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in asset::balance"),
         }))
     }    
 }
@@ -450,13 +450,13 @@ pub async fn transfer_from(
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
+                    description: format!("Error in asset::transfer_from"),
                 }))
             }
         },
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
+            description: format!("Error in asset::transfer_from"),
         }))
     }    
 }

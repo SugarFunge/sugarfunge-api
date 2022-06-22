@@ -18,7 +18,7 @@ use sugarfunge_api_types::user::*;
 /// Generate admin token for sugarfunge-api client
 pub async fn get_sugarfunge_token(env: web::Data<Config>) -> error::Result<SugarTokenOutput, HttpResponse> {
     let config = &env;
-    let endpoint = config.keycloak_host.to_string() + "/auth/realms/" + &config.keycloak_realm + "/protocol/openid-connect/token";
+    let endpoint = config.keycloak_host.to_string() + "/realms/" + &config.keycloak_realm + "/protocol/openid-connect/token";
     let credentials = web::Data::new(Credentials{
         client_id: config.keycloak_client_id.to_string(),
         grant_type: "password".to_string(),
@@ -64,7 +64,7 @@ pub async fn get_seed(
     match get_sugarfunge_token(env).await {
         Ok(response) => {
             let awc_client = awc::Client::new();
-            let endpoint = format!("{}/auth/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, user_id); 
+            let endpoint = format!("{}/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, user_id); 
             let user_response = awc_client.get(endpoint)
                 .append_header((header::ACCEPT, "application/json"), )
                 .append_header((header::CONTENT_TYPE, "application/json"))
@@ -123,7 +123,7 @@ pub async fn insert_seed(
                     let str_bytes = std::str::from_utf8(&bytes).unwrap().to_string();
                     let body: CreateAccountOutput = serde_json::from_str(&str_bytes).unwrap();                    
                     let awc_client = awc::Client::new();
-                    let endpoint = format!("{}/auth/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, user_id); 
+                    let endpoint = format!("{}/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, user_id); 
                     let attributes = json!({
                         "attributes": {
                             "user-seed": [
