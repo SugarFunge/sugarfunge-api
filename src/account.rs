@@ -203,7 +203,7 @@ pub async fn transfer(
                 match user::get_sugarfunge_token(env_aux).await {
                     Ok(response) => {                        
                         let awc_client = awc::Client::new();
-                        let endpoint = format!("{}/auth/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, &claims.sub);
+                        let endpoint = format!("{}/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, &claims.sub);
                         let attributes = json!({
                             "attributes": ""
                         });
@@ -217,7 +217,7 @@ pub async fn transfer(
                             Ok(user_response) => {
                                 if let StatusCode::NO_CONTENT = user_response.status() {                                    
                                     let awc_client = awc::Client::new();
-                                    let endpoint = format!("{}/auth/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, String::from(&req.to));
+                                    let endpoint = format!("{}/admin/realms/{}/users/{}", config.keycloak_host, config.keycloak_realm, String::from(&req.to));
                                     let attributes = json!({
                                         "attributes": {
                                             "user-seed": [
