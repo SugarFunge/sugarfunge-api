@@ -13,7 +13,7 @@ scale-info = { version = "2.0.0", features = ["bit-vec"] }
 
 [dependencies.subxt]
 git = "https://github.com/SugarFunge/subxt.git"
-rev = "72bf373b7adc1b30afcf6d03f6c700215b995590"
+rev = "50652dfe5dbb17a9faf4f3487c55ce895d8710a1"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate.git"
