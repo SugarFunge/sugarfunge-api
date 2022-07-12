@@ -2866,7 +2866,7 @@ checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
 [[package]]
 name = "subxt"
 version = "0.21.0"
-source = "git+https://github.com/SugarFunge/subxt.git?rev=72bf373b7adc1b30afcf6d03f6c700215b995590#72bf373b7adc1b30afcf6d03f6c700215b995590"
+source = "git+https://github.com/SugarFunge/subxt.git?rev=50652dfe5dbb17a9faf4f3487c55ce895d8710a1#50652dfe5dbb17a9faf4f3487c55ce895d8710a1"
 dependencies = [
  "bitvec",
  "derivative",
@@ -2890,7 +2890,7 @@ dependencies = [
 [[package]]
 name = "subxt-codegen"
 version = "0.21.0"
-source = "git+https://github.com/SugarFunge/subxt.git?rev=72bf373b7adc1b30afcf6d03f6c700215b995590#72bf373b7adc1b30afcf6d03f6c700215b995590"
+source = "git+https://github.com/SugarFunge/subxt.git?rev=50652dfe5dbb17a9faf4f3487c55ce895d8710a1#50652dfe5dbb17a9faf4f3487c55ce895d8710a1"
 dependencies = [
  "darling",
  "frame-metadata",
@@ -2907,7 +2907,7 @@ dependencies = [
 [[package]]
 name = "subxt-macro"
 version = "0.21.0"
-source = "git+https://github.com/SugarFunge/subxt.git?rev=72bf373b7adc1b30afcf6d03f6c700215b995590#72bf373b7adc1b30afcf6d03f6c700215b995590"
+source = "git+https://github.com/SugarFunge/subxt.git?rev=50652dfe5dbb17a9faf4f3487c55ce895d8710a1#50652dfe5dbb17a9faf4f3487c55ce895d8710a1"
 dependencies = [
  "darling",
  "proc-macro-error",
@@ -2918,7 +2918,7 @@ dependencies = [
 [[package]]
 name = "subxt-metadata"
 version = "0.21.0"
-source = "git+https://github.com/SugarFunge/subxt.git?rev=72bf373b7adc1b30afcf6d03f6c700215b995590#72bf373b7adc1b30afcf6d03f6c700215b995590"
+source = "git+https://github.com/SugarFunge/subxt.git?rev=50652dfe5dbb17a9faf4f3487c55ce895d8710a1#50652dfe5dbb17a9faf4f3487c55ce895d8710a1"
 dependencies = [
  "frame-metadata",
  "parity-scale-codec",
