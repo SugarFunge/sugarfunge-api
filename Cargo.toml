@@ -7,7 +7,10 @@ edition = "2021"
 members = ["crates/*"]
 
 [dependencies]
-sugarfunge-api-types = { path = "crates/sugarfunge-api-types" }
+sugarfunge-api-admin-types = { path = "crates/sugarfunge-api-admin-types" }
+sugarfunge-api-keycloak-types = { path = "crates/sugarfunge-api-keycloak-types" }
+sugarfunge-api-admin = { path = "crates/sugarfunge-api-admin" }
+sugarfunge-api-keycloak = { path = "crates/sugarfunge-api-keycloak" }
 env_logger = "0.8"
 structopt = "0.3"
 rand = "0.8.3"
@@ -58,3 +61,4 @@ package = "actix-web-middleware-keycloak-auth"
 [features]
 default = ["std"]
 std = ["codec/std", "scale-info/std"]
+keycloak = []

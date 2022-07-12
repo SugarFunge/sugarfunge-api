@@ -3066,12 +3066,80 @@ dependencies = [
  "sp-std",
  "structopt",
  "subxt",
- "sugarfunge-api-types",
+ "sugarfunge-api-admin",
+ "sugarfunge-api-admin-types",
+ "sugarfunge-api-keycloak",
+ "sugarfunge-api-keycloak-types",
  "url",
 ]
 
 [[package]]
-name = "sugarfunge-api-types"
+name = "sugarfunge-api-admin"
+version = "0.1.0"
+dependencies = [
+ "actix-cors",
+ "actix-web",
+ "derive_more",
+ "env_logger",
+ "hex",
+ "jsonrpsee-types 0.5.1",
+ "parity-scale-codec",
+ "rand 0.8.5",
+ "scale-info",
+ "serde",
+ "serde_json",
+ "sp-core",
+ "sp-io",
+ "sp-keyring",
+ "sp-std",
+ "structopt",
+ "subxt",
+ "sugarfunge-api-admin-types",
+ "url",
+]
+
+[[package]]
+name = "sugarfunge-api-admin-types"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "serde_json",
+ "sp-core",
+ "subxt",
+]
+
+[[package]]
+name = "sugarfunge-api-keycloak"
+version = "0.1.0"
+dependencies = [
+ "actix-cors",
+ "actix-web",
+ "actix-web-middleware-keycloak-auth",
+ "awc",
+ "derive_more",
+ "dotenv",
+ "env_logger",
+ "hex",
+ "jsonrpsee-types 0.5.1",
+ "parity-scale-codec",
+ "rand 0.8.5",
+ "scale-info",
+ "serde",
+ "serde_json",
+ "sp-core",
+ "sp-io",
+ "sp-keyring",
+ "sp-std",
+ "structopt",
+ "subxt",
+ "sugarfunge-api-keycloak-types",
+ "url",
+]
+
+[[package]]
+name = "sugarfunge-api-keycloak-types"
 version = "0.1.0"
 dependencies = [
  "parity-scale-codec",
