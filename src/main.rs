@@ -6,6 +6,7 @@ use actix_web::{
 };
 use command::*;
 use state::*;
+use util::url_to_string;
 use std::sync::Arc;
 use structopt::StructOpt;
 use subxt::{ClientBuilder, DefaultConfig, PolkadotExtrinsicParams};
@@ -40,7 +41,7 @@ async fn main() -> std::io::Result<()> {
     let opt = Opt::from_args();
 
     let api = ClientBuilder::new()
-        .set_url(opt.node_server.to_string())
+        .set_url(url_to_string(opt.node_server))
         .build()
         .await
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
