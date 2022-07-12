@@ -1,0 +1,22 @@
+[package]
+name = "sugarfunge-api-keycloak-types"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive", "full", "bit-vec"] }
+scale-info = { version = "2.0.0", features = ["bit-vec"] }
+
+[dependencies.subxt]
+git = "https://github.com/SugarFunge/subxt.git"
+rev = "50652dfe5dbb17a9faf4f3487c55ce895d8710a1"
+
+[dependencies.sp-core]
+git = "https://github.com/paritytech/substrate.git"
+branch = "polkadot-v0.9.23"
+package = "sp-core"
+features = ["full_crypto"]

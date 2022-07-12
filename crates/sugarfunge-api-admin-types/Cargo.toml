@@ -1,5 +1,5 @@
 [package]
-name = "sugarfunge-api-types"
+name = "sugarfunge-api-admin-types"
 version = "0.1.0"
 edition = "2021"
 
