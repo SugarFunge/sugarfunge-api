@@ -190,9 +190,8 @@ pub async fn balances(
     req: web::Json<AssetBalancesInput>,
 ) -> error::Result<HttpResponse> {
     let account = sp_core::sr25519::Public::from_str(&req.account).map_err(map_account_err)?;
-    let account = sp_core::crypto::AccountId32::from(account);
     let api = &data.api;
-    let params = &[jsonrpsee_types::to_json_value(account.to_string())?];
+    let params = &[jsonrpsee_types::to_json_value(account)?];
     let result = api
         .client
         .rpc()
