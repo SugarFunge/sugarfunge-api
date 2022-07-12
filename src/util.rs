@@ -5,6 +5,7 @@ use serde_json::json;
 use sp_core::Pair;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
+use url::Url;
 
 #[derive(Serialize, Deserialize, Debug, Display)]
 #[display(fmt = "{:?} {:?}", message, description)]
@@ -58,4 +59,15 @@ pub fn get_pair_from_seed(seed: &Seed) -> error::Result<sp_core::sr25519::Pair> 
         let req_error = serde_json::to_string_pretty(&req_error).unwrap();
         error::ErrorBadRequest(req_error)
     })
+}
+
+pub fn url_to_string(url: Url) -> String {
+    let mut res = url.to_string();
+    match (url.port(), url.port_or_known_default()) {
+        (None, Some(port)) => {
+            res.insert_str(res.len() - 1, &format!(":{}", port));
+            res
+        }
+        _ => res,
+    }
 }
