@@ -7,10 +7,10 @@ use actix_web::{
 mod command;
 use command::*;
 use state::*;
-use util::url_to_string;
 use std::sync::Arc;
 use structopt::StructOpt;
 use subxt::{ClientBuilder, DefaultConfig, PolkadotExtrinsicParams};
+use util::url_to_string;
 
 #[cfg(not(feature = "keycloak"))]
 use sugarfunge_api_admin;
@@ -39,13 +39,11 @@ use sugarfunge_api_admin::validator;
 use sugarfunge_api_keycloak;
 
 #[cfg(feature = "keycloak")]
-use sugarfunge_api_keycloak_types::sugarfunge;
-#[cfg(feature = "keycloak")]
-use actix_web_middleware_keycloak_auth::{
-    AlwaysReturnPolicy, DecodingKey, KeycloakAuth,
-};
+use actix_web_middleware_keycloak_auth::{AlwaysReturnPolicy, DecodingKey, KeycloakAuth};
 #[cfg(feature = "keycloak")]
 use dotenv::dotenv;
+#[cfg(feature = "keycloak")]
+use sugarfunge_api_keycloak_types::sugarfunge;
 
 #[cfg(feature = "keycloak")]
 use sugarfunge_api_keycloak_types::config;
@@ -158,13 +156,16 @@ async fn main() -> std::io::Result<()> {
 #[cfg(feature = "keycloak")]
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    dotenv().ok(); 
-    
+    dotenv().ok();
+
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     let env = config::init();
 
-    let keycloak_pk = format!("-----BEGIN PUBLIC KEY----- {} -----END PUBLIC KEY-----", env.keycloak_public_key);
+    let keycloak_pk = format!(
+        "-----BEGIN PUBLIC KEY----- {} -----END PUBLIC KEY-----",
+        env.keycloak_public_key
+    );
 
     let opt = Opt::from_args();
 
@@ -191,7 +192,9 @@ async fn main() -> std::io::Result<()> {
         let keycloak_auth = KeycloakAuth {
             detailed_responses: true,
             passthrough_policy: AlwaysReturnPolicy,
-            keycloak_oid_public_key: DecodingKey::from_rsa_pem(keycloak_pk.as_bytes()).unwrap().into_static(),
+            keycloak_oid_public_key: DecodingKey::from_rsa_pem(keycloak_pk.as_bytes())
+                .unwrap()
+                .into_static(),
             required_roles: vec![],
         };
 
@@ -201,7 +204,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(Data::new(state.clone()))
             .app_data(Data::new(env.clone()))
             .wrap(keycloak_auth)
-            .wrap(cors)            
+            .wrap(cors)
             .route("account/seeded", web::post().to(account::seeded))
             .route("account/exists", web::post().to(account::exists))
             .route("account/create", web::post().to(account::create))
@@ -256,4 +259,3 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
-
