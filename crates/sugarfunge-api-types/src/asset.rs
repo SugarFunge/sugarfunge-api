@@ -3,9 +3,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateClassInput {
-    pub seed: Seed,
     pub class_id: ClassId,
     pub metadata: serde_json::Value,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
+    #[cfg(not(feature = "keycloak"))]
     pub owner: Account,
 }
 
