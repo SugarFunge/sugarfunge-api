@@ -10,13 +10,26 @@ use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 
-use sugarfunge_api_types::config::Config;
-use crate::user;
-use actix_web_middleware_keycloak_auth::KeycloakClaims;
-use sp_core::Pair;
-use subxt::sp_runtime::traits::IdentifyAccount;
+// /// Create an asset class for an account
+// #[cfg(feature = "keycloak")]
+// pub async fn create_class(
+//     data: web::Data<AppState>,
+//     req: web::Json<CreateClassInput>,
+// ) -> error::Result<HttpResponse> {
+//     let user_seed = Seed::from(String::from("//Alice"));
+//     let to = sp_core::sr25519::Public::from_str("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY")
+//         .map_err(map_account_err)?;
+//     let to = sp_core::crypto::AccountId32::from(to);
 
-/// Create an asset class for an account
+//     match create_class_call(data, req, user_seed, to).await {
+//         Ok(response) => Ok(HttpResponse::Ok().json(response)),
+//         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+//             message: json!("Failed to create class"),
+//             description: format!("Error in asset::createClass"),
+//         })),
+//     }
+// }
+
 #[cfg(not(feature = "keycloak"))]
 pub async fn create_class(
     data: web::Data<AppState>,
@@ -27,23 +40,21 @@ pub async fn create_class(
     let to = sp_core::crypto::AccountId32::from(to);
 
     match create_class_call(data, req, user_seed, to).await {
-        Ok(response) => {Ok(HttpResponse::Ok().json(response))}
-        Err(_) => {
-            Ok(HttpResponse::BadRequest().json(RequestError {
-                message: json!("Failed to create class"),
-                description: format!("Error in asset::createClass"),
-            }))
-        }
-    }    
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to create class"),
+            description: format!("Error in asset::createClass"),
+        })),
+    }
 }
 
-/// Create an asset class for an account
+// Create an asset class for an account
 #[cfg(feature = "keycloak")]
 pub async fn create_class(
     data: web::Data<AppState>,
     req: web::Json<CreateClassInput>,
     claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
-    env: web::Data<Config>
+    env: web::Data<Config>,
 ) -> error::Result<HttpResponse> {
     match user::get_seed(&claims.sub, env).await {
         Ok(response) => {
@@ -51,33 +62,37 @@ pub async fn create_class(
                 let user_seed = Seed::from(response.seed.clone().unwrap());
                 let pair = get_pair_from_seed(&user_seed)?;
                 let pair_account = pair.public().into_account().to_string();
-                let to = sp_core::sr25519::Public::from_str(&pair_account.as_str()).map_err(map_account_err)?;
+                let to = sp_core::sr25519::Public::from_str(&pair_account.as_str())
+                    .map_err(map_account_err)?;
                 let to = sp_core::crypto::AccountId32::from(to);
                 match create_class_call(data, req, user_seed, to).await {
-                    Ok(response) => {Ok(HttpResponse::Ok().json(response))}
-                    Err(_) => {
-                        Ok(HttpResponse::BadRequest().json(RequestError {
-                            message: json!("Failed to create class"),
-                            description: format!("Error in asset::createClass"),
-                        }))
-                    }
-                }  
+                    Ok(response) => Ok(HttpResponse::Ok().json(response)),
+                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+                        message: json!("Failed to create class"),
+                        description: format!("Error in asset::createClass"),
+                    })),
+                }
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
                     message: json!("Not found user Attributes"),
                     description: format!("Error in asset::create_class"),
                 }))
             }
-        },
+        }
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find user::getAttributes"),
             description: format!("Error in asset::create_class"),
-        }))
-    }               
+        })),
+    }
 }
 
-async fn create_class_call(data: web::Data<AppState>, req: web::Json<CreateClassInput>, seed: Seed, to:AccountId32) -> error::Result<web::Json<CreateClassOutput>, HttpResponse> {
-    let pair = get_pair_from_seed(&seed)?;    
+async fn create_class_call(
+    data: web::Data<AppState>,
+    req: web::Json<CreateClassInput>,
+    seed: Seed,
+    to: AccountId32,
+) -> error::Result<web::Json<CreateClassOutput>, HttpResponse> {
+    let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);

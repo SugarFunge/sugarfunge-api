@@ -58,5 +58,5 @@ package = "actix-web-middleware-keycloak-auth"
 [features]
 default = ["std","admin"]
 std = ["codec/std", "scale-info/std"]
-admin = []
-keycloak = []
+admin = ["sugarfunge-api-types/admin"]
+keycloak = ["sugarfunge-api-types/keycloak"]
