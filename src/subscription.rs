@@ -53,6 +53,7 @@ impl SubcriptionServiceWS {
         // api.events().subscribe().await.into
 
         let task = async move {
+            
 
             let mut events = api.events().subscribe().await.unwrap()
             .filter_events::<(sugarfunge::balances::events::Transfer,)>();
@@ -112,7 +113,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for SubcriptionServic
             Ok(ws::Message::Pong(_)) => {
                 self.last_client_heartbeat = Instant::now();
             }
-            Ok(ws::Message::Text(text)) => ctx.text(text),
+            Ok(ws::Message::Text(text)) => ctx.text(format!("echo: {}", text)),
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
             Ok(ws::Message::Close(reason)) => {
                 ctx.close(reason);
