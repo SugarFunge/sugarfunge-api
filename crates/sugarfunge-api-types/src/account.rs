@@ -10,8 +10,9 @@ pub struct CreateAccountOutput {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FundAccountInput {
     pub seed: Seed,
-    pub to: Account,
     pub amount: Balance,
+    #[cfg(not(feature = "keycloak"))]
+    pub to: Account,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -21,6 +22,7 @@ pub struct FundAccountOutput {
     pub amount: Balance,
 }
 
+#[cfg(not(feature = "keycloak"))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AccountBalanceInput {
     pub account: Account,
@@ -31,6 +33,7 @@ pub struct AccountBalanceOutput {
     pub balance: Balance,
 }
 
+#[cfg(not(feature = "keycloak"))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AccountExistsInput {
     pub account: Account,
@@ -42,6 +45,7 @@ pub struct AccountExistsOutput {
     pub exists: bool,
 }
 
+#[cfg(not(feature = "keycloak"))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SeededAccountInput {
     pub seed: Seed,

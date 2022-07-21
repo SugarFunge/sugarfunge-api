@@ -10,11 +10,12 @@ pub struct BundleSchema {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RegisterBundleInput {
-    pub seed: Seed,
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub schema: BundleSchema,
     pub metadata: serde_json::Value,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -27,11 +28,14 @@ pub struct RegisterBundleOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MintBundleInput {
-    pub seed: Seed,
-    pub from: Account,
-    pub to: Account,
     pub bundle_id: BundleId,
     pub amount: Balance,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
+    #[cfg(not(feature = "keycloak"))]
+    pub from: Account,
+    #[cfg(not(feature = "keycloak"))]
+    pub to: Account,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -45,11 +49,14 @@ pub struct MintBundleOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BurnBundleInput {
-    pub seed: Seed,
-    pub from: Account,
-    pub to: Account,
     pub bundle_id: BundleId,
     pub amount: Balance,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
+    #[cfg(not(feature = "keycloak"))]
+    pub from: Account,
+    #[cfg(not(feature = "keycloak"))]
+    pub to: Account,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

@@ -171,7 +171,6 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .route("account/seeded", web::post().to(account::seeded))
             .route("account/exists", web::post().to(account::exists))
-            .route("account/create", web::post().to(account::create))
             .route("account/fund", web::post().to(account::fund))
             .route("account/balance", web::post().to(account::balance))
             .route("asset/create_class", web::post().to(asset::create_class))

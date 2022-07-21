@@ -9,6 +9,13 @@ use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_market;
 
+#[cfg(feature = "keycloak")]
+use sugarfunge_api_types::config::Config;
+#[cfg(feature = "keycloak")]
+use crate::user;
+#[cfg(feature = "keycloak")]
+use actix_web_middleware_keycloak_auth::KeycloakClaims;
+
 fn extrinsinc_rates(
     in_rates: &Vec<AssetRate>,
 ) -> BoundedVec<sugarfunge_market::AssetRate<subxt::sp_runtime::AccountId32, u64, u64>> {
@@ -36,11 +43,61 @@ fn transform_balances(
         .collect()
 }
 
+/// Creates a market
+#[cfg(not(feature = "keycloak"))]
 pub async fn create_market(
     data: web::Data<AppState>,
     req: web::Json<CreateMarketInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.seed)?;
+    let user_seed = Seed::from(req.seed.clone());
+    match market_create_call(data, req, user_seed).await {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to create market"),
+            description: format!("Error in market::create"),
+        })),
+    }
+}
+
+/// Creates a market
+#[cfg(feature = "keycloak")]
+pub async fn create_market(
+    data: web::Data<AppState>,
+    req: web::Json<CreateMarketInput>,
+    claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
+    env: web::Data<Config>
+) -> error::Result<HttpResponse> {
+    match user::get_seed(&claims.sub, env).await {
+        Ok(response) => {
+            if !response.seed.clone().unwrap_or_default().is_empty() {
+                let user_seed = Seed::from(response.seed.clone().unwrap());
+                match market_create_call(data, req, user_seed).await {
+                    Ok(response) => Ok(HttpResponse::Ok().json(response)),
+                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+                        message: json!("Failed to create market"),
+                        description: format!("Error in market::create"),
+                    })),
+                }
+            } else {
+                Ok(HttpResponse::BadRequest().json(RequestError {
+                    message: json!("Not found user Attributes"),
+                    description: format!("Error in market::create_market"),
+                }))
+            }
+        }
+        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find user::getAttributes"),
+            description: format!("Error in market::create_market"),
+        })),
+    }
+}
+
+pub async fn market_create_call(
+    data: web::Data<AppState>,
+    req: web::Json<CreateMarketInput>,
+    seed: Seed,
+) -> error::Result<web::Json<CreateMarketOutput>, HttpResponse> {
+    let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let api = &data.api;
     let result = api
@@ -58,28 +115,76 @@ pub async fn create_market(
         .find_first::<sugarfunge::market::events::Created>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(CreateMarketOutput {
+        Some(event) => Ok(web::Json(CreateMarketOutput {
             who: event.who.into(),
             market_id: event.market_id.into(),
         })),
-        None => Ok(HttpResponse::BadRequest().json(RequestError {
+        None => Err(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::Created"),
             description: format!(""),
         })),
     }
 }
 
+/// Creates a market rate
+#[cfg(not(feature = "keycloak"))]
 pub async fn create_market_rate(
     data: web::Data<AppState>,
     req: web::Json<CreateMarketRateInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.seed)?;
+    let user_seed = Seed::from(req.seed.clone());
+    match market_rate_create_call(data, req, user_seed).await {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to create market rate"),
+            description: format!("Error in market::createRate"),
+        })),
+    }
+}
+
+/// Creates a market rate
+#[cfg(feature = "keycloak")]
+pub async fn create_market_rate(
+    data: web::Data<AppState>,
+    req: web::Json<CreateMarketRateInput>,
+    claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
+    env: web::Data<Config>
+) -> error::Result<HttpResponse> {
+    match user::get_seed(&claims.sub, env).await {
+        Ok(response) => {
+            if !response.seed.clone().unwrap_or_default().is_empty() {
+                let user_seed = Seed::from(response.seed.clone().unwrap());
+                match market_rate_create_call(data, req, user_seed).await {
+                    Ok(response) => Ok(HttpResponse::Ok().json(response)),
+                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+                        message: json!("Failed to create market rate"),
+                        description: format!("Error in market::createRate"),
+                    })),
+                }
+            } else {
+                Ok(HttpResponse::BadRequest().json(RequestError {
+                    message: json!("Not found user Attributes"),
+                    description: format!("Error in market::create_market_rate"),
+                }))
+            }
+        }
+        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find user::getAttributes"),
+            description: format!("Error in market::create_market_rate"),
+        })),
+    }
+}
+    
+pub async fn market_rate_create_call(
+    data: web::Data<AppState>,
+    req: web::Json<CreateMarketRateInput>,
+    seed: Seed,
+) -> error::Result<web::Json<CreateMarketRateOutput>, HttpResponse> {
+    let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let api = &data.api;
-
     let rates = &req.rates.rates; //transform_input(&req.rates.rates);
     let rates = extrinsinc_rates(&rates);
-
     let result = api
         .tx()
         .market()
@@ -95,23 +200,73 @@ pub async fn create_market_rate(
         .find_first::<sugarfunge::market::events::RateCreated>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(CreateMarketRateOutput {
+        Some(event) => Ok(web::Json(CreateMarketRateOutput {
             who: event.who.into(),
             market_id: event.market_id.into(),
             market_rate_id: MarketId::from(event.market_rate_id),
         })),
-        None => Ok(HttpResponse::BadRequest().json(RequestError {
+        None => Err(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::RateCreated"),
             description: format!(""),
         })),
     }
 }
 
+/// Deposits assets in a market
+#[cfg(not(feature = "keycloak"))]
 pub async fn deposit_assets(
     data: web::Data<AppState>,
     req: web::Json<DepositAssetsInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.seed)?;
+    let user_seed = Seed::from(req.seed.clone());
+    match deposit_assets_call(data, req, user_seed).await {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to deposit assets"),
+            description: format!("Error in market::depositAssets"),
+        })),
+    }
+}
+
+/// Deposits assets in a market
+#[cfg(feature = "keycloak")]
+pub async fn deposit_assets(
+    data: web::Data<AppState>,
+    req: web::Json<DepositAssetsInput>,
+    claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
+    env: web::Data<Config>
+) -> error::Result<HttpResponse> {
+    match user::get_seed(&claims.sub, env).await {
+        Ok(response) => {
+            if !response.seed.clone().unwrap_or_default().is_empty() {
+                let user_seed = Seed::from(response.seed.clone().unwrap());
+                match deposit_assets_call(data, req, user_seed).await {
+                    Ok(response) => Ok(HttpResponse::Ok().json(response)),
+                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+                        message: json!("Failed to deposit assets"),
+                        description: format!("Error in market::depositAssets"),
+                    })),
+                }
+            } else {
+                Ok(HttpResponse::BadRequest().json(RequestError {
+                    message: json!("Not found user Attributes"),
+                    description: format!("Error in market::deposit_assets"),
+                }))
+            }
+        }
+        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find user::getAttributes"),
+            description: format!("Error in market::deposit_assets"),
+        })),
+    }
+}
+
+pub async fn deposit_assets_call(
+    data: web::Data<AppState>,
+    req: web::Json<DepositAssetsInput>,
+    seed: Seed,
+) -> error::Result<web::Json<DepositAssetsOutput>, HttpResponse> {
+    let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let api = &data.api;
     let result = api
@@ -133,7 +288,7 @@ pub async fn deposit_assets(
         .find_first::<sugarfunge::market::events::Deposit>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(DepositAssetsOutput {
+        Some(event) => Ok(web::Json(DepositAssetsOutput {
             who: event.who.into(),
             market_id: event.market_id.into(),
             market_rate_id: MarketId::from(event.market_rate_id),
@@ -141,18 +296,68 @@ pub async fn deposit_assets(
             balances: transform_balances(event.balances),
             success: event.success,
         })),
-        None => Ok(HttpResponse::BadRequest().json(RequestError {
+        None => Err(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::Deposit"),
             description: format!(""),
         })),
     }
 }
 
+/// Exchanges assets in a market
+#[cfg(not(feature = "keycloak"))]
 pub async fn exchange_assets(
     data: web::Data<AppState>,
     req: web::Json<ExchangeAssetsInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.seed)?;
+    let user_seed = Seed::from(req.seed.clone());
+    match exchange_assets_call(data, req, user_seed).await {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to exchange assets"),
+            description: format!("Error in market::exchangeAssets"),
+        })),
+    }    
+}
+
+/// Exchanges assets in a market
+#[cfg(feature = "keycloak")]
+pub async fn exchange_assets(
+    data: web::Data<AppState>,
+    req: web::Json<ExchangeAssetsInput>,
+    claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
+    env: web::Data<Config>
+) -> error::Result<HttpResponse> {
+    match user::get_seed(&claims.sub, env).await {
+        Ok(response) => {
+            if !response.seed.clone().unwrap_or_default().is_empty() {
+                let user_seed = Seed::from(response.seed.clone().unwrap());
+                match exchange_assets_call(data, req, user_seed).await {
+                    Ok(response) => Ok(HttpResponse::Ok().json(response)),
+                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+                        message: json!("Failed to exchange assets"),
+                        description: format!("Error in market::exchangeAssets"),
+                    })),
+                } 
+            } else {
+                Ok(HttpResponse::BadRequest().json(RequestError {
+                    message: json!("Not found user Attributes"),
+                    description: format!("Error in market::exchange_assets"),
+                }))
+            }
+        }
+        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find user::getAttributes"),
+            description: format!("Error in market::exchange_assets"),
+        })),
+    }  
+}
+
+pub async fn exchange_assets_call(
+    data: web::Data<AppState>,
+    req: web::Json<ExchangeAssetsInput>,
+    seed: Seed,
+) -> error::Result<web::Json<ExchangeAssetsOutput>, HttpResponse> {
+    let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let api = &data.api;
     let result = api
@@ -174,7 +379,7 @@ pub async fn exchange_assets(
         .find_first::<sugarfunge::market::events::Exchanged>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(ExchangeAssetsOutput {
+        Some(event) => Ok(web::Json(ExchangeAssetsOutput {
             buyer: event.buyer.into(),
             market_id: event.market_id.into(),
             market_rate_id: MarketId::from(event.market_rate_id),
@@ -182,7 +387,7 @@ pub async fn exchange_assets(
             balances: transform_balances(event.balances),
             success: event.success,
         })),
-        None => Ok(HttpResponse::BadRequest().json(RequestError {
+        None => Err(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::Exchange"),
             description: format!(""),
         })),
