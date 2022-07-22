@@ -147,8 +147,8 @@ pub async fn create(
     match create_asset_call(data, req, user_seed).await {
         Ok(response) => Ok(HttpResponse::Ok().json(response)),
         Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to create class"),
-            description: format!("Error in asset::createClass"),
+            message: json!("Failed to create asset"),
+            description: format!("Error in asset::create"),
         })),
     }    
 }
