@@ -13,7 +13,7 @@ use sugarfunge_api_types::sugarfunge;
 #[cfg(feature = "keycloak")]
 use std::str::FromStr;
 #[cfg(feature = "keycloak")]
-use sugarfunge_api_types::config::Config;
+use crate::config::Config;
 #[cfg(feature = "keycloak")]
 use crate::user;
 #[cfg(feature = "keycloak")]

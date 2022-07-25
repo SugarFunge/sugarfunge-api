@@ -10,7 +10,7 @@ use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bou
 use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_market;
 
 #[cfg(feature = "keycloak")]
-use sugarfunge_api_types::config::Config;
+use crate::config::Config;
 #[cfg(feature = "keycloak")]
 use crate::user;
 #[cfg(feature = "keycloak")]

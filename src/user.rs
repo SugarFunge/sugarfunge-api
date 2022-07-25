@@ -12,7 +12,7 @@ use actix_web_middleware_keycloak_auth::{KeycloakClaims};
 use awc::{self};
 use serde_json::json;
 use sugarfunge_api_types::account::*;
-use sugarfunge_api_types::config::Config;
+use crate::config::Config;
 use sugarfunge_api_types::user::*;
 
 /// Generate admin token for sugarfunge-api client

@@ -13,7 +13,7 @@ use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
 
 #[cfg(feature = "keycloak")]
-use sugarfunge_api_types::config::Config;
+use crate::config::Config;
 #[cfg(feature = "keycloak")]
 use crate::user;
 #[cfg(feature = "keycloak")]

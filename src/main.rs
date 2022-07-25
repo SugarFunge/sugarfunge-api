@@ -17,6 +17,8 @@ mod asset;
 mod bag;
 mod bundle;
 mod command;
+#[cfg(feature = "keycloak")]
+mod config;
 mod market;
 mod state;
 #[cfg(feature = "keycloak")]
@@ -28,8 +30,6 @@ mod validator;
 use actix_web_middleware_keycloak_auth::{AlwaysReturnPolicy, DecodingKey, KeycloakAuth};
 #[cfg(feature = "keycloak")]
 use dotenv::dotenv;
-#[cfg(feature = "keycloak")]
-use sugarfunge_api_types::config;
 
 #[cfg(not(feature = "keycloak"))]
 #[actix_web::main]
