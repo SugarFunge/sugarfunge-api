@@ -51,3 +51,11 @@ OPTIONS:
 ```
 subxt-cli metadata -f bytes > sugarfunge_metadata.scale
 ```
+
+## Subscriptions
+
+Ping
+```
+websocat ws://127.0.0.1:4000/ws 
+```
+

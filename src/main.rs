@@ -25,6 +25,7 @@ mod state;
 mod user;
 mod util;
 mod validator;
+mod subscription;
 
 #[cfg(feature = "keycloak")]
 use actix_web_middleware_keycloak_auth::{AlwaysReturnPolicy, DecodingKey, KeycloakAuth};
@@ -63,6 +64,8 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(cors)
             .app_data(Data::new(state.clone()))
+            .service(web::resource("/ws").route(web::get().to(subscription::ws)))
+            // .route("/ws", web::get().to(subscription::ws))
             .route("account/seeded", web::post().to(account::seeded))
             .route("account/exists", web::post().to(account::exists))
             .route("account/create", web::post().to(account::create))
