@@ -1,14 +1,12 @@
 use crate::state::*;
-use crate::util::*;
 use actix::prelude::*;
-use actix_web::{error, web, Error, HttpRequest, HttpResponse};
+use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
+use crossbeam::channel;
 use futures::StreamExt;
-use serde_json::json;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use sugarfunge_api_types::sugarfunge;
-use crossbeam::channel;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -23,17 +21,6 @@ pub struct SubcriptionServiceWS {
     /// otherwise we drop connection.
     last_client_heartbeat: Instant,
     subs: HashMap<String, SpawnHandle>,
-}
-
-pub fn map_ws_subxt_err(e: subxt::GenericError<std::convert::Infallible>) -> actix_web::Error {
-    // TODO: json_err should be a json Value to improve UX
-    let json_err = json!(e.to_string());
-    let req_error = RequestError {
-        message: json_err,
-        description: "Subxt error".into(),
-    };
-    let req_error = serde_json::to_string_pretty(&req_error).unwrap();
-    error::ErrorBadRequest(req_error)
 }
 
 impl SubcriptionServiceWS {
@@ -53,24 +40,43 @@ impl SubcriptionServiceWS {
         // api.events().subscribe().await.into
 
         let task = async move {
-            
+            let mut events = api.events().subscribe().await.unwrap();
 
-            let mut events = api.events().subscribe().await.unwrap()
-            .filter_events::<(sugarfunge::balances::events::Transfer,)>();
-
-            while let Some(event) = events.next().await {
-                println!("Balance transfer event: {event:?}");
-                tx.send(event).unwrap();
+            while let Some(events) = events.next().await {
+                if let Ok(events) = events {
+                    tx.send(events).unwrap();
+                }
             }
         }
         .into_actor(self);
 
         let sub: SpawnHandle = ctx.spawn(task);
 
-        ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
+        self.subs.insert("all_events".into(), sub);
 
-            if let Ok(Ok(event)) = rx.try_recv() {
-                ctx.text(format!("{:#?}", event.event));
+        ctx.run_interval(HEARTBEAT_INTERVAL, move |_act, ctx| {
+            if let Ok(events) = rx.try_recv() {
+                for event in events.iter() {
+                    if let Ok(event) = event {
+                        let event: subxt::events::EventDetails<sugarfunge::Event> = event;
+                        let event: sugarfunge::Event = event.event;
+                        match event {
+                            sugarfunge::Event::Balances(event) => {
+                                let event = serde_json::to_string_pretty(&event).unwrap();
+                                ctx.text(format!("{:#?}", event));
+                            }
+                            sugarfunge::Event::Asset(event) => {
+                                let event = serde_json::to_string_pretty(&event).unwrap();
+                                ctx.text(format!("{:#?}", event));
+                            }
+                            sugarfunge::Event::Bag(event) => {
+                                let event = serde_json::to_string_pretty(&event).unwrap();
+                                ctx.text(format!("{:#?}", event));
+                            }
+                            _ => (),
+                        }
+                    }
+                }
             }
         });
     }
