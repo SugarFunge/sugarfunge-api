@@ -50,3 +50,17 @@ pub struct ClaimsWithEmail {
     pub family_name: String,
     pub email: String
 }
+
+#[derive(Debug,Serialize, Deserialize)]
+pub struct CreateKeycloakUserInput {
+    pub email: String,
+    pub username: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub password: String,
+}
+
+#[derive(Debug,Serialize, Deserialize)]
+pub struct CreateKeycloakUserOutput {
+    pub message: String,
+}

@@ -211,3 +211,66 @@ pub async fn verify_seed(
         }
     }
 }
+
+pub async fn create_keycloak_user(
+    req: web::Json<CreateKeycloakUserInput>,
+    env: web::Data<Config>
+) -> error::Result<HttpResponse> {
+    let config = env.clone();
+    match get_sugarfunge_token(env).await {
+        Ok(response) => {                             
+            let awc_client = awc::Client::new();
+            let endpoint = format!("{}/admin/realms/{}/users", config.keycloak_host, config.keycloak_realm);            
+            let attributes = json!({
+                "enabled": true,
+                "username": req.username,
+                "email": req.email,
+                "emailVerified": true,
+                "firstName": req.first_name,
+                "lastName": req.last_name,
+                "credentials": [
+                    {
+                        "type": "password",
+                        "value": req.password,
+                        "temporary": false
+                    }
+                ]
+            });        
+            let response = awc_client.post(endpoint)
+                .append_header((header::ACCEPT, "application/json"), )
+                .append_header((header::CONTENT_TYPE, "application/json"))
+                .append_header((header::AUTHORIZATION, "Bearer ".to_string() + &response.access_token))
+                .send_json(&attributes)
+                .await;        
+            match response {
+                Ok(response) => {
+                    match response.status() { 
+                        StatusCode::CREATED => {
+                            Ok(HttpResponse::Ok().json(CreateKeycloakUserOutput {
+                                message: "User created".to_string()
+                            }))
+                        }
+                        _ => {
+                            Ok(HttpResponse::BadRequest().json(RequestError {
+                                message: json!("Failed to create user"),
+                                description: format!("Error in user::createKeycloakUser"),
+                            }))
+                        }
+                    }
+                }
+                Err(_e) => {
+                    Ok(HttpResponse::BadRequest().json(RequestError {
+                        message: json!("Failed to create user"),
+                        description: format!("Error in user::createKeycloakUser"),
+                    }))
+                }
+            }
+        }
+        Err(_error) => {
+            Ok(HttpResponse::BadRequest().json(RequestError {
+                message: json!("Failed to get the sugarfunge token"),
+                description: format!("Error in user::getSugarfungeToken"),
+            }))
+        }
+    }
+}
