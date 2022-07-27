@@ -172,6 +172,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(Data::new(env.clone()))
             .wrap(keycloak_auth)
             .wrap(cors)
+            .service(web::resource("/ws").route(web::get().to(subscription::ws)))
             .route("account/seeded", web::post().to(account::seeded))
             .route("account/exists", web::post().to(account::exists))
             .route("account/fund", web::post().to(account::fund))
