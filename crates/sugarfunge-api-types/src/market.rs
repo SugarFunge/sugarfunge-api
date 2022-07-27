@@ -208,8 +208,9 @@ impl Into<RateAccount> for Account {
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketInput {
-    pub seed: Seed,
     pub market_id: MarketId,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -220,10 +221,11 @@ pub struct CreateMarketOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketRateInput {
-    pub seed: Seed,
     pub market_id: MarketId,
     pub market_rate_id: MarketId,
     pub rates: Rates,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketRateOutput {
@@ -234,10 +236,11 @@ pub struct CreateMarketRateOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DepositAssetsInput {
-    pub seed: Seed,
     pub market_id: MarketId,
     pub market_rate_id: MarketId,
     pub amount: Balance,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -252,10 +255,11 @@ pub struct DepositAssetsOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExchangeAssetsInput {
-    pub seed: Seed,
     pub market_id: MarketId,
     pub market_rate_id: MarketId,
     pub amount: Balance,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

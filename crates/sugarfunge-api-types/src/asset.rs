@@ -3,9 +3,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateClassInput {
-    pub seed: Seed,
     pub class_id: ClassId,
     pub metadata: serde_json::Value,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
+    #[cfg(not(feature = "keycloak"))]
     pub owner: Account,
 }
 
@@ -34,10 +36,11 @@ pub struct ClassInfoOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateInput {
-    pub seed: Seed,
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub metadata: serde_json::Value,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -67,10 +70,11 @@ pub struct AssetInfoOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateMetadataInput {
-    pub seed: Seed,
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub metadata: serde_json::Value,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -83,11 +87,13 @@ pub struct UpdateMetadataOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MintInput {
-    pub seed: Seed,
-    pub to: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub amount: Balance,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
+    #[cfg(not(feature = "keycloak"))]
+    pub to: Account,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -101,11 +107,13 @@ pub struct MintOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BurnInput {
-    pub seed: Seed,
-    pub from: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub amount: Balance,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
+    #[cfg(not(feature = "keycloak"))]
+    pub from: Account,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -119,9 +127,10 @@ pub struct BurnOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AssetBalanceInput {
-    pub account: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
+    #[cfg(not(feature = "keycloak"))]
+    pub account: Account,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -149,12 +158,14 @@ pub struct AssetBalanceItemOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TransferFromInput {
-    pub seed: Seed,
-    pub from: Account,
     pub to: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub amount: Balance,
+    #[cfg(not(feature = "keycloak"))]
+    pub seed: Seed,
+    #[cfg(not(feature = "keycloak"))]
+    pub from: Account,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

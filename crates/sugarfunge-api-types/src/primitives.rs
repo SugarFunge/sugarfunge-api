@@ -189,6 +189,13 @@ impl ValidatorId {
     }
 }
 
+//#[cfg(feature = "keycloak")]
+#[derive(Debug,Serialize, Deserialize, Default, Clone)]
+pub struct UserAtributes {
+    #[serde(rename = "user-seed", default)]
+    pub user_seed: Box<[String]>
+}
+
 pub fn transform_vec_account_to_string(in_vec: Vec<Account>) -> Vec<String> {
     in_vec
         .into_iter()

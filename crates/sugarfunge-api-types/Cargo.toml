@@ -20,3 +20,9 @@ git = "https://github.com/paritytech/substrate.git"
 branch = "polkadot-v0.9.23"
 package = "sp-core"
 features = ["full_crypto"]
+
+[features]
+default = ["std","admin"]
+std = ["codec/std", "scale-info/std"]
+admin = []
+keycloak = []

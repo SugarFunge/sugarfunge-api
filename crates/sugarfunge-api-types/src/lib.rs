@@ -12,4 +12,5 @@ pub mod bag;
 pub mod bundle;
 pub mod market;
 pub mod primitives;
+pub mod user;
 pub mod validator;
