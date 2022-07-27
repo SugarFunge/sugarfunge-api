@@ -11,7 +11,6 @@ pub struct CreateAccountOutput {
 pub struct FundAccountInput {
     pub seed: Seed,
     pub amount: Balance,
-    #[cfg(not(feature = "keycloak"))]
     pub to: Account,
 }
 

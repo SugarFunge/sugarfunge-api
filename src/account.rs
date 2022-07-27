@@ -89,7 +89,6 @@ async fn account_seeded_call(
 }
 
 /// Fund a given account with amount
-#[cfg(not(feature = "keycloak"))]
 pub async fn fund(
     data: web::Data<AppState>,
     req: web::Json<FundAccountInput>,
@@ -101,43 +100,6 @@ pub async fn fund(
             message: json!("Failed to fund account"),
             description: format!("Error in account::fund"),
         })),
-    }
-}
-
-/// Fund a given account with amount
-#[cfg(feature = "keycloak")]
-pub async fn fund(
-    data: web::Data<AppState>,
-    req: web::Json<FundAccountInput>,
-    claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
-    env: web::Data<Config>
-) -> error::Result<HttpResponse> {
-    match user::get_seed(&claims.sub, env).await {
-        Ok(response) => {
-            if !response.seed.clone().unwrap_or_default().is_empty() {
-                let user_seed = Seed::from(response.seed.clone().unwrap());
-                let pair = get_pair_from_seed(&user_seed)?;
-                let pair_account = pair.public().into_account().to_string();
-                let account = sp_core::sr25519::Public::from_str(&pair_account).map_err(map_account_err)?;
-                let account = sp_core::crypto::AccountId32::from(account);                
-                match account_fund_call(data, req, account).await {
-                    Ok(response) => Ok(HttpResponse::Ok().json(response)),
-                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-                        message: json!("Failed to fund account"),
-                        description: format!("Error in account::fund"),
-                    })),
-                }
-            } else {
-                Ok(HttpResponse::BadRequest().json(RequestError {
-                    message: json!("Not found user Attributes"),
-                    description: format!("Error in account::fund"),
-                }))
-            }
-        },
-        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find user::getAttributes"),
-            description: format!("Error in account::fund"),
-        }))
     }
 }
 
