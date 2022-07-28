@@ -197,7 +197,6 @@ async fn main() -> std::io::Result<()> {
             .route("bundle/mint", web::post().to(bundle::mint_bundle))
             .route("bundle/burn", web::post().to(bundle::burn_bundle))
             .route("user/verify_seed", web::get().to(user::verify_seed))
-            .route("user/create_account", web::post().to(user::create_keycloak_user))
             .route(
                 "validator/add_validator",
                 web::post().to(validator::add_validator),
