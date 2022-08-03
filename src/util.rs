@@ -2,6 +2,7 @@ use actix_web::error;
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use serde_json::Value;
 use sp_core::Pair;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
@@ -70,4 +71,10 @@ pub fn url_to_string(url: Url) -> String {
         }
         _ => res,
     }
+}
+
+pub fn actixweb_err_to_json(e: actix_web::Error) -> Value {
+    let eror_value = format!("{}", e);
+    let res: Value = serde_json::from_str(eror_value.as_str()).unwrap();
+    return res;
 }

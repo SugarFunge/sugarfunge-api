@@ -1,9 +1,9 @@
-use std::str::FromStr;
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use sp_core::crypto::AccountId32;
+use std::str::FromStr;
 use subxt::PairSigner;
 use sugarfunge_api_types::bag::*;
 use sugarfunge_api_types::primitives::*;
@@ -29,12 +29,9 @@ pub async fn register(
 ) -> error::Result<HttpResponse> {
     let user_seed = Seed::from(req.seed.clone());
     match bag_register_call(data, req, user_seed).await {
-        Ok(response) => Ok(HttpResponse::Ok().json(response)),
-        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to register bag"),
-            description: format!("Error in bag::register"),
-        })),
-    }    
+        Ok(response) => Ok(response),
+        Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
+    }
 }
 
 /// Registers a class for the bag
@@ -43,22 +40,19 @@ pub async fn register(
     data: web::Data<AppState>,
     req: web::Json<RegisterInput>,
     claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
-    env: web::Data<Config>
+    env: web::Data<Config>,
 ) -> error::Result<HttpResponse> {
     match user::get_seed(&claims.sub, env).await {
         Ok(response) => {
             if !response.seed.clone().unwrap_or_default().is_empty() {
                 let user_seed = Seed::from(response.seed.clone().unwrap());
                 match bag_register_call(data, req, user_seed).await {
-                    Ok(response) => Ok(HttpResponse::Ok().json(response)),
-                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-                        message: json!("Failed to register bag"),
-                        description: format!("Error in bag::register"),
-                    })),
-                } 
+                    Ok(response) => Ok(response),
+                    Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
+                }
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
-                    message: json!("Not found user Attributes"),
+                    message: json!("Not found seed in user Attributes"),
                     description: format!("Error in bag::register"),
                 }))
             }
@@ -74,7 +68,7 @@ pub async fn bag_register_call(
     data: web::Data<AppState>,
     req: web::Json<RegisterInput>,
     seed: Seed,
-) -> error::Result<web::Json<RegisterOutput>, HttpResponse> {
+) -> error::Result<HttpResponse, actix_web::Error> {
     let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let metadata: Vec<u8> = serde_json::to_vec(&req.metadata).unwrap_or_default();
@@ -95,11 +89,11 @@ pub async fn bag_register_call(
         .find_first::<sugarfunge::bag::events::Register>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(web::Json(RegisterOutput {
+        Some(event) => Ok(HttpResponse::Ok().json(RegisterOutput {
             who: event.who.into(),
             class_id: event.class_id.into(),
         })),
-        None => Err(HttpResponse::BadRequest().json(RequestError {
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bag::events::Register"),
             description: format!(""),
         })),
@@ -132,11 +126,8 @@ pub async fn create(
 ) -> error::Result<HttpResponse> {
     let user_seed = Seed::from(req.seed.clone());
     match bag_create_call(data, req, user_seed).await {
-        Ok(response) => Ok(HttpResponse::Ok().json(response)),
-        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to create bag"),
-            description: format!("Error in bag::create"),
-        })),
+        Ok(response) => Ok(response),
+        Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
     }
 }
 
@@ -146,22 +137,19 @@ pub async fn create(
     data: web::Data<AppState>,
     req: web::Json<CreateInput>,
     claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
-    env: web::Data<Config>
+    env: web::Data<Config>,
 ) -> error::Result<HttpResponse> {
     match user::get_seed(&claims.sub, env).await {
         Ok(response) => {
             if !response.seed.clone().unwrap_or_default().is_empty() {
                 let user_seed = Seed::from(response.seed.clone().unwrap());
                 match bag_create_call(data, req, user_seed).await {
-                    Ok(response) => Ok(HttpResponse::Ok().json(response)),
-                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-                        message: json!("Failed to create bag"),
-                        description: format!("Error in bag::create"),
-                    })),
+                    Ok(response) => Ok(response),
+                    Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
                 }
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
-                    message: json!("Not found user Attributes"),
+                    message: json!("Not found seed in user Attributes"),
                     description: format!("Error in bag::create"),
                 }))
             }
@@ -177,7 +165,7 @@ pub async fn bag_create_call(
     data: web::Data<AppState>,
     req: web::Json<CreateInput>,
     seed: Seed,
-) -> error::Result<web::Json<CreateOutput>, HttpResponse> {
+) -> error::Result<HttpResponse, actix_web::Error> {
     let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let owners = transform_owners_input(transform_vec_account_to_string(req.owners.clone()));
@@ -201,14 +189,14 @@ pub async fn bag_create_call(
         .find_first::<sugarfunge::bag::events::Created>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(web::Json(CreateOutput {
+        Some(event) => Ok(HttpResponse::Ok().json(CreateOutput {
             bag: event.bag.into(),
             class_id: event.class_id.into(),
             asset_id: event.asset_id.into(),
             owners: transform_vec_string_to_account(transform_owners_output(event.owners)),
         })),
-        None => Err(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::bag::events::AccountCreated"),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::bag::events::Created"),
             description: format!(""),
         })),
     }
@@ -219,15 +207,12 @@ pub async fn bag_create_call(
 pub async fn sweep(
     data: web::Data<AppState>,
     req: web::Json<SweepInput>,
-) -> error::Result<HttpResponse> {    
+) -> error::Result<HttpResponse> {
     let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let user_seed = Seed::from(req.seed.clone());
     match bag_sweep_call(data, req, user_seed, to).await {
-        Ok(response) => Ok(HttpResponse::Ok().json(response)),
-        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to sweep bag"),
-            description: format!("Error in bag::sweep"),
-        })),
+        Ok(response) => Ok(response),
+        Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
     }
 }
 
@@ -237,26 +222,24 @@ pub async fn sweep(
     data: web::Data<AppState>,
     req: web::Json<SweepInput>,
     claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
-    env: web::Data<Config>
-) -> error::Result<HttpResponse> {    
+    env: web::Data<Config>,
+) -> error::Result<HttpResponse> {
     match user::get_seed(&claims.sub, env).await {
         Ok(response) => {
             if !response.seed.clone().unwrap_or_default().is_empty() {
                 let user_seed = Seed::from(response.seed.clone().unwrap());
                 let pair = get_pair_from_seed(&user_seed)?;
                 let pair_account = pair.public().into_account().to_string();
-                let account = sp_core::sr25519::Public::from_str(&pair_account.as_str()).map_err(map_account_err)?;
+                let account = sp_core::sr25519::Public::from_str(&pair_account.as_str())
+                    .map_err(map_account_err)?;
                 let account = sp_core::crypto::AccountId32::from(account);
                 match bag_sweep_call(data, req, user_seed, account).await {
-                    Ok(response) => Ok(HttpResponse::Ok().json(response)),
-                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-                        message: json!("Failed to sweep bag"),
-                        description: format!("Error in bag::sweep"),
-                    })),
-                } 
+                    Ok(response) => Ok(response),
+                    Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
+                }
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
-                    message: json!("Not found user Attributes"),
+                    message: json!("Not found seed in user Attributes"),
                     description: format!("Error in bag::sweep"),
                 }))
             }
@@ -272,8 +255,8 @@ pub async fn bag_sweep_call(
     data: web::Data<AppState>,
     req: web::Json<SweepInput>,
     seed: Seed,
-    to: AccountId32
-) -> error::Result<web::Json<SweepOutput>, HttpResponse> {
+    to: AccountId32,
+) -> error::Result<HttpResponse, actix_web::Error> {
     let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let bag = sp_core::crypto::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
@@ -293,12 +276,12 @@ pub async fn bag_sweep_call(
         .find_first::<sugarfunge::bag::events::Sweep>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(web::Json(SweepOutput {
+        Some(event) => Ok(HttpResponse::Ok().json(SweepOutput {
             bag: event.bag.into(),
             who: event.who.into(),
             to: event.to.into(),
         })),
-        None => Err(HttpResponse::BadRequest().json(RequestError {
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bag::events::Sweep"),
             description: format!(""),
         })),
@@ -313,11 +296,8 @@ pub async fn deposit(
 ) -> error::Result<HttpResponse> {
     let user_seed = Seed::from(req.seed.clone());
     match bag_deposit_call(data, req, user_seed).await {
-        Ok(response) => Ok(HttpResponse::Ok().json(response)),
-        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to sweep bag"),
-            description: format!("Error in bag::sweep"),
-        })),
+        Ok(response) => Ok(response),
+        Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
     }
 }
 
@@ -327,22 +307,19 @@ pub async fn deposit(
     data: web::Data<AppState>,
     req: web::Json<DepositInput>,
     claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
-    env: web::Data<Config>
+    env: web::Data<Config>,
 ) -> error::Result<HttpResponse> {
     match user::get_seed(&claims.sub, env).await {
         Ok(response) => {
             if !response.seed.clone().unwrap_or_default().is_empty() {
                 let user_seed = Seed::from(response.seed.clone().unwrap());
                 match bag_deposit_call(data, req, user_seed).await {
-                    Ok(response) => Ok(HttpResponse::Ok().json(response)),
-                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-                        message: json!("Failed to sweep bag"),
-                        description: format!("Error in bag::sweep"),
-                    })),
+                    Ok(response) => Ok(response),
+                    Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
                 }
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
-                    message: json!("Not found user Attributes"),
+                    message: json!("Not found seed in user Attributes"),
                     description: format!("Error in bag::deposit"),
                 }))
             }
@@ -358,7 +335,7 @@ pub async fn bag_deposit_call(
     data: web::Data<AppState>,
     req: web::Json<DepositInput>,
     seed: Seed,
-) -> error::Result<web::Json<DepositOutput>, HttpResponse> {
+) -> error::Result<HttpResponse, actix_web::Error> {
     let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let bag = sp_core::crypto::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
@@ -383,11 +360,11 @@ pub async fn bag_deposit_call(
         .find_first::<sugarfunge::bag::events::Deposit>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(web::Json(DepositOutput {
+        Some(event) => Ok(HttpResponse::Ok().json(DepositOutput {
             bag: event.bag.into(),
             who: event.who.into(),
         })),
-        None => Err(HttpResponse::BadRequest().json(RequestError {
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bag::events::Deposit"),
             description: format!(""),
         })),
