@@ -35,11 +35,8 @@ pub async fn register_bundle(
 ) -> error::Result<HttpResponse> {
     let user_seed = Seed::from(req.seed.clone());
     match register_bundle_call(data, req, user_seed).await {
-        Ok(response) => Ok(HttpResponse::Ok().json(response)),
-        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to register bundle"),
-            description: format!("Error in bundle::register"),
-        })),
+        Ok(response) => Ok(response),
+        Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
     }
 }
 
@@ -56,15 +53,12 @@ pub async fn register_bundle(
             if !response.seed.clone().unwrap_or_default().is_empty() {
                 let user_seed = Seed::from(response.seed.clone().unwrap());
                 match register_bundle_call(data, req, user_seed).await {
-                    Ok(response) => Ok(HttpResponse::Ok().json(response)),
-                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-                        message: json!("Failed to register bundle"),
-                        description: format!("Error in bundle::register"),
-                    })),
+                    Ok(response) => Ok(response),
+                    Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
                 }
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
-                    message: json!("Not found user Attributes"),
+                    message: json!("Not found seed in user Attributes"),
                     description: format!("Error in bundle::register_bundle"),
                 }))
             }
@@ -73,14 +67,14 @@ pub async fn register_bundle(
             message: json!("Failed to find user::getAttributes"),
             description: format!("Error in bundle::register_bundle"),
         })),
-    }    
+    }
 }
 
 pub async fn register_bundle_call(
-        data: web::Data<AppState>,
-        req: web::Json<RegisterBundleInput>,
-        seed: Seed,
-) -> error::Result<web::Json<RegisterBundleOutput>, HttpResponse> {
+    data: web::Data<AppState>,
+    req: web::Json<RegisterBundleInput>,
+    seed: Seed,
+) -> error::Result<HttpResponse, actix_web::Error> {
     let schema = (
         BoundedVec(transform_vec_classid_to_u64(req.schema.class_ids.to_vec())),
         BoundedVec(
@@ -123,15 +117,15 @@ pub async fn register_bundle_call(
         .map_err(map_sf_err)?;
     let result = result
         .find_first::<sugarfunge::bundle::events::Register>()
-        .map_err(map_subxt_err)?;    
+        .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(web::Json(RegisterBundleOutput {
+        Some(event) => Ok(HttpResponse::Ok().json(RegisterBundleOutput {
             who: event.who.into(),
             bundle_id: event.bundle_id.encode_hex(),
             class_id: event.class_id.into(),
             asset_id: event.asset_id.into(),
         })),
-        None => Err(HttpResponse::BadRequest().json(RequestError {
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Register"),
             description: format!(""),
         })),
@@ -144,16 +138,14 @@ pub async fn mint_bundle(
     data: web::Data<AppState>,
     req: web::Json<MintBundleInput>,
 ) -> error::Result<HttpResponse> {
-    let account_from = sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
+    let account_from =
+        sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let user_seed = Seed::from(req.seed.clone());
     match mint_bundle_call(data, req, user_seed, account_from, account_to).await {
-        Ok(response) => Ok(HttpResponse::Ok().json(response)),
-        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to mint bundle"),
-            description: format!("Error in bundle::mint"),
-        })),
-    }    
+        Ok(response) => Ok(response),
+        Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
+    }
 }
 
 /// Mints a bundle
@@ -170,19 +162,17 @@ pub async fn mint_bundle(
                 let user_seed = Seed::from(response.seed.clone().unwrap());
                 let pair = get_pair_from_seed(&user_seed)?;
                 let pair_account = pair.public().into_account().to_string();
-                let account_from = sp_core::sr25519::Public::from_str(&pair_account.as_str()).map_err(map_account_err)?;
+                let account_from = sp_core::sr25519::Public::from_str(&pair_account.as_str())
+                    .map_err(map_account_err)?;
                 let account_from = sp_core::crypto::AccountId32::from(account_from);
                 let account_to = account_from.clone();
                 match mint_bundle_call(data, req, user_seed, account_from, account_to).await {
-                    Ok(response) => Ok(HttpResponse::Ok().json(response)),
-                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-                        message: json!("Failed to mint bundle"),
-                        description: format!("Error in bundle::mint"),
-                    })),
-                }  
+                    Ok(response) => Ok(response),
+                    Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
+                }
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
-                    message: json!("Not found user Attributes"),
+                    message: json!("Not found seed in user Attributes"),
                     description: format!("Error in bundle::mint_bundle"),
                 }))
             }
@@ -191,7 +181,7 @@ pub async fn mint_bundle(
             message: json!("Failed to find user::getAttributes"),
             description: format!("Error in bundle::mint_bundle"),
         })),
-    }      
+    }
 }
 
 pub async fn mint_bundle_call(
@@ -200,7 +190,7 @@ pub async fn mint_bundle_call(
     seed: Seed,
     account_from: AccountId32,
     account_to: AccountId32,
-) -> error::Result<web::Json<MintBundleOutput>, HttpResponse> {
+) -> error::Result<HttpResponse, actix_web::Error> {
     let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
     let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
@@ -220,14 +210,14 @@ pub async fn mint_bundle_call(
         .find_first::<sugarfunge::bundle::events::Mint>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(web::Json(MintBundleOutput {
+        Some(event) => Ok(HttpResponse::Ok().json(MintBundleOutput {
             who: event.who.into(),
             from: event.from.into(),
             to: event.to.into(),
             bundle_id: event.bundle_id.encode_hex(),
             amount: event.amount.into(),
         })),
-        None => Err(HttpResponse::BadRequest().json(RequestError {
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Mint"),
             description: format!(""),
         })),
@@ -240,16 +230,14 @@ pub async fn burn_bundle(
     data: web::Data<AppState>,
     req: web::Json<BurnBundleInput>,
 ) -> error::Result<HttpResponse> {
-    let account_from = sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
+    let account_from =
+        sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let user_seed = Seed::from(req.seed.clone());
     match burn_bundle_call(data, req, user_seed, account_from, account_to).await {
-        Ok(response) => Ok(HttpResponse::Ok().json(response)),
-        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to burn bundle"),
-            description: format!("Error in bundle::burn"),
-        })),
-    }    
+        Ok(response) => Ok(response),
+        Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
+    }
 }
 
 /// Burns a bundle
@@ -266,19 +254,17 @@ pub async fn burn_bundle(
                 let user_seed = Seed::from(response.seed.clone().unwrap());
                 let pair = get_pair_from_seed(&user_seed)?;
                 let pair_account = pair.public().into_account().to_string();
-                let account_from = sp_core::sr25519::Public::from_str(&pair_account.as_str()).map_err(map_account_err)?;
+                let account_from = sp_core::sr25519::Public::from_str(&pair_account.as_str())
+                    .map_err(map_account_err)?;
                 let account_from = sp_core::crypto::AccountId32::from(account_from);
                 let account_to = account_from.clone();
                 match burn_bundle_call(data, req, user_seed, account_from, account_to).await {
-                    Ok(response) => Ok(HttpResponse::Ok().json(response)),
-                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-                        message: json!("Failed to burn bundle"),
-                        description: format!("Error in bundle::burn"),
-                    })),
-                }  
+                    Ok(response) => Ok(response),
+                    Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
+                }
             } else {
                 Ok(HttpResponse::BadRequest().json(RequestError {
-                    message: json!("Not found user Attributes"),
+                    message: json!("Not found seed in user Attributes"),
                     description: format!("Error in bundle::burn_bundle"),
                 }))
             }
@@ -287,7 +273,7 @@ pub async fn burn_bundle(
             message: json!("Failed to find user::getAttributes"),
             description: format!("Error in bundle::burn_bundle"),
         })),
-    }      
+    }
 }
 
 pub async fn burn_bundle_call(
@@ -296,7 +282,7 @@ pub async fn burn_bundle_call(
     seed: Seed,
     account_from: AccountId32,
     account_to: AccountId32,
-) -> error::Result<web::Json<BurnBundleOutput>, HttpResponse> {
+) -> error::Result<HttpResponse, actix_web::Error> {
     let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
     let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
@@ -316,14 +302,14 @@ pub async fn burn_bundle_call(
         .find_first::<sugarfunge::bundle::events::Burn>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(web::Json(BurnBundleOutput {
+        Some(event) => Ok(HttpResponse::Ok().json(BurnBundleOutput {
             who: event.who.into(),
             from: event.from.into(),
             to: event.to.into(),
             bundle_id: event.bundle_id.encode_hex(),
             amount: event.amount.into(),
         })),
-        None => Err(HttpResponse::BadRequest().json(RequestError {
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Burn"),
             description: format!(""),
         })),
