@@ -50,9 +50,9 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         let cors = Cors::default()
-            .allowed_origin("http://localhost:8080")
+            .allowed_origin("http://127.0.0.1:8080")
             .allowed_origin_fn(|origin, _req_head| {
-                origin.as_bytes().starts_with(b"http://localhost")
+                origin.as_bytes().starts_with(b"http://127.0.0.1")
             })
             .allowed_methods(vec!["GET", "POST"])
             .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
@@ -147,9 +147,9 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         let cors = Cors::default()
-            .allowed_origin("http://localhost:8080")
+            .allowed_origin("http://127.0.0.1:8080")
             .allowed_origin_fn(|origin, _req_head| {
-                origin.as_bytes().starts_with(b"http://localhost")
+                origin.as_bytes().starts_with(b"http://127.0.0.1")
             })
             .allowed_methods(vec!["GET", "POST"])
             .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
