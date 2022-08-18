@@ -4,7 +4,8 @@ use actix_web::{error, web, HttpRequest, HttpResponse};
 use rand::prelude::*;
 use serde_json::json;
 use sp_core::Pair;
-use subxt::{sp_runtime::traits::IdentifyAccount, PairSigner};
+use subxt::ext::{sp_runtime::traits::IdentifyAccount};
+use subxt::tx::PairSigner;
 use sugarfunge_api_types::account::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
@@ -41,7 +42,7 @@ pub async fn fund(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let account = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let account = subxt::sp_runtime::MultiAddress::Id(account);
+    let account = subxt::ext::sp_runtime::MultiAddress::Id(account);
     let amount_input = req.amount;
     let api = &data.api;
     let result = api

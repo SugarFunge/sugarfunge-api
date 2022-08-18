@@ -2,22 +2,22 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
-use subxt::PairSigner;
+use subxt::tx::PairSigner;
 use sugarfunge_api_types::market::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_market;
 
 fn extrinsinc_rates(
     in_rates: &Vec<AssetRate>,
-) -> BoundedVec<sugarfunge_market::AssetRate<subxt::sp_runtime::AccountId32, u64, u64>> {
+) -> BoundedVec<sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64>> {
     BoundedVec(
         in_rates
             .iter()
             .map(|rate| {
                 <AssetRate as Into<
-                    sugarfunge_market::AssetRate<subxt::sp_runtime::AccountId32, u64, u64>,
+                    sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64>,
                 >>::into(rate.clone())
             })
             .collect(),
@@ -25,7 +25,7 @@ fn extrinsinc_rates(
 }
 
 fn transform_balances(
-    in_balances: Vec<sugarfunge_market::RateBalance<subxt::sp_runtime::AccountId32, u64, u64>>,
+    in_balances: Vec<sugarfunge_market::RateBalance<subxt::ext::sp_runtime::AccountId32, u64, u64>>,
 ) -> Vec<RateBalance> {
     in_balances
         .into_iter()

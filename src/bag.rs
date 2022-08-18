@@ -5,11 +5,11 @@ use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use sp_core::crypto::AccountId32;
-use subxt::PairSigner;
+use subxt::tx::PairSigner;
 use sugarfunge_api_types::bag::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 
 pub async fn register(
     data: web::Data<AppState>,

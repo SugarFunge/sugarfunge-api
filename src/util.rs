@@ -14,7 +14,7 @@ pub struct RequestError {
     pub description: String,
 }
 
-pub fn map_subxt_err(e: subxt::GenericError<std::convert::Infallible>) -> actix_web::Error {
+pub fn map_subxt_err(e: subxt::Error) -> actix_web::Error {
     // TODO: json_err should be a json Value to improve UX
     let json_err = json!(e.to_string());
     let req_error = RequestError {
@@ -26,9 +26,7 @@ pub fn map_subxt_err(e: subxt::GenericError<std::convert::Infallible>) -> actix_
 }
 
 pub fn map_sf_err(
-    e: subxt::GenericError<
-        subxt::RuntimeError<sugarfunge::runtime_types::sp_runtime::DispatchError>,
-    >,
+    e: subxt::Error,
 ) -> actix_web::Error {
     // TODO: json_err should be a json Value to improve UX
     let json_err = json!(e.to_string());

@@ -9,7 +9,9 @@ use state::*;
 use util::url_to_string;
 use std::sync::Arc;
 use structopt::StructOpt;
-use subxt::{ClientBuilder, DefaultConfig, PolkadotExtrinsicParams};
+//use subxt::{ClientBuilder, DefaultConfig, /*PolkadotExtrinsicParams*/};
+//use subxt::config::Config:: //online client
+use subxt::tx::PolkadotExtrinsicParams;
 use sugarfunge_api_types::sugarfunge;
 
 mod account;
