@@ -45,12 +45,12 @@ pub async fn fund(
     let account = subxt::ext::sp_runtime::MultiAddress::Id(account);
     let amount_input = req.amount;
     let api = &data.api;
+
+    let call = sugarfunge::tx().balances().transfer(account, amount_input.into());
+
     let result = api
         .tx()
-        .balances()
-        .transfer(account, amount_input.into())
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -79,11 +79,20 @@ pub async fn balance(
 ) -> error::Result<HttpResponse> {
     let account = sp_core::crypto::AccountId32::try_from(&req.account).map_err(map_account_err)?;
     let api = &data.api;
-    let result = api.storage().system().account(&account, None).await;
+
+    let call = sugarfunge::storage().system().account(&account);
+
+    let result = api.storage().fetch(&call, None).await;
     let data = result.map_err(map_subxt_err)?;
-    Ok(HttpResponse::Ok().json(AccountBalanceOutput {
-        balance: data.data.free.into(),
-    }))
+    match data {
+        Some(data) => Ok(HttpResponse::Ok().json(AccountBalanceOutput {
+            balance: data.data.free.into(),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::balances::events::balance"),
+            description: format!("Error in account::balance"),
+        })),
+    }    
 }
 
 /// Check if account exists and is active
@@ -94,10 +103,19 @@ pub async fn exists(
     let account = sp_core::crypto::AccountId32::try_from(&req.account).map_err(map_account_err)?;
     let account_out = account.clone();
     let api = &data.api;
-    let result = api.storage().system().account(&account, None).await;
-    let data = result.map_err(map_subxt_err)?;
-    Ok(HttpResponse::Ok().json(AccountExistsOutput {
-        account: account_out.into(),
-        exists: data.providers > 0,
-    }))
+
+    let call = sugarfunge::storage().system().account(&account);
+    
+    let result = api.storage().fetch(&call, None).await;
+    let data = result.map_err(map_subxt_err)?;    
+    match data {
+        Some(data) => Ok(HttpResponse::Ok().json(AccountExistsOutput {
+            account: account_out.into(),
+            exists: data.providers > 0,
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::balances::events::balance"),
+            description: format!("Error in account::exist"),
+        })),
+    }
 }
