@@ -58,7 +58,7 @@ impl SubcriptionServiceWS {
             if let Ok(events) = rx.try_recv() {
                 for event in events.iter() {
                     if let Ok(event) = event {
-                        let event: subxt::events::EventDetails<sugarfunge::Event> = event;
+                        let event: subxt::events::EventDetails::<sugarfunge::Event> = event;
                         let event: sugarfunge::Event = event.event;
                         match event {
                             sugarfunge::Event::Balances(event) => {
