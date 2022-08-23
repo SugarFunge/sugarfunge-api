@@ -42,18 +42,19 @@ pub async fn register_bundle(
     let metadata: Vec<u8> = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
     let api = &data.api;
+
+    let call = sugarfunge::tx().bundle()
+    .register_bundle(
+        req.class_id.into(),
+        req.asset_id.into(),
+        bundle_id,
+        schema,
+        metadata,
+    );
+
     let result = api
         .tx()
-        .bundle()
-        .register_bundle(
-            req.class_id.into(),
-            req.asset_id.into(),
-            bundle_id,
-            schema,
-            metadata,
-        )
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -87,12 +88,12 @@ pub async fn mint_bundle(
     let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;
+
+    let call = sugarfunge::tx().bundle().mint_bundle(account_from, account_to, bundle_id, req.amount.into());
+
     let result = api
         .tx()
-        .bundle()
-        .mint_bundle(account_from, account_to, bundle_id, req.amount.into())
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -127,12 +128,13 @@ pub async fn burn_bundle(
     let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;
+
+    let call = sugarfunge::tx().bundle()
+    .burn_bundle(account_from, account_to, bundle_id, req.amount.into());
+
     let result = api
         .tx()
-        .bundle()
-        .burn_bundle(account_from, account_to, bundle_id, req.amount.into())
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()

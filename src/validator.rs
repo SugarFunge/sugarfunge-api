@@ -22,12 +22,12 @@ pub async fn add_validator(
     };
     let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::ValidatorSet(call);
     let api = &data.api;
+
+    let call_value = sugarfunge::tx().sudo().sudo(call);
+
     let result = api
         .tx()
-        .sudo()
-        .sudo(call)
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call_value,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -64,12 +64,12 @@ pub async fn remove_validator(
         };
     let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::ValidatorSet(call);
     let api = &data.api;
+
+    let call_value = sugarfunge::tx().sudo().sudo(call);
+
     let result = api
         .tx()
-        .sudo()
-        .sudo(call)
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call_value,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()

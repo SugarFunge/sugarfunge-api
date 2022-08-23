@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sp_core::Pair;
 use sugarfunge_api_types::primitives::*;
-use sugarfunge_api_types::sugarfunge;
 use url::Url;
 
 #[derive(Serialize, Deserialize, Debug, Display)]
