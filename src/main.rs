@@ -14,12 +14,12 @@ use subxt::{client::OnlineClient, PolkadotConfig};
 mod account;
 mod asset;
 mod bag;
-// mod bundle;
+mod bundle;
 mod command;
-// mod market;
+mod market;
 mod state;
 mod util;
-// mod validator;
+mod validator;
 // mod subscription;
 
 #[actix_web::main]
@@ -73,33 +73,33 @@ async fn main() -> std::io::Result<()> {
             .route("bag/create", web::post().to(bag::create))
             .route("bag/sweep", web::post().to(bag::sweep))
             .route("bag/deposit", web::post().to(bag::deposit))
-            // .route("bundle/register", web::post().to(bundle::register_bundle))
-            // .route("bundle/mint", web::post().to(bundle::mint_bundle))
-            // .route("bundle/burn", web::post().to(bundle::burn_bundle))
-            // .route(
-            //     "validator/add_validator",
-            //     web::post().to(validator::add_validator),
-            // )
-            // .route(
-            //     "validator/remove_validator",
-            //     web::post().to(validator::remove_validator),
-            // )
-            // .route(
-            //     "market/create_market",
-            //     web::post().to(market::create_market),
-            // )
-            // .route(
-            //     "market/create_market_rate",
-            //     web::post().to(market::create_market_rate),
-            // )
-            // .route(
-            //     "market/deposit_assets",
-            //     web::post().to(market::deposit_assets),
-            // )
-            // .route(
-            //     "market/exchange_assets",
-            //     web::post().to(market::exchange_assets),
-            // )
+            .route("bundle/register", web::post().to(bundle::register_bundle))
+            .route("bundle/mint", web::post().to(bundle::mint_bundle))
+            .route("bundle/burn", web::post().to(bundle::burn_bundle))
+            .route(
+                "validator/add_validator",
+                web::post().to(validator::add_validator),
+            )
+            .route(
+                "validator/remove_validator",
+                web::post().to(validator::remove_validator),
+            )
+            .route(
+                "market/create_market",
+                web::post().to(market::create_market),
+            )
+            .route(
+                "market/create_market_rate",
+                web::post().to(market::create_market_rate),
+            )
+            .route(
+                "market/deposit_assets",
+                web::post().to(market::deposit_assets),
+            )
+            .route(
+                "market/exchange_assets",
+                web::post().to(market::exchange_assets),
+            )
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()
