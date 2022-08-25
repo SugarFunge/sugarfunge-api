@@ -20,7 +20,7 @@ mod market;
 mod state;
 mod util;
 mod validator;
-// mod subscription;
+mod subscription;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -50,7 +50,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(cors)
             .app_data(Data::new(state.clone()))
-            // .service(web::resource("/ws").route(web::get().to(subscription::ws)))
+            .service(web::resource("/ws").route(web::get().to(subscription::ws)))
             // .route("/ws", web::get().to(subscription::ws))
             .route("account/seeded", web::post().to(account::seeded))
             .route("account/exists", web::post().to(account::exists))
