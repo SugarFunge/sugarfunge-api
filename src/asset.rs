@@ -21,7 +21,9 @@ pub async fn create_class(
     let metadata = BoundedVec(metadata);
     let api = &data.api;
 
-    let call = sugarfunge::tx().asset().create_class(to, req.class_id.into(), metadata);
+    let call = sugarfunge::tx()
+        .asset()
+        .create_class(to, req.class_id.into(), metadata);
 
     let result = api
         .tx()
@@ -80,7 +82,10 @@ pub async fn create(
     let metadata = BoundedVec(metadata);
     let api = &data.api;
 
-    let call = sugarfunge::tx().asset().create_asset(req.class_id.into(), req.asset_id.into(), metadata);
+    let call =
+        sugarfunge::tx()
+            .asset()
+            .create_asset(req.class_id.into(), req.asset_id.into(), metadata);
 
     let result = api
         .tx()
@@ -113,7 +118,9 @@ pub async fn info(
 ) -> error::Result<HttpResponse> {
     let api = &data.api;
 
-    let call = sugarfunge::storage().asset().assets(&req.class_id.into(), &req.asset_id.into());
+    let call = sugarfunge::storage()
+        .asset()
+        .assets(&req.class_id.into(), &req.asset_id.into());
 
     let result = api.storage().fetch(&call, None).await;
     let info = result.map_err(map_subxt_err)?;
@@ -140,7 +147,11 @@ pub async fn update_metadata(
     let metadata = BoundedVec(metadata);
     let api = &data.api;
 
-    let call = sugarfunge::tx().asset().update_asset_metadata(req.class_id.into(), req.asset_id.into(), metadata);
+    let call = sugarfunge::tx().asset().update_asset_metadata(
+        req.class_id.into(),
+        req.asset_id.into(),
+        metadata,
+    );
 
     let result = api
         .tx()
@@ -177,7 +188,12 @@ pub async fn mint(
     let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = &data.api;
 
-    let call = sugarfunge::tx().asset().mint(to,req.class_id.into(),req.asset_id.into(),req.amount.into(),);
+    let call = sugarfunge::tx().asset().mint(
+        to,
+        req.class_id.into(),
+        req.asset_id.into(),
+        req.amount.into(),
+    );
 
     let result = api
         .tx()
@@ -215,7 +231,12 @@ pub async fn burn(
     let from = sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let api = &data.api;
 
-    let call = sugarfunge::tx().asset().burn(from,req.class_id.into(),req.asset_id.into(),req.amount.into(),);
+    let call = sugarfunge::tx().asset().burn(
+        from,
+        req.class_id.into(),
+        req.asset_id.into(),
+        req.amount.into(),
+    );
 
     let result = api
         .tx()
@@ -253,7 +274,11 @@ pub async fn balance(
     let account = sp_core::crypto::AccountId32::from(account);
     let api = &data.api;
 
-    let call = sugarfunge::storage().asset().balances(&account, &req.class_id.into(), &req.asset_id.into());
+    let call = sugarfunge::storage().asset().balances(
+        &account,
+        &req.class_id.into(),
+        &req.asset_id.into(),
+    );
 
     let result = api.storage().fetch(&call, None).await;
     let amount = result.map_err(map_subxt_err)?;
@@ -265,8 +290,70 @@ pub async fn balance(
             message: json!("Failed to find sugarfunge::balances::events::balance"),
             description: format!("Error in asset::balance"),
         })),
-    } 
-    
+    }
+}
+
+use codec::Decode;
+use subxt::storage::address::{StorageHasher, StorageMapKey};
+
+/// Get balances for owner and maybe class
+pub async fn balances(
+    data: web::Data<AppState>,
+    req: web::Json<AssetBalancesInput>,
+) -> error::Result<HttpResponse> {
+    let account =
+        sp_core::sr25519::Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
+    let account = sp_core::crypto::AccountId32::from(account);
+    let api = &data.api;
+
+    let mut query_key = sugarfunge::storage().asset().balances_root().to_bytes();
+    println!("query_key balances_root len: {}", query_key.len());
+    StorageMapKey::new(&account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+    println!("query_key account len: {}", query_key.len());
+    if let Some(class_id) = req.class_id {
+        let class_id: u64 = class_id.into();
+        StorageMapKey::new(&class_id, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        println!("query_key class_id len: {}", query_key.len());
+    }
+
+    let keys = api
+        .storage()
+        .fetch_keys(&query_key, 1000, None, None)
+        .await
+        .map_err(map_subxt_err)?;
+
+    println!("Obtained keys:");
+    for key in keys.iter() {
+        println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+
+        let class_idx = 96;
+        let class_key = key.0.as_slice()[class_idx..(class_idx + 8)].to_vec();
+        let class_id = u64::decode(&mut &class_key[..]);
+        println!("class_id: {:?}", class_id);
+
+        let asset_idx = 120;
+        let asset_key = key.0.as_slice()[asset_idx..(asset_idx + 8)].to_vec();
+        let asset_id = u64::decode(&mut &asset_key[..]);
+        println!("asset_id: {:?}", asset_id);
+
+        if let Some(storage_data) = api
+            .storage()
+            .fetch_raw(&key.0, None)
+            .await
+            .map_err(map_subxt_err)?
+        {
+            let value = u128::decode(&mut &storage_data[..]);
+            println!(
+                "Class_Id: {:?} AssetId: {:?}  Value: {:?}",
+                class_id, asset_id, value
+            );
+        }
+    }
+
+    Ok(HttpResponse::BadRequest().json(RequestError {
+        message: json!("Just testing"),
+        description: format!(""),
+    }))
 }
 
 /// Transfer asset from to accounts
@@ -281,7 +368,13 @@ pub async fn transfer_from(
     let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = &data.api;
 
-    let call = sugarfunge::tx().asset().transfer_from(account_from,account_to,req.class_id.into(),req.asset_id.into(),req.amount.into(),);
+    let call = sugarfunge::tx().asset().transfer_from(
+        account_from,
+        account_to,
+        req.class_id.into(),
+        req.asset_id.into(),
+        req.amount.into(),
+    );
 
     let result = api
         .tx()
