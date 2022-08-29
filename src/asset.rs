@@ -2,6 +2,7 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
+use sugarfunge_api_types::primitives::*;
 use std::str::FromStr;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::asset::*;
@@ -306,6 +307,7 @@ pub async fn balances(
     let account = sp_core::crypto::AccountId32::from(account);
     let api = &data.api;
 
+    let mut result_array = Vec::new();
     let mut query_key = sugarfunge::storage().asset().balances_root().to_bytes();
     println!("query_key balances_root len: {}", query_key.len());
     StorageMapKey::new(&account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
@@ -347,12 +349,17 @@ pub async fn balances(
                 "Class_Id: {:?} AssetId: {:?}  Value: {:?}",
                 class_id, asset_id, value
             );
+            let item = AssetBalanceItemOutput{
+                class_id: ClassId::from(class_id.unwrap()),
+                asset_id: AssetId::from(asset_id.unwrap()),
+                amount: Balance::from(value.unwrap()),
+            };
+            result_array.push(item);
         }
     }
 
-    Ok(HttpResponse::BadRequest().json(RequestError {
-        message: json!("Just testing"),
-        description: format!(""),
+    Ok(HttpResponse::Ok().json(AssetBalancesOutput {
+        balances: result_array,
     }))
 }
 
