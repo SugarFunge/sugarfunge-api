@@ -16,6 +16,7 @@ mod asset;
 mod bag;
 mod bundle;
 mod command;
+mod fula;
 mod market;
 mod state;
 mod util;
@@ -101,6 +102,11 @@ async fn main() -> std::io::Result<()> {
                 "market/exchange_assets",
                 web::post().to(market::exchange_assets),
             )
+            .route(
+                "fula/update_manifest",
+                web::post().to(fula::update_manifest),
+            )
+            .route("fula/manifest", web::post().to(fula::manifest))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()
