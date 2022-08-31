@@ -107,6 +107,7 @@ async fn main() -> std::io::Result<()> {
                 web::post().to(fula::update_manifest),
             )
             .route("fula/manifest", web::post().to(fula::manifest))
+            .route("fula/manifest_new", web::post().to(fula::manifest_new))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()

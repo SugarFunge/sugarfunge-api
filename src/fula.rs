@@ -1,7 +1,8 @@
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
-use serde_json::json;
+use serde_json::{json, Value};
+use subxt::storage::address::{StorageHasher, StorageMapKey};
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::fula::*;
 use sugarfunge_api_types::sugarfunge;
@@ -80,4 +81,46 @@ pub async fn manifest(
             description: format!(""),
         }))
     }
+}
+
+pub async fn manifest_new(
+    data: web::Data<AppState>,
+    req: web::Json<GetManifestsInput>,
+) -> error::Result<HttpResponse> {
+    let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let api = &data.api;
+
+    let mut result_array = Vec::new();
+    let mut query_key = sugarfunge::storage().fula().manifests_root().to_bytes();
+    println!("query_key balances_root len: {}", query_key.len());
+    StorageMapKey::new(&account_to, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+    println!("query_key account len: {}", query_key.len());
+    
+    let keys = api
+        .storage()
+        .fetch_keys(&query_key, 1000, None, None)
+        .await
+        .map_err(map_subxt_err)?;
+
+    for key in keys.iter() {
+        
+        if let Some(storage_data) = api
+            .storage()
+            .fetch_raw(&key.0, None)
+            .await
+            .map_err(map_subxt_err)?
+        {
+            let manifest: Value = serde_json::to_value(&storage_data).unwrap();
+            let item = Manifest{
+                from: req.from.clone(),
+                to: req.to.clone(),
+                manifest
+            };
+            result_array.push(item);
+        }
+    }
+
+    Ok(HttpResponse::Ok().json(ManifestsOutput {
+        manifests: result_array,
+    }))
 }

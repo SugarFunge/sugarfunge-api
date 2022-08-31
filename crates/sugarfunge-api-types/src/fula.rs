@@ -34,3 +34,9 @@ pub struct Manifest {
 pub struct ManifestsOutput {
     pub manifests: Vec<Manifest>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetManifestsInput {
+    pub from: Account,
+    pub to: Account,
+}
