@@ -1,13 +1,12 @@
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
-use serde_json::{json, Value};
+use serde_json::json;
 use subxt::storage::address::{StorageHasher, StorageMapKey};
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::fula::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
-use subxt::storage::address::{StorageHasher, StorageMapKey};
 use codec::Decode;
 
 pub async fn update_manifest(
