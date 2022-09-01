@@ -7,6 +7,8 @@ use subxt::tx::PairSigner;
 use sugarfunge_api_types::fula::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
+use subxt::storage::address::{StorageHasher, StorageMapKey};
+use codec::Decode;
 
 pub async fn update_manifest(
     data: web::Data<AppState>,
@@ -39,7 +41,7 @@ pub async fn update_manifest(
             manifest: serde_json::from_slice(event.manifest.as_slice()).unwrap_or_default(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::bundle::events::Register"),
+            message: json!("Failed to find sugarfunge::fula::events::UpdateManifests"),
             description: format!(""),
         })),
     }
@@ -49,77 +51,47 @@ pub async fn manifest(
     data: web::Data<AppState>,
     req: web::Json<ManifestsInput>,
 ) -> error::Result<HttpResponse> {
-    let account_from =
-        sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
-    let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let account_to = sp_core::crypto::AccountId32::try_from(&req.account).map_err(map_account_err)?;
+    // let account_from;
     let api = &data.api;
-
-    let call = sugarfunge::storage().fula().manifests(&account_to, &account_from);
-
-    let result = api.storage().fetch(&call, None).await;
-
-    let manifest = result.map_err(map_subxt_err)?;
-
-    if let Some(manifest) = manifest {
-        if let Ok(manifest) = serde_json::from_slice(manifest.manifest.0.as_slice()) {
-            Ok(HttpResponse::Ok().json(ManifestsOutput {
-                manifests: vec![Manifest {
-                    from: account_from.into(),
-                    to: account_to.into(),
-                    manifest: manifest,
-                }],
-            }))
-        } else {
-            Ok(HttpResponse::BadRequest().json(RequestError {
-                message: json!("Manifest no JSON."),
-                description: format!(""),
-            }))
-        }
-    } else {
-        Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("No manifest."),
-            description: format!(""),
-        }))
-    }
-}
-
-pub async fn manifest_new(
-    data: web::Data<AppState>,
-    req: web::Json<GetManifestsInput>,
-) -> error::Result<HttpResponse> {
-    let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let api = &data.api;
-
     let mut result_array = Vec::new();
+
     let mut query_key = sugarfunge::storage().fula().manifests_root().to_bytes();
-    println!("query_key balances_root len: {}", query_key.len());
+    println!("query_key manifests_root len: {}", query_key.len());
     StorageMapKey::new(&account_to, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
-    println!("query_key account len: {}", query_key.len());
-    
+    println!("query_key account_to len: {}", query_key.len());
+    // if let Some(operator_id) = req.operator.clone() {
+    //     account_from = sp_core::crypto::AccountId32::try_from(&operator_id).map_err(map_account_err)?;
+    //     StorageMapKey::new(&account_from, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+    //     println!("query_key account_from len: {}", query_key.len());
+    // }
+
     let keys = api
         .storage()
         .fetch_keys(&query_key, 1000, None, None)
         .await
         .map_err(map_subxt_err)?;
 
+    println!("Obtained keys:");
     for key in keys.iter() {
-        
+        println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+
         if let Some(storage_data) = api
             .storage()
             .fetch_raw(&key.0, None)
             .await
             .map_err(map_subxt_err)?
         {
-            let manifest: Value = serde_json::to_value(&storage_data).unwrap();
+            let value = u64::decode(&mut &storage_data[..]).unwrap();
             let item = Manifest{
-                from: req.from.clone(),
-                to: req.to.clone(),
-                manifest
+                from: req.operator.clone().unwrap(),
+                to: req.account.clone(),
+                manifest: json!(""),
+                value
             };
             result_array.push(item);
         }
     }
-
     Ok(HttpResponse::Ok().json(ManifestsOutput {
         manifests: result_array,
     }))

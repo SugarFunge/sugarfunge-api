@@ -2,12 +2,15 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
+use sp_core::crypto::AccountId32;
 use sugarfunge_api_types::primitives::*;
 use std::str::FromStr;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::asset::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
+use codec::Decode;
+use subxt::storage::address::{StorageHasher, StorageMapKey};
 
 /// Create an asset class for an account
 pub async fn create_class(
@@ -294,9 +297,6 @@ pub async fn balance(
     }
 }
 
-use codec::Decode;
-use subxt::storage::address::{StorageHasher, StorageMapKey};
-
 /// Get balances for owner and maybe class
 pub async fn balances(
     data: web::Data<AppState>,
@@ -317,6 +317,11 @@ pub async fn balances(
         StorageMapKey::new(&class_id, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
         println!("query_key class_id len: {}", query_key.len());
     }
+    if let Some(asset_id) = req.asset_id {
+        let asset_id: u64 = asset_id.into();
+        StorageMapKey::new(&asset_id, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        println!("query_key asset_id len: {}", query_key.len());
+    }
 
     let keys = api
         .storage()
@@ -327,6 +332,13 @@ pub async fn balances(
     println!("Obtained keys:");
     for key in keys.iter() {
         println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+
+        let account_idx = 48;
+        let account_key = key.0.as_slice()[account_idx..(account_idx + 32)].to_vec();
+        let account_id = AccountId32::decode(&mut &account_key[..]);
+        let account_id = Account::from(account_id.unwrap());
+        let account_id = String::from(&account_id);
+        println!("account_id: {}", account_id);
 
         let class_idx = 96;
         let class_key = key.0.as_slice()[class_idx..(class_idx + 8)].to_vec();
