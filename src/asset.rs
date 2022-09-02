@@ -317,11 +317,11 @@ pub async fn balances(
         StorageMapKey::new(&class_id, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
         println!("query_key class_id len: {}", query_key.len());
     }
-    if let Some(asset_id) = req.asset_id {
-        let asset_id: u64 = asset_id.into();
-        StorageMapKey::new(&asset_id, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
-        println!("query_key asset_id len: {}", query_key.len());
-    }
+    // if let Some(asset_id) = req.asset_id {
+    //     let asset_id: u64 = asset_id.into();
+    //     StorageMapKey::new(&asset_id, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+    //     println!("query_key asset_id len: {}", query_key.len());
+    // }
 
     let keys = api
         .storage()

@@ -4,7 +4,9 @@ use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use subxt::storage::address::{StorageHasher, StorageMapKey};
 use subxt::tx::PairSigner;
+use sp_core::crypto::AccountId32;
 use sugarfunge_api_types::fula::*;
+use sugarfunge_api_types::primitives::Account;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 use codec::Decode;
@@ -51,7 +53,7 @@ pub async fn manifest(
     req: web::Json<ManifestsInput>,
 ) -> error::Result<HttpResponse> {
     let account_to = sp_core::crypto::AccountId32::try_from(&req.account).map_err(map_account_err)?;
-    // let account_from;
+    let account_from;
     let api = &data.api;
     let mut result_array = Vec::new();
 
@@ -59,11 +61,11 @@ pub async fn manifest(
     println!("query_key manifests_root len: {}", query_key.len());
     StorageMapKey::new(&account_to, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
     println!("query_key account_to len: {}", query_key.len());
-    // if let Some(operator_id) = req.operator.clone() {
-    //     account_from = sp_core::crypto::AccountId32::try_from(&operator_id).map_err(map_account_err)?;
-    //     StorageMapKey::new(&account_from, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
-    //     println!("query_key account_from len: {}", query_key.len());
-    // }
+    if let Some(operator_id) = req.operator.clone() {
+        account_from = sp_core::crypto::AccountId32::try_from(&operator_id).map_err(map_account_err)?;
+        StorageMapKey::new(&account_from, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        println!("query_key account_from len: {}", query_key.len());
+    }
 
     let keys = api
         .storage()
@@ -75,6 +77,18 @@ pub async fn manifest(
     for key in keys.iter() {
         println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
+        let account_to_idx = 48;
+        let account_to_key = key.0.as_slice()[account_to_idx..(account_to_idx + 32)].to_vec();
+        let account_to_id = AccountId32::decode(&mut &account_to_key[..]);
+        let account_to_id = Account::from(account_to_id.unwrap());
+        println!("account_to_id: {:?}", account_to_id);
+
+        let account_from_idx = 96;
+        let account_from_key = key.0.as_slice()[account_from_idx..(account_from_idx + 32)].to_vec();
+        let account_from_id = AccountId32::decode(&mut &account_from_key[..]);
+        let account_from_id = Account::from(account_from_id.unwrap());
+        println!("account_from_id: {:?}", account_from_id);
+
         if let Some(storage_data) = api
             .storage()
             .fetch_raw(&key.0, None)
@@ -83,8 +97,8 @@ pub async fn manifest(
         {
             let value = u64::decode(&mut &storage_data[..]).unwrap();
             let item = Manifest{
-                from: req.operator.clone().unwrap(),
-                to: req.account.clone(),
+                from: account_from_id,
+                to: account_to_id,
                 manifest: json!(""),
                 value
             };
