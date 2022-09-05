@@ -1,5 +1,5 @@
-use crate::primitives::*;
 use serde::{Deserialize, Serialize};
+use crate::primitives::*;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateManifestInput {
@@ -26,7 +26,6 @@ pub struct Manifest {
     pub from: Account,
     pub to: Account,
     pub manifest: serde_json::Value,
-    pub value: u64
 }
 
 #[derive(Serialize, Deserialize, Debug)]

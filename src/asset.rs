@@ -2,7 +2,7 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
-use sp_core::crypto::AccountId32;
+// use sp_core::crypto::AccountId32;
 use sugarfunge_api_types::primitives::*;
 use std::str::FromStr;
 use subxt::tx::PairSigner;
@@ -309,13 +309,13 @@ pub async fn balances(
 
     let mut result_array = Vec::new();
     let mut query_key = sugarfunge::storage().asset().balances_root().to_bytes();
-    println!("query_key balances_root len: {}", query_key.len());
+    // println!("query_key balances_root len: {}", query_key.len());
     StorageMapKey::new(&account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
-    println!("query_key account len: {}", query_key.len());
+    // println!("query_key account len: {}", query_key.len());
     if let Some(class_id) = req.class_id {
         let class_id: u64 = class_id.into();
         StorageMapKey::new(&class_id, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
-        println!("query_key class_id len: {}", query_key.len());
+        // println!("query_key class_id len: {}", query_key.len());
     }
     // if let Some(asset_id) = req.asset_id {
     //     let asset_id: u64 = asset_id.into();
@@ -329,26 +329,26 @@ pub async fn balances(
         .await
         .map_err(map_subxt_err)?;
 
-    println!("Obtained keys:");
+    // println!("Obtained keys:");
     for key in keys.iter() {
-        println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+        // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
-        let account_idx = 48;
-        let account_key = key.0.as_slice()[account_idx..(account_idx + 32)].to_vec();
-        let account_id = AccountId32::decode(&mut &account_key[..]);
-        let account_id = Account::from(account_id.unwrap());
-        let account_id = String::from(&account_id);
-        println!("account_id: {}", account_id);
+        // let account_idx = 48;
+        // let account_key = key.0.as_slice()[account_idx..(account_idx + 32)].to_vec();
+        // let account_id = AccountId32::decode(&mut &account_key[..]);
+        // let account_id = Account::from(account_id.unwrap());
+        // let account_id = String::from(&account_id);
+        // println!("account_id: {}", account_id);
 
         let class_idx = 96;
         let class_key = key.0.as_slice()[class_idx..(class_idx + 8)].to_vec();
         let class_id = u64::decode(&mut &class_key[..]);
-        println!("class_id: {:?}", class_id);
+        // println!("class_id: {:?}", class_id);
 
         let asset_idx = 120;
         let asset_key = key.0.as_slice()[asset_idx..(asset_idx + 8)].to_vec();
         let asset_id = u64::decode(&mut &asset_key[..]);
-        println!("asset_id: {:?}", asset_id);
+        // println!("asset_id: {:?}", asset_id);
 
         if let Some(storage_data) = api
             .storage()
@@ -357,10 +357,10 @@ pub async fn balances(
             .map_err(map_subxt_err)?
         {
             let value = u128::decode(&mut &storage_data[..]);
-            println!(
-                "Class_Id: {:?} AssetId: {:?}  Value: {:?}",
-                class_id, asset_id, value
-            );
+            // println!(
+            //     "Class_Id: {:?} AssetId: {:?}  Value: {:?}",
+            //     class_id, asset_id, value
+            // );
             let item = AssetBalanceItemOutput{
                 class_id: ClassId::from(class_id.unwrap()),
                 asset_id: AssetId::from(asset_id.unwrap()),
