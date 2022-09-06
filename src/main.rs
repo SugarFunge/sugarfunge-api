@@ -51,6 +51,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(cors)
             .app_data(Data::new(state.clone()))
+            .route("health", web::post().to(util::health_check))
             .service(web::resource("/ws").route(web::get().to(subscription::ws)))
             // .route("/ws", web::get().to(subscription::ws))
             .route("account/seeded", web::post().to(account::seeded))

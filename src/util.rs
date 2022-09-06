@@ -1,10 +1,13 @@
-use actix_web::error;
+use actix_web::{error, web, HttpResponse};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sp_core::Pair;
+use subxt::rpc::Health;
 use sugarfunge_api_types::primitives::*;
 use url::Url;
+
+use crate::state::AppState;
 
 #[derive(Serialize, Deserialize, Debug, Display)]
 #[display(fmt = "{:?} {:?}", message, description)]
@@ -67,4 +70,14 @@ pub fn url_to_string(url: Url) -> String {
         }
         _ => res,
     }
+}
+
+pub async fn health_check(data: web::Data<AppState>) -> error::Result<HttpResponse> {
+    let api = &data.api;
+    let health: Health = api
+        .rpc()
+        .system_health()
+        .await
+        .map_err(map_subxt_err)?;
+    Ok(HttpResponse::Ok().json(health))
 }
