@@ -3,12 +3,14 @@ use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use sp_core::crypto::AccountId32;
-use std::str::FromStr;
-use subxt::PairSigner;
-use sugarfunge_api_types::asset::*;
 use sugarfunge_api_types::primitives::*;
+use std::str::FromStr;
+use subxt::tx::PairSigner;
+use sugarfunge_api_types::asset::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
+use codec::Decode;
+use subxt::storage::address::{StorageHasher, StorageMapKey};
 
 #[cfg(feature = "keycloak")]
 use crate::config::Config;
@@ -19,7 +21,7 @@ use actix_web_middleware_keycloak_auth::KeycloakClaims;
 #[cfg(feature = "keycloak")]
 use sp_core::Pair;
 #[cfg(feature = "keycloak")]
-use subxt::sp_runtime::traits::IdentifyAccount;
+use subxt::ext::sp_runtime::traits::IdentifyAccount;
 
 #[cfg(not(feature = "keycloak"))]
 pub async fn create_class(
@@ -81,12 +83,14 @@ async fn create_class_call(
     let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
     let api = &data.api;
+
+    let call = sugarfunge::tx()
+        .asset()
+        .create_class(to, req.class_id.into(), metadata);
+
     let result = api
         .tx()
-        .asset()
-        .create_class(to, req.class_id.into(), metadata)
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -113,11 +117,10 @@ pub async fn class_info(
     req: web::Json<ClassInfoInput>,
 ) -> error::Result<HttpResponse> {
     let api = &data.api;
-    let result = api
-        .storage()
-        .asset()
-        .classes(&req.class_id.into(), None)
-        .await;
+
+    let call = sugarfunge::storage().asset().classes(&req.class_id.into());
+
+    let result = api.storage().fetch(&call, None).await;
     let info = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(ClassInfoOutput {
         info: match info {
@@ -184,12 +187,14 @@ async fn create_asset_call(
     let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
     let api = &data.api;
+    let call =
+        sugarfunge::tx()
+            .asset()
+            .create_asset(req.class_id.into(), req.asset_id.into(), metadata);
+
     let result = api
         .tx()
-        .asset()
-        .create_asset(req.class_id.into(), req.asset_id.into(), metadata)
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -217,11 +222,12 @@ pub async fn info(
     req: web::Json<AssetInfoInput>,
 ) -> error::Result<HttpResponse> {
     let api = &data.api;
-    let result = api
-        .storage()
+
+    let call = sugarfunge::storage()
         .asset()
-        .assets(&req.class_id.into(), &req.asset_id.into(), None)
-        .await;
+        .assets(&req.class_id.into(), &req.asset_id.into());
+
+    let result = api.storage().fetch(&call, None).await;
     let info = result.map_err(map_subxt_err)?;
     Ok(HttpResponse::Ok().json(AssetInfoOutput {
         info: match info {
@@ -288,12 +294,15 @@ async fn update_asset_call(
     let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
     let api = &data.api;
+    let call = sugarfunge::tx().asset().update_asset_metadata(
+        req.class_id.into(),
+        req.asset_id.into(),
+        metadata,
+    );
+
     let result = api
         .tx()
-        .asset()
-        .update_asset_metadata(req.class_id.into(), req.asset_id.into(), metadata)
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -374,17 +383,16 @@ async fn mint_asset_call(
     let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let api = &data.api;
+    let call = sugarfunge::tx().asset().mint(
+        to,
+        req.class_id.into(),
+        req.asset_id.into(),
+        req.amount.into(),
+    );
+
     let result = api
         .tx()
-        .asset()
-        .mint(
-            to,
-            req.class_id.into(),
-            req.asset_id.into(),
-            req.amount.into(),
-        )
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -466,17 +474,16 @@ async fn burn_asset_call(
     let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let api = &data.api;
+    let call = sugarfunge::tx().asset().burn(
+        from,
+        req.class_id.into(),
+        req.asset_id.into(),
+        req.amount.into(),
+    );
+
     let result = api
         .tx()
-        .asset()
-        .burn(
-            from,
-            req.class_id.into(),
-            req.asset_id.into(),
-            req.amount.into(),
-        )
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -556,14 +563,125 @@ async fn balance_asset_call(
     account: AccountId32,
 ) -> error::Result<HttpResponse, actix_web::Error> {
     let api = &data.api;
-    let result = api
-        .storage()
-        .asset()
-        .balances(&account, &req.class_id.into(), &req.asset_id.into(), None)
-        .await;
+    let call = sugarfunge::storage().asset().balances(
+        &account,
+        &req.class_id.into(),
+        &req.asset_id.into(),
+    );
+
+    let result = api.storage().fetch(&call, None).await;
+    
     let amount = result.map_err(map_subxt_err)?;
-    Ok(HttpResponse::Ok().json(AssetBalanceOutput {
-        amount: amount.into(),
+    match amount {
+        Some(amount) => Ok(HttpResponse::Ok().json(AssetBalanceOutput {
+            amount: amount.into(),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find asset::getBalance"),
+            description: format!("Error in asset::balance"),
+        })),
+    } 
+}
+
+/// Get balances for owner and maybe class
+#[cfg(not(feature = "keycloak"))]
+pub async fn balances(
+    data: web::Data<AppState>,
+    req: web::Json<AssetBalancesInput>,
+) -> error::Result<HttpResponse> {
+    let account =
+        sp_core::sr25519::Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
+    let account = sp_core::crypto::AccountId32::from(account);
+    match balances_asset_call(data, req, account).await {
+        Ok(response) => Ok(response),
+        Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
+    }
+}
+
+/// Get balances for owner and maybe class
+#[cfg(feature = "keycloak")]
+pub async fn balances(
+    data: web::Data<AppState>,
+    req: web::Json<AssetBalancesInput>,
+    claims: KeycloakClaims<sugarfunge_api_types::user::ClaimsWithEmail>,
+    env: web::Data<Config>,
+) -> error::Result<HttpResponse> {
+    let account =
+        sp_core::sr25519::Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
+    let account = sp_core::crypto::AccountId32::from(account);
+    match user::get_seed(&claims.sub, env).await {
+        Ok(response) => {
+            if !response.seed.clone().unwrap_or_default().is_empty() {
+                //let user_seed = Seed::from(response.seed.clone().unwrap());              
+                match balances_asset_call(data, req, account).await {
+                    Ok(response) => Ok(response),
+                    Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
+                }
+            } else {
+                Ok(HttpResponse::BadRequest().json(RequestError {
+                    message: json!("Not found seed in user Attributes"),
+                    description: format!("Error in asset::balance"),
+                }))
+            }
+        }
+        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find user::getAttributes"),
+            description: format!("Error in asset::balance"),
+        })),
+    }
+}
+
+async fn balances_asset_call(
+    data: web::Data<AppState>,
+    req: web::Json<AssetBalancesInput>,
+    account: AccountId32,
+) -> error::Result<HttpResponse, actix_web::Error> {
+    let api = &data.api;
+
+    let mut result_array = Vec::new();
+    let mut query_key = sugarfunge::storage().asset().balances_root().to_bytes();
+
+    StorageMapKey::new(&account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+    
+    if let Some(class_id) = req.class_id {
+        let class_id: u64 = class_id.into();
+        StorageMapKey::new(&class_id, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);        
+    }
+    
+    let keys = api
+        .storage()
+        .fetch_keys(&query_key, 1000, None, None)
+        .await
+        .map_err(map_subxt_err)?;
+
+    for key in keys.iter() {
+
+        let class_idx = 96;
+        let class_key = key.0.as_slice()[class_idx..(class_idx + 8)].to_vec();
+        let class_id = u64::decode(&mut &class_key[..]);
+
+        let asset_idx = 120;
+        let asset_key = key.0.as_slice()[asset_idx..(asset_idx + 8)].to_vec();
+        let asset_id = u64::decode(&mut &asset_key[..]);
+
+        if let Some(storage_data) = api
+            .storage()
+            .fetch_raw(&key.0, None)
+            .await
+            .map_err(map_subxt_err)?
+        {
+            let value = u128::decode(&mut &storage_data[..]);
+            let item = AssetBalanceItemOutput{
+                class_id: ClassId::from(class_id.unwrap()),
+                asset_id: AssetId::from(asset_id.unwrap()),
+                amount: Balance::from(value.unwrap()),
+            };
+            result_array.push(item);
+        }
+    }
+
+    Ok(HttpResponse::Ok().json(AssetBalancesOutput {
+        balances: result_array,
     }))
 }
 
@@ -627,18 +745,17 @@ async fn transfer_asset_call(
     let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let api = &data.api;
+    let call = sugarfunge::tx().asset().transfer_from(
+        account_from,
+        account_to,
+        req.class_id.into(),
+        req.asset_id.into(),
+        req.amount.into(),
+    );
+
     let result = api
         .tx()
-        .asset()
-        .transfer_from(
-            account_from,
-            account_to,
-            req.class_id.into(),
-            req.asset_id.into(),
-            req.amount.into(),
-        )
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()

@@ -8,8 +8,8 @@ use command::*;
 use state::*;
 use std::sync::Arc;
 use structopt::StructOpt;
-use subxt::{ClientBuilder, DefaultConfig, PolkadotExtrinsicParams};
-use sugarfunge_api_types::sugarfunge;
+use subxt::{client::OnlineClient, PolkadotConfig};
+//use sugarfunge_api_types::sugarfunge;
 use util::url_to_string;
 
 mod account;
@@ -39,12 +39,9 @@ async fn main() -> std::io::Result<()> {
 
     let opt = Opt::from_args();
 
-    let api = ClientBuilder::new()
-        .set_url(url_to_string(opt.node_server))
-        .build()
+    let api = OnlineClient::<PolkadotConfig>::from_url(url_to_string(opt.node_server))
         .await
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
-        .to_runtime_api::<sugarfunge::RuntimeApi<DefaultConfig, PolkadotExtrinsicParams<DefaultConfig>>>();
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
 
     let state = AppState { api: Arc::new(api) };
 
@@ -64,6 +61,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(cors)
             .app_data(Data::new(state.clone()))
+            .route("health", web::post().to(util::health_check))
             .service(web::resource("/ws").route(web::get().to(subscription::ws)))
             // .route("/ws", web::get().to(subscription::ws))
             .route("account/seeded", web::post().to(account::seeded))
@@ -82,6 +80,7 @@ async fn main() -> std::io::Result<()> {
             .route("asset/mint", web::post().to(asset::mint))
             .route("asset/burn", web::post().to(asset::burn))
             .route("asset/balance", web::post().to(asset::balance))
+            .route("asset/balances", web::post().to(asset::balances))
             .route("asset/transfer_from", web::post().to(asset::transfer_from))
             .route("bag/register", web::post().to(bag::register))
             .route("bag/create", web::post().to(bag::create))
@@ -136,12 +135,9 @@ async fn main() -> std::io::Result<()> {
 
     let opt = Opt::from_args();
 
-    let api = ClientBuilder::new()
-        .set_url(url_to_string(opt.node_server))
-        .build()
+    let api = OnlineClient::<PolkadotConfig>::from_url(url_to_string(opt.node_server))
         .await
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
-        .to_runtime_api::<sugarfunge::RuntimeApi<DefaultConfig, PolkadotExtrinsicParams<DefaultConfig>>>();
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
 
     let state = AppState { api: Arc::new(api) };
 
@@ -172,6 +168,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(Data::new(env.clone()))
             .wrap(keycloak_auth)
             .wrap(cors)
+            .route("health", web::post().to(util::health_check))
             .service(web::resource("/ws").route(web::get().to(subscription::ws)))
             .route("account/seeded", web::post().to(account::seeded))
             .route("account/exists", web::post().to(account::exists))
@@ -188,6 +185,7 @@ async fn main() -> std::io::Result<()> {
             .route("asset/mint", web::post().to(asset::mint))
             .route("asset/burn", web::post().to(asset::burn))
             .route("asset/balance", web::post().to(asset::balance))
+            .route("asset/balances", web::post().to(asset::balances))
             .route("asset/transfer_from", web::post().to(asset::transfer_from))
             .route("bag/register", web::post().to(bag::register))
             .route("bag/create", web::post().to(bag::create))

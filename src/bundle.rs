@@ -6,11 +6,11 @@ use hex::ToHex;
 use serde_json::json;
 use sp_core::crypto::AccountId32;
 use std::str::FromStr;
-use subxt::PairSigner;
+use subxt::tx::PairSigner;
 use sugarfunge_api_types::bundle::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 
 #[cfg(feature = "keycloak")]
 use crate::config::Config;
@@ -21,7 +21,7 @@ use actix_web_middleware_keycloak_auth::KeycloakClaims;
 #[cfg(feature = "keycloak")]
 use sp_core::Pair;
 #[cfg(feature = "keycloak")]
-use subxt::sp_runtime::traits::IdentifyAccount;
+use subxt::ext::sp_runtime::traits::IdentifyAccount;
 
 fn hash(s: &[u8]) -> sp_core::H256 {
     sp_io::hashing::blake2_256(s).into()
@@ -98,18 +98,18 @@ pub async fn register_bundle_call(
     let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
     let api = &data.api;
+    let call = sugarfunge::tx().bundle()
+    .register_bundle(
+        req.class_id.into(),
+        req.asset_id.into(),
+        bundle_id,
+        schema,
+        metadata,
+    );
+
     let result = api
         .tx()
-        .bundle()
-        .register_bundle(
-            req.class_id.into(),
-            req.asset_id.into(),
-            bundle_id,
-            schema,
-            metadata,
-        )
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -195,12 +195,11 @@ pub async fn mint_bundle_call(
     let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let api = &data.api;
+    let call = sugarfunge::tx().bundle().mint_bundle(account_from, account_to, bundle_id, req.amount.into());
+
     let result = api
         .tx()
-        .bundle()
-        .mint_bundle(account_from, account_to, bundle_id, req.amount.into())
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -287,12 +286,12 @@ pub async fn burn_bundle_call(
     let pair = get_pair_from_seed(&seed)?;
     let signer = PairSigner::new(pair);
     let api = &data.api;
+    let call = sugarfunge::tx().bundle()
+    .burn_bundle(account_from, account_to, bundle_id, req.amount.into());
+
     let result = api
         .tx()
-        .bundle()
-        .burn_bundle(account_from, account_to, bundle_id, req.amount.into())
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()

@@ -3,9 +3,10 @@ use crate::util::*;
 use actix_web::{error, web, HttpRequest, HttpResponse};
 use rand::prelude::*;
 use serde_json::json;
-use sp_core::crypto::AccountId32;
 use sp_core::Pair;
-use subxt::{sp_runtime::traits::IdentifyAccount, PairSigner};
+use sp_core::crypto::AccountId32;
+use subxt::ext::{sp_runtime::traits::IdentifyAccount};
+use subxt::tx::PairSigner;
 use sugarfunge_api_types::account::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
@@ -85,8 +86,7 @@ pub async fn fund(
     data: web::Data<AppState>,
     req: web::Json<FundAccountInput>,
 ) -> error::Result<HttpResponse> {
-    let account = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    match account_fund_call(data, req, account).await {
+    match account_fund_call(data, req).await {
         Ok(response) => Ok(response),
         Err(e) => Ok(HttpResponse::BadRequest().json(actixweb_err_to_json(e))),
     }
@@ -95,19 +95,19 @@ pub async fn fund(
 async fn account_fund_call(
     data: web::Data<AppState>,
     req: web::Json<FundAccountInput>,
-    to: AccountId32,
 ) -> error::Result<HttpResponse, actix_web::Error> {
-    let account = subxt::sp_runtime::MultiAddress::Id(to);
+    let account = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let account = subxt::ext::sp_runtime::MultiAddress::Id(account);
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let amount_input = req.amount;
     let api = &data.api;
+
+    let call = sugarfunge::tx().balances().transfer(account, amount_input.into());
+
     let result = api
         .tx()
-        .balances()
-        .transfer(account, amount_input.into())
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -181,11 +181,25 @@ async fn account_balance_call(
     account: AccountId32,
 ) -> error::Result<HttpResponse, actix_web::Error> {
     let api = &data.api;
-    let result = api.storage().system().account(&account, None).await;
+
+    let call = sugarfunge::storage().system().account(&account);
+
+    let result = api.storage().fetch(&call, None).await;
     let data = result.map_err(map_subxt_err)?;
-    Ok(HttpResponse::Ok().json(AccountBalanceOutput {
-        balance: data.data.free.into(),
-    }))
+    
+    match data {
+        Some(data) => Ok(HttpResponse::Ok().json(AccountBalanceOutput {
+            balance: data.data.free.into(),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find user::getBalance"),
+            description: format!("Error in account::balance"),
+        })),
+    }  
+
+    // Ok(HttpResponse::Ok().json(AccountBalanceOutput {
+    //     balance: data.data.free.into(),
+    // }))
 }
 
 /// Check if account exists and is active
@@ -241,10 +255,19 @@ async fn account_exists_call(
 ) -> error::Result<HttpResponse, actix_web::Error> {
     let account_out = account.clone();
     let api = &data.api;
-    let result = api.storage().system().account(&account, None).await;
+    let call = sugarfunge::storage().system().account(&account);
+    
+    let result = api.storage().fetch(&call, None).await;
+    
     let data = result.map_err(map_subxt_err)?;
-    Ok(HttpResponse::Ok().json(AccountExistsOutput {
-        account: account_out.into(),
-        exists: data.providers > 0,
-    }))
+    match data {
+        Some(data) => Ok(HttpResponse::Ok().json(AccountExistsOutput {
+            account: account_out.into(),
+            exists: data.providers > 0,
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find user"),
+            description: format!("Error in account::exists"),
+        })),
+    }    
 }

@@ -1,12 +1,13 @@
-use actix_web::error;
+use actix_web::{error, web, HttpResponse};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
-use serde_json::Value;
+use serde_json::{json, Value};
 use sp_core::Pair;
+use subxt::rpc::Health;
 use sugarfunge_api_types::primitives::*;
-use sugarfunge_api_types::sugarfunge;
 use url::Url;
+
+use crate::state::AppState;
 
 #[derive(Serialize, Deserialize, Debug, Display)]
 #[display(fmt = "{:?} {:?}", message, description)]
@@ -15,7 +16,7 @@ pub struct RequestError {
     pub description: String,
 }
 
-pub fn map_subxt_err(e: subxt::GenericError<std::convert::Infallible>) -> actix_web::Error {
+pub fn map_subxt_err(e: subxt::Error) -> actix_web::Error {
     // TODO: json_err should be a json Value to improve UX
     let json_err = json!(e.to_string());
     let req_error = RequestError {
@@ -27,9 +28,7 @@ pub fn map_subxt_err(e: subxt::GenericError<std::convert::Infallible>) -> actix_
 }
 
 pub fn map_sf_err(
-    e: subxt::GenericError<
-        subxt::RuntimeError<sugarfunge::runtime_types::sp_runtime::DispatchError>,
-    >,
+    e: subxt::Error,
 ) -> actix_web::Error {
     // TODO: json_err should be a json Value to improve UX
     let json_err = json!(e.to_string());
@@ -77,4 +76,14 @@ pub fn actixweb_err_to_json(e: actix_web::Error) -> Value {
     let eror_value = format!("{}", e);
     let res: Value = serde_json::from_str(eror_value.as_str()).unwrap();
     return res;
+}
+
+pub async fn health_check(data: web::Data<AppState>) -> error::Result<HttpResponse> {
+    let api = &data.api;
+    let health: Health = api
+        .rpc()
+        .system_health()
+        .await
+        .map_err(map_subxt_err)?;
+    Ok(HttpResponse::Ok().json(health))
 }

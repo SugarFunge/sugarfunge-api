@@ -29,28 +29,28 @@ awc = "3.0.0-beta.10"
 dotenv = "0.15.0"
 
 [dependencies.subxt]
-git = "https://github.com/SugarFunge/subxt.git"
-rev = "50652dfe5dbb17a9faf4f3487c55ce895d8710a1"
+git = "https://github.com/carloslopezandara/subxt.git"
+branch = "feature/polkadot-v0.9.27"
 
 [dependencies.sp-keyring]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.23"
+branch = "polkadot-v0.9.27"
 package = "sp-keyring"
 
 [dependencies.sp-std]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.23"
+branch = "polkadot-v0.9.27"
 package = "sp-std"
 
 [dependencies.sp-io]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.23"
+branch = "polkadot-v0.9.27"
 package = "sp-io"
 features = []
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.23"
+branch = "polkadot-v0.9.27"
 package = "sp-core"
 features = ["full_crypto"]
 
