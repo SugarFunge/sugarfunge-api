@@ -49,6 +49,43 @@ pub async fn update_manifest(
     }
 }
 
+pub async fn burn_manifest(
+    data: web::Data<AppState>,
+    req: web::Json<UpdateManifestInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed)?;
+    let signer = PairSigner::new(pair);
+    let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let manifest: Vec<u8> = serde_json::to_vec(&req.manifest).unwrap_or_default();
+    let manifest = BoundedVec(manifest);
+    let api = &data.api;
+
+    let call = sugarfunge::tx().fula().burn(account_to, manifest);
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_sf_err)?;
+    let result = result
+        .find_first::<sugarfunge::fula::events::ManifestBurned>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(UpdateManifestOutput {
+            from: event.from.into(),
+            to: event.to.into(),
+            manifest: serde_json::from_slice(event.manifest.as_slice()).unwrap_or_default(),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::fula::events::UpdateManifests"),
+            description: format!(""),
+        })),
+    }
+}
+
 pub async fn manifest(
     data: web::Data<AppState>,
     req: web::Json<ManifestsInput>,
