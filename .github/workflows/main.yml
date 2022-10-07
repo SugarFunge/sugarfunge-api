@@ -2,54 +2,21 @@ name: DockerBuildPush
 
 on:
   push:
-    branches: [ main ]
+    branches: [ feature/polkadot-v0.9.27 ]
 jobs:
     build-and-deploy:
         runs-on: ubuntu-latest
         steps:
-        - name: 'Checkout GitHub Action'
-          uses: actions/checkout@main
-          
-        - name: 'Build and push image'
-          uses: azure/docker-login@v1
+        - uses: actions/checkout@v3
+        - name: Login to DockerHub
+          uses: docker/login-action@v1
           with:
-            login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-            username: ${{ secrets.REGISTRY_USERNAME }}
-            password: ${{ secrets.REGISTRY_PASSWORD }}
-        - run: |
-            docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:${{ github.sha }} -f docker/Dockerfile .
-            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:${{ github.sha }}
-            docker tag ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:${{ github.sha }} ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:latest
-            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:latest
-        - uses: slackapi/slack-github-action@v1.18.0
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_ORG_TOKEN }}
+        - name: Build and push
+          uses: docker/build-push-action@v2
           with:
-            channel-id: ${{ secrets.SUGARFUNGE_SLACK_CHANNEL_ID }}
-            payload: |
-              {
-                "text": "sugarfunge-api Image Updated",
-                "blocks": [
-                  {
-                    "type": "section",
-                    "text": {
-                      "type": "mrkdwn",
-                      "text": "<https://github.com/SugarFunge/sugarfunge-api | sugarfunge-api> Image Updated :white_check_mark:\n Remember to run `docker-compose pull` to update the image if you're using the `latest` tag!"
-                    }
-                  },
-                  {
-                    "type": "section",
-                    "text": {
-                      "type": "mrkdwn",
-                      "text": "*Commit:* <${{ github.event.pull_request.html_url || github.event.head_commit.url }} | ${{ github.sha }}>"
-                    }
-                  },
-                  {
-                    "type": "section",
-                    "text": {
-                      "type": "mrkdwn",
-                      "text": "*Author:* ${{ github.event.pusher.name }}"
-                    }
-                  }
-                ]
-              }
-          env:
-            SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+            context: ./
+            file: ./docker/Dockerfile
+            push: true
+            tags: ${{ secrets.DOCKERHUB_USERNAME }}/sugarfunge-api:latest
