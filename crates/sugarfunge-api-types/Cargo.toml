@@ -12,9 +12,8 @@ codec = { package = "parity-scale-codec", version = "3.0.0", default-features = 
 scale-info = { version = "2.0.0", features = ["bit-vec"] }
 
 [dependencies.subxt]
-git = "https://github.com/carloslopezandara/subxt.git"
+git = "https://github.com/SugarFunge/subxt.git"
 branch = "feature/polkadot-v0.9.27"
-#rev = "f92fc58ae22d3e55d121358d7a023b14e4e9c759"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate.git"
