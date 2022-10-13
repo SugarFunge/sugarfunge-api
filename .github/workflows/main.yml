@@ -45,7 +45,7 @@ jobs:
               password: ${{ secrets.REGISTRY_PASSWORD }}
           - name: 'Create and Push manifest'
             run: |
-              docker docker manifest create ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:latest \
+              docker manifest create ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:latest \
               --amend ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:amd64-latest \
               --amend ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:arm64-latest
           - uses: slackapi/slack-github-action@v1.18.0
