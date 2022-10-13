@@ -48,6 +48,7 @@ jobs:
               docker manifest create ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:latest \
               --amend ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:amd64-latest \
               --amend ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:arm64-latest
+              docker manifest push ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:latest
           - uses: slackapi/slack-github-action@v1.18.0
             with:
               channel-id: ${{ secrets.SUGARFUNGE_SLACK_CHANNEL_ID }}
