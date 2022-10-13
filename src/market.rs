@@ -2,22 +2,22 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
-use subxt::PairSigner;
+use subxt::tx::PairSigner;
 use sugarfunge_api_types::market::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_market;
 
 fn extrinsinc_rates(
     in_rates: &Vec<AssetRate>,
-) -> BoundedVec<sugarfunge_market::AssetRate<subxt::sp_runtime::AccountId32, u64, u64>> {
+) -> BoundedVec<sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64>> {
     BoundedVec(
         in_rates
             .iter()
             .map(|rate| {
                 <AssetRate as Into<
-                    sugarfunge_market::AssetRate<subxt::sp_runtime::AccountId32, u64, u64>,
+                    sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64>,
                 >>::into(rate.clone())
             })
             .collect(),
@@ -25,7 +25,7 @@ fn extrinsinc_rates(
 }
 
 fn transform_balances(
-    in_balances: Vec<sugarfunge_market::RateBalance<subxt::sp_runtime::AccountId32, u64, u64>>,
+    in_balances: Vec<sugarfunge_market::RateBalance<subxt::ext::sp_runtime::AccountId32, u64, u64>>,
 ) -> Vec<RateBalance> {
     in_balances
         .into_iter()
@@ -43,12 +43,12 @@ pub async fn create_market(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let api = &data.api;
+
+    let call = sugarfunge::tx().market().create_market(req.market_id.into());
+
     let result = api
         .tx()
-        .market()
-        .create_market(req.market_id.into())
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -80,12 +80,12 @@ pub async fn create_market_rate(
     let rates = &req.rates.rates; //transform_input(&req.rates.rates);
     let rates = extrinsinc_rates(&rates);
 
+    let call = sugarfunge::tx().market()
+    .create_market_rate(req.market_id.into(), u64::from(req.market_rate_id), rates);
+
     let result = api
         .tx()
-        .market()
-        .create_market_rate(req.market_id.into(), u64::from(req.market_rate_id), rates)
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -114,16 +114,17 @@ pub async fn deposit_assets(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let api = &data.api;
+
+    let call = sugarfunge::tx().market()
+    .deposit(
+        req.market_id.into(),
+        u64::from(req.market_rate_id),
+        req.amount.into(),
+    );
+
     let result = api
         .tx()
-        .market()
-        .deposit(
-            req.market_id.into(),
-            u64::from(req.market_rate_id),
-            req.amount.into(),
-        )
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -155,16 +156,17 @@ pub async fn exchange_assets(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let api = &data.api;
+
+    let call = sugarfunge::tx().market()
+    .exchange_assets(
+        req.market_id.into(),
+        u64::from(req.market_rate_id),
+        req.amount.into(),
+    );
+
     let result = api
         .tx()
-        .market()
-        .exchange_assets(
-            req.market_id.into(),
-            u64::from(req.market_rate_id),
-            req.amount.into(),
-        )
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()

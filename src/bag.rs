@@ -5,11 +5,11 @@ use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use sp_core::crypto::AccountId32;
-use subxt::PairSigner;
+use subxt::tx::PairSigner;
 use sugarfunge_api_types::bag::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::frame_support::storage::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 
 pub async fn register(
     data: web::Data<AppState>,
@@ -20,12 +20,12 @@ pub async fn register(
     let metadata: Vec<u8> = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
     let api = &data.api;
+
+    let call = sugarfunge::tx().bag().register(req.class_id.into(), metadata);
+
     let result = api
         .tx()
-        .bag()
-        .register(req.class_id.into(), metadata)
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -45,6 +45,7 @@ pub async fn register(
         })),
     }
 }
+
 pub fn transform_owners_input(in_owners: Vec<String>) -> Vec<AccountId32> {
     in_owners
         .into_iter()
@@ -71,16 +72,12 @@ pub async fn create(
     let signer = PairSigner::new(pair);
     let owners = transform_owners_input(transform_vec_account_to_string(req.owners.clone()));
     let api = &data.api;
+
+    let call = sugarfunge::tx().bag().create(req.class_id.into(),owners,transform_vec_balance_to_u128(&req.shares),);
+
     let result = api
         .tx()
-        .bag()
-        .create(
-            req.class_id.into(),
-            owners,
-            transform_vec_balance_to_u128(&req.shares),
-        )
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -112,12 +109,12 @@ pub async fn sweep(
     let bag = sp_core::crypto::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
     let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = &data.api;
+
+    let call = sugarfunge::tx().bag().sweep(to, bag);
+
     let result = api
         .tx()
-        .bag()
-        .sweep(to, bag)
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -147,17 +144,12 @@ pub async fn deposit(
     let signer = PairSigner::new(pair);
     let bag = sp_core::crypto::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
     let api = &data.api;
+
+    let call = sugarfunge::tx().bag().deposit(bag,transform_vec_classid_to_u64(req.class_ids.clone()),transform_doublevec_assetid_to_u64(req.asset_ids.clone()),transform_doublevec_balance_to_u128(req.amounts.clone()),);
+
     let result = api
         .tx()
-        .bag()
-        .deposit(
-            bag,
-            transform_vec_classid_to_u64(req.class_ids.clone()),
-            transform_doublevec_assetid_to_u64(req.asset_ids.clone()),
-            transform_doublevec_balance_to_u128(req.amounts.clone()),
-        )
-        .map_err(map_subxt_err)?
-        .sign_and_submit_then_watch(&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
