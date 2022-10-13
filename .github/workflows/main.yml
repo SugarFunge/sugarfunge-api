@@ -4,23 +4,41 @@ on:
   push:
     branches: [ main ]
 jobs:
-    build-and-deploy:
-        runs-on: ubuntu-latest
+    build-arm64:
+        runs-on: [self-hosted, linux, ARM64]
         steps:
         - name: 'Checkout GitHub Action'
           uses: actions/checkout@main
           
-        - name: 'Build and push image'
+        - name: 'Build ARM64 image'
           uses: azure/docker-login@v1
           with:
             login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
             username: ${{ secrets.REGISTRY_USERNAME }}
             password: ${{ secrets.REGISTRY_PASSWORD }}
         - run: |
-            docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:${{ github.sha }} -f docker/Dockerfile .
-            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:${{ github.sha }}
-            docker tag ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:${{ github.sha }} ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:latest
-            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:latest
+            docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:arm64-latest -f docker/Dockerfile .
+            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:arm64-latest
+    build-notify-amd64:
+        runs-on: ubuntu-latest
+        steps:
+        - name: 'Checkout GitHub Action'
+          uses: actions/checkout@main
+        - name: 'Build and push image'
+          uses: azure/docker-login@v1
+          with:
+            login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+            username: ${{ secrets.REGISTRY_USERNAME }}
+            password: ${{ secrets.REGISTRY_PASSWORD }}
+        - name: 'Build AMD64 image'
+          run: |
+            docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:amd64-latest -f docker/Dockerfile .
+            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:amd64-latest
+        - name: 'Create and Push manifest'
+          run: |
+            docker docker manifest create ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:latest \
+            --amend ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:amd64-latest \
+            --amend ${{ secrets.REGISTRY_LOGIN_SERVER }}/api:arm64-latest
         - uses: slackapi/slack-github-action@v1.18.0
           with:
             channel-id: ${{ secrets.SUGARFUNGE_SLACK_CHANNEL_ID }}
