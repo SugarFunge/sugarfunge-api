@@ -104,11 +104,13 @@ async fn main() -> std::io::Result<()> {
                 web::post().to(market::exchange_assets),
             )
             .route(
-                "fula/update_manifest",
+                "fula/manifest/update",
                 web::post().to(fula::update_manifest),
             )
-            .route("fula/manifest", web::post().to(fula::manifest))
-            .route("fula/burn_manifest", web::post().to(fula::burn_manifest))
+            .route("fula/manifest", web::post().to(fula::get_all_manifests))
+            .route("fula/manifest/remove", web::post().to(fula::remove_manifest))
+            .route("fula/manifest/upload", web::post().to(fula::upload_manifest))
+            .route("fula/manifest/available", web::get().to(fula::get_available_manifests))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()

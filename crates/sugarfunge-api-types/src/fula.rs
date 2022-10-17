@@ -11,30 +11,66 @@ pub struct UpdateManifestInput {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateManifestOutput {
     pub from: Account,
-    pub to: Account,
+    pub to: Option<Account>,
     pub manifest: serde_json::Value,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ManifestsInput {
-    pub account: Account,
-    pub operator: Option<Account>,
+pub struct UploadManifestInput {
+    pub seed: Seed,
+    pub manifest: serde_json::Value,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UploadManifestOutput {
+    pub from: Account,
+    pub to: Option<Account>,
+    pub manifest: serde_json::Value,
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RemoveManifestInput {
+    pub seed: Seed,
+    pub cid: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RemoveManifestOutput {
+    pub from: Account,
+    pub cid: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetAllManifestsInput {
+    pub account: Option<Account>,
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetAllManifestsOutput {
+    pub manifests: Vec<ManifestStorage>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetAvailableManifestsOutput {
+    pub manifests: Vec<ManifestAvailable>,
+}
+
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Manifest {
     pub from: Account,
-    pub to: Account,
     pub manifest: serde_json::Value,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ManifestsOutput {
-    pub manifests: Vec<Manifest>,
+pub struct ManifestStorage {
+    pub to: Option<Account>,
+    pub manifest: Manifest,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GetManifestsInput {
-    pub from: Account,
-    pub to: Account,
+pub struct ManifestAvailable {
+    pub manifest: serde_json::Value,
 }

@@ -10,7 +10,7 @@ use sugarfunge_api_types::primitives::Account;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 use codec::Decode;
-use sugarfunge_api_types::sugarfunge::runtime_types::functionland_fula::Manifest as ManifestRuntime;
+use sugarfunge_api_types::sugarfunge::runtime_types::functionland_fula::Value as ValueRuntime;
 
 pub async fn update_manifest(
     data: web::Data<AppState>,
@@ -19,11 +19,15 @@ pub async fn update_manifest(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+
+    let cid: Vec<u8> = req.manifest["job"]["uri"].to_string().replace("\"", "").into_bytes();
+    let cid = BoundedVec(cid);
+
     let manifest: Vec<u8> = serde_json::to_vec(&req.manifest).unwrap_or_default();
     let manifest = BoundedVec(manifest);
     let api = &data.api;
 
-    let call = sugarfunge::tx().fula().update_manifest(account_to, manifest);
+    let call = sugarfunge::tx().fula().update_manifest(account_to, manifest,cid);
 
     let result = api
         .tx()
@@ -39,7 +43,7 @@ pub async fn update_manifest(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(UpdateManifestOutput {
             from: event.from.into(),
-            to: event.to.into(),
+            to: get_value(event.to),
             manifest: serde_json::from_slice(event.manifest.as_slice()).unwrap_or_default(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -49,18 +53,21 @@ pub async fn update_manifest(
     }
 }
 
-pub async fn burn_manifest(
+pub async fn upload_manifest(
     data: web::Data<AppState>,
-    req: web::Json<UpdateManifestInput>,
+    req: web::Json<UploadManifestInput>,
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+
+    let cid: Vec<u8> = req.manifest["job"]["uri"].to_string().replace("\"", "").into_bytes();
+    let cid = BoundedVec(cid);
+
     let manifest: Vec<u8> = serde_json::to_vec(&req.manifest).unwrap_or_default();
     let manifest = BoundedVec(manifest);
     let api = &data.api;
 
-    let call = sugarfunge::tx().fula().burn(account_to, manifest);
+    let call = sugarfunge::tx().fula().upload_manifest( manifest,cid);
 
     let result = api
         .tx()
@@ -71,39 +78,72 @@ pub async fn burn_manifest(
         .await
         .map_err(map_sf_err)?;
     let result = result
-        .find_first::<sugarfunge::fula::events::ManifestBurned>()
+        .find_first::<sugarfunge::fula::events::ManifestUpdated>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(UpdateManifestOutput {
+        Some(event) => Ok(HttpResponse::Ok().json(UploadManifestOutput {
             from: event.from.into(),
-            to: event.to.into(),
+            to: get_value(event.to),
             manifest: serde_json::from_slice(event.manifest.as_slice()).unwrap_or_default(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::fula::events::UpdateManifests"),
+            message: json!("Failed to find sugarfunge::fula::events::UploadManifests"),
             description: format!(""),
         })),
     }
 }
 
-pub async fn manifest(
+pub async fn remove_manifest(
     data: web::Data<AppState>,
-    req: web::Json<ManifestsInput>,
+    req: web::Json<RemoveManifestInput>,
 ) -> error::Result<HttpResponse> {
-    let account_to = sp_core::crypto::AccountId32::try_from(&req.account).map_err(map_account_err)?;
-    let account_from;
+    let pair = get_pair_from_seed(&req.seed)?;
+    let signer = PairSigner::new(pair);
+    let cid: Vec<u8> = req.cid.clone().into_bytes();
+    // let cid: Vec<u8> = serde_json::to_vec(&req.cid.clone()).unwrap_or_default();
+    let cid = BoundedVec(cid);
+    let api = &data.api;
+
+    let call = sugarfunge::tx().fula().remove_manifest(cid);
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_sf_err)?;
+    let result = result
+        .find_first::<sugarfunge::fula::events::ManifestRemoved>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(RemoveManifestOutput {
+            from: event.from.into(),
+            cid: String::from_utf8(event.cid).unwrap_or_default()
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::fula::events::RemoveManifest"),
+            description: format!(""),
+        })),
+    }
+}
+
+pub async fn get_all_manifests(
+    data: web::Data<AppState>,
+    req: web::Json<GetAllManifestsInput>,
+) -> error::Result<HttpResponse> {
     let api = &data.api;
     let mut result_array = Vec::new();
 
     let mut query_key = sugarfunge::storage().fula().manifests_root().to_bytes();
     // println!("query_key manifests_root len: {}", query_key.len());
-    StorageMapKey::new(&account_to, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
-    // println!("query_key account_to len: {}", query_key.len());
-    if let Some(operator_id) = req.operator.clone() {
-        account_from = sp_core::crypto::AccountId32::try_from(&operator_id).map_err(map_account_err)?;
-        StorageMapKey::new(&account_from, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
-        // println!("query_key account_from len: {}", query_key.len());
+
+    if let Some(value) = req.account.clone() {
+        let account = sp_core::crypto::AccountId32::try_from(&value).map_err(map_account_err)?;
+        StorageMapKey::new(&account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
     }
+    // println!("query_key account_to len: {}", query_key.len());
 
     let keys = api
         .storage()
@@ -146,17 +186,63 @@ pub async fn manifest(
             .map_err(map_subxt_err)?
         {
             let value = 
-             ManifestRuntime::<AccountId32,Vec<u8>>::decode(&mut &storage_data[..]);
+             ValueRuntime::<AccountId32,Vec<u8>>::decode(&mut &storage_data[..]);
             let value =value.unwrap();
-            let item = Manifest{
-                from: Account::from(value.from),
-                to: Account::from(value.to),
-                manifest:serde_json::from_slice(value.manifest.as_slice()).unwrap_or_default(),
+            let manifest = Manifest{
+                from: Account::from(value.manifest.from),
+                manifest:serde_json::from_slice(value.manifest.manifest.as_slice()).unwrap_or_default(),
             };
-            result_array.push(item);
+            let to = get_value(value.storage);
+            result_array.push(ManifestStorage { to , manifest });
         }
     }
-    Ok(HttpResponse::Ok().json(ManifestsOutput {
+    Ok(HttpResponse::Ok().json(GetAllManifestsOutput {
         manifests: result_array,
     }))
+}
+
+pub async fn get_available_manifests(
+    data: web::Data<AppState>,
+) -> error::Result<HttpResponse> {
+    let api = &data.api;
+    let mut result_array = Vec::new();
+
+    let query_key = sugarfunge::storage().fula().manifests_root().to_bytes();
+    // println!("query_key manifests_root len: {}", query_key.len());
+
+    let keys = api
+        .storage()
+        .fetch_keys(&query_key, 1000, None, None)
+        .await
+        .map_err(map_subxt_err)?;
+
+    // println!("Obtained keys:");
+    for key in keys.iter() {
+        // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+
+        if let Some(storage_data) = api
+            .storage()
+            .fetch_raw(&key.0, None)
+            .await
+            .map_err(map_subxt_err)?
+        {
+            let value = 
+             ValueRuntime::<AccountId32,Vec<u8>>::decode(&mut &storage_data[..]);
+            let value =value.unwrap();
+            if let None = value.storage{
+                let manifest = serde_json::from_slice(value.manifest.manifest.as_slice()).unwrap_or_default();
+                result_array.push(ManifestAvailable{manifest});
+            }
+        }
+    }
+    Ok(HttpResponse::Ok().json(GetAvailableManifestsOutput{
+        manifests: result_array,
+    }))
+}
+
+fn get_value(value: Option<AccountId32>)-> Option<Account> {
+    if let Some(value) = value {
+        return Some(value.into())
+    }
+    return None::<Account>;
 }
