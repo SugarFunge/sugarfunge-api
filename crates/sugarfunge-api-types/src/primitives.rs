@@ -24,6 +24,27 @@ impl Seed {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Cid(String);
+
+impl From<String> for Cid {
+    fn from(cid: String) -> Cid {
+        Cid(cid.clone())
+    }
+}
+
+impl From<&Cid> for String {
+    fn from(cid: &Cid) -> String {
+        cid.0.clone()
+    }
+}
+
+impl Cid {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Account(String);
 
 impl From<String> for Account {

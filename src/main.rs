@@ -111,6 +111,7 @@ async fn main() -> std::io::Result<()> {
             .route("fula/manifest/remove", web::post().to(fula::remove_manifest))
             .route("fula/manifest/upload", web::post().to(fula::upload_manifest))
             .route("fula/manifest/available", web::get().to(fula::get_available_manifests))
+            .route("fula/manifest/storage",web::post().to(fula::storage_manifest))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()
