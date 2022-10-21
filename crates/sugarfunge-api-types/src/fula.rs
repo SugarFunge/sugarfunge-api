@@ -6,12 +6,13 @@ pub struct UpdateManifestInput {
     pub seed: Seed,
     pub storage: Account,
     pub manifest_metadata: serde_json::Value,
+    pub replication_factor: u8,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManifestOutput {
     pub uploader: Account,
-    pub storage: Option<Account>,
+    pub storage: Vec<Account>,
     pub manifest_metadata: serde_json::Value,
 }
 
@@ -19,6 +20,7 @@ pub struct ManifestOutput {
 pub struct UploadManifestInput {
     pub seed: Seed,
     pub manifest_metadata: serde_json::Value,
+    pub replication_factor: u8,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -28,8 +30,22 @@ pub struct RemoveManifestInput {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct RemoveFromManifestInput {
+    pub seed: Seed,
+    pub storage: Account,
+    pub cid: Cid,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct RemoveManifestOutput {
     pub uploader: Account,
+    pub cid: Cid,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RemoveFromManifestOutput {
+    pub uploader: Account,
+    pub storage: Account,
     pub cid: Cid,
 }
 
@@ -58,7 +74,7 @@ pub struct StorageManifestInput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct StorageManifestOutput {
-    pub storage: Option<Account>,
+    pub storage: Account,
     pub uploader: Account,
     pub cid: Cid,
 }
@@ -71,7 +87,7 @@ pub struct ManifestData {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Manifest {
-    pub storage: Option<Account>,
+    pub storage: Vec<Account>,
     pub manifest_data: ManifestData,
 }
 
