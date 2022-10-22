@@ -178,12 +178,12 @@ pub async fn remove_from_manifest(
     let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
     // let cid: Vec<u8> = serde_json::to_vec(&req.cid.clone()).unwrap_or_default();
     let cid = BoundedVec(cid);
-    let storer = sp_core::sr25519::Public::from_str(&req.storage.as_str()).map_err(map_account_err)?;
-    let storer = sp_core::crypto::AccountId32::from(storer);
+    let uploader = sp_core::sr25519::Public::from_str(&req.uploader.as_str()).map_err(map_account_err)?;
+    let uploader = sp_core::crypto::AccountId32::from(uploader);
 
     let api = &data.api;
 
-    let call = sugarfunge::tx().fula().remove_storer(storer, cid);
+    let call = sugarfunge::tx().fula().remove_storer(uploader, cid);
 
     let result = api
         .tx()
@@ -199,11 +199,11 @@ pub async fn remove_from_manifest(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveFromManifestOutput {
             uploader: event.uploader.into(),
-            storage: event.storage.unwrap().into(),
+            storage: transform_option_value(event.storage),
             cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default())
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::fula::events::RemoveManifest"),
+            message: json!("Failed to find sugarfunge::fula::events::RemoveStorer"),
             description: format!(""),
         })),
     }
@@ -279,9 +279,12 @@ pub async fn get_all_manifests(
             for storer in storage {
                 let current_account = Account::try_from(storer).unwrap();
                 storage_vec.push(current_account);
-            }            
+            } 
+            
+            let storers_count: u8 = storage_vec.len() as u8;
+            let replication_available = value.replication_factor - storers_count;
 
-            result_array.push(Manifest { storage:storage_vec , manifest_data });
+            result_array.push(Manifest { storage:storage_vec , manifest_data, replication_available });
         }
     }
     Ok(HttpResponse::Ok().json(GetAllManifestsOutput {
@@ -318,12 +321,14 @@ pub async fn get_available_manifests(
              ManifestRuntime::<AccountId32,Vec<u8>>::decode(&mut &storage_data[..]);
             let value =value.unwrap(); 
 
-            /*for current_manifest in value.storage {  
-                if current_manifest{ //verificar si esta vacia la cuenta
-                    let manifest = serde_json::from_slice(value.manifest_data.manifest_metadata.as_slice()).unwrap_or_default();
-                    result_array.push(ManifestAvailable{manifest});
-                }
-            }   */         
+            let storers_count: u8 = value.storage.len() as u8;
+            let replication_available = value.replication_factor - storers_count;
+
+            if replication_available > 0 {
+                let manifest_metadata = serde_json::from_slice(value.manifest_data.manifest_metadata.as_slice()).unwrap_or_default();
+                let uploader = value.manifest_data.uploader.into();
+                result_array.push(ManifestAvailable{manifest_data: ManifestData { uploader, manifest_metadata}, replication_available});
+            }          
         }
     }
     Ok(HttpResponse::Ok().json(GetAvailableManifestsOutput{
@@ -336,4 +341,11 @@ pub fn transform_storage_output(storers: Vec<AccountId32>) -> Vec<String> {
         .into_iter()
         .map(|current_storer| current_storer.to_string())
         .collect()
+}
+
+fn transform_option_value(value: Option<AccountId32>)-> Option<Account> {
+    if let Some(value) = value {
+        return Some(value.into())
+    }
+    return None::<Account>;
 }
