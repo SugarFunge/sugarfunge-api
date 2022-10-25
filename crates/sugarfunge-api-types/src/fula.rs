@@ -38,7 +38,7 @@ pub struct RemoveManifestOutput {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RemoveFromManifestInput {
     pub seed: Seed,
-    pub uploader: Account,
+    pub storage: Account,
     pub cid: Cid,
 }
 
