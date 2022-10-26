@@ -6,6 +6,7 @@ pub struct UpdateManifestInput {
     pub seed: Seed,
     pub storage: Account,
     pub manifest_metadata: serde_json::Value,
+    pub pool_id: u16,
     pub replication_factor: u8,
 }
 
@@ -14,12 +15,14 @@ pub struct ManifestOutput {
     pub uploader: Account,
     pub storage: Vec<Account>,
     pub manifest_metadata: serde_json::Value,
+    pub pool_id: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UploadManifestInput {
     pub seed: Seed,
     pub manifest_metadata: serde_json::Value,
+    pub pool_id: u16,
     pub replication_factor: u8,
 }
 
@@ -27,26 +30,46 @@ pub struct UploadManifestInput {
 pub struct RemoveManifestInput {
     pub seed: Seed,
     pub cid: Cid,
+    pub pool_id: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RemoveManifestOutput {
     pub uploader: Account,
     pub cid: Cid,
+    pub pool_id: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct RemoveFromManifestInput {
+pub struct RemoveStorerInput {
     pub seed: Seed,
     pub storage: Account,
     pub cid: Cid,
+    pub pool_id: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct RemoveFromManifestOutput {
+pub struct RemoveStorerOutput {
+    pub uploader: Account,
+    pub storage: Option<Account>,
+    pub cid: Cid,
+    pub pool_id: u16,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RemoveStoringManifestInput {
+    pub seed: Seed,
     pub uploader: Account,
     pub cid: Cid,
+    pub pool_id: u16,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RemoveStoringManifestOutput {
+    pub uploader: Account,
     pub storage: Option<Account>,
+    pub cid: Cid,
+    pub pool_id: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -70,6 +93,7 @@ pub struct StorageManifestInput {
     pub seed: Seed,
     pub uploader: Account,
     pub cid: Cid,
+    pub pool_id: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -77,6 +101,7 @@ pub struct StorageManifestOutput {
     pub storage: Account,
     pub uploader: Account,
     pub cid: Cid,
+    pub pool_id: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

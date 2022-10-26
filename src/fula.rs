@@ -29,7 +29,8 @@ pub async fn update_manifest(
     let manifest = BoundedVec(manifest);
     let api = &data.api;
 
-    let call = sugarfunge::tx().fula().update_manifest(account_storage, manifest, cid, req.replication_factor);
+    let call = sugarfunge::tx()
+    .fula().update_manifest(account_storage, manifest, cid, req.pool_id,req.replication_factor);
 
     let result = api
         .tx()
@@ -47,6 +48,7 @@ pub async fn update_manifest(
             uploader: event.uploader.into(),
             storage: transform_vec_string_to_account(transform_storage_output(event.storage)),
             manifest_metadata: serde_json::from_slice(event.manifest.as_slice()).unwrap_or_default(),
+            pool_id: event.pool_id,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::UpdateManifests"),
@@ -68,8 +70,9 @@ pub async fn upload_manifest(
     let manifest: Vec<u8> = serde_json::to_vec(&req.manifest_metadata).unwrap_or_default();
     let manifest = BoundedVec(manifest);
     let api = &data.api;
-
-    let call = sugarfunge::tx().fula().upload_manifest(manifest,cid, req.replication_factor);
+ 
+    let call = sugarfunge::tx()
+    .fula().upload_manifest(manifest, cid, req.pool_id, req.replication_factor);
 
     let result = api
         .tx()
@@ -87,6 +90,7 @@ pub async fn upload_manifest(
             uploader: event.uploader.into(),
             storage: transform_vec_string_to_account(transform_storage_output(event.storage)),
             manifest_metadata: serde_json::from_slice(event.manifest.as_slice()).unwrap_or_default(),
+            pool_id: event.pool_id,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::UploadManifests"),
@@ -107,7 +111,8 @@ pub async fn storage_manifest(
 
     let api = &data.api;
 
-    let call = sugarfunge::tx().fula().storage_manifest(account_uploader,cid);
+    let call = sugarfunge::tx()
+    .fula().storage_manifest(account_uploader, cid, req.pool_id);
 
     let result = api
         .tx()
@@ -125,6 +130,7 @@ pub async fn storage_manifest(
             uploader: event.uploader.into(),
             storage: event.storage.into(),
             cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
+            pool_id: event.pool_id,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::StorageManifest"),
@@ -144,7 +150,8 @@ pub async fn remove_manifest(
     let cid = BoundedVec(cid);
     let api = &data.api;
 
-    let call = sugarfunge::tx().fula().remove_manifest(cid);
+    let call = sugarfunge::tx()
+    .fula().remove_manifest(cid, req.pool_id);
 
     let result = api
         .tx()
@@ -160,7 +167,8 @@ pub async fn remove_manifest(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveManifestOutput {
             uploader: event.uploader.into(),
-            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default())
+            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
+            pool_id: event.pool_id,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::RemoveManifest"),
@@ -169,21 +177,22 @@ pub async fn remove_manifest(
     }
 }
 
-pub async fn remove_from_manifest(
+pub async fn remove_storer(
     data: web::Data<AppState>,
-    req: web::Json<RemoveFromManifestInput>,
+    req: web::Json<RemoveStorerInput>,
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
     // let cid: Vec<u8> = serde_json::to_vec(&req.cid.clone()).unwrap_or_default();
     let cid = BoundedVec(cid);
-    let uploader = sp_core::sr25519::Public::from_str(&req.uploader.as_str()).map_err(map_account_err)?;
-    let uploader = sp_core::crypto::AccountId32::from(uploader);
+    let storage = sp_core::sr25519::Public::from_str(&req.storage.as_str()).map_err(map_account_err)?;
+    let storage = sp_core::crypto::AccountId32::from(storage);
 
     let api = &data.api;
 
-    let call = sugarfunge::tx().fula().remove_storer(uploader, cid);
+    let call = sugarfunge::tx()
+    .fula().remove_storing_manifest(storage, cid, req.pool_id);
 
     let result = api
         .tx()
@@ -197,10 +206,53 @@ pub async fn remove_from_manifest(
         .find_first::<sugarfunge::fula::events::RemoveStorerOutput>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(RemoveFromManifestOutput {
+        Some(event) => Ok(HttpResponse::Ok().json(RemoveStorerOutput {
             uploader: event.uploader.into(),
             storage: transform_option_value(event.storage),
-            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default())
+            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
+            pool_id: event.pool_id,
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::fula::events::RemoveStorer"),
+            description: format!(""),
+        })),
+    }
+}
+
+pub async fn remove_storing_manifest(
+    data: web::Data<AppState>,
+    req: web::Json<RemoveStoringManifestInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed)?;
+    let signer = PairSigner::new(pair);
+    let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
+    // let cid: Vec<u8> = serde_json::to_vec(&req.cid.clone()).unwrap_or_default();
+    let cid = BoundedVec(cid);
+    let uploader = sp_core::sr25519::Public::from_str(&req.uploader.as_str()).map_err(map_account_err)?;
+    let uploader = sp_core::crypto::AccountId32::from(uploader);
+
+    let api = &data.api;
+
+    let call = sugarfunge::tx()
+    .fula().remove_storer(uploader, cid, req.pool_id);
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_sf_err)?;
+    let result = result
+        .find_first::<sugarfunge::fula::events::RemoveStorerOutput>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(RemoveStoringManifestOutput {
+            uploader: event.uploader.into(),
+            storage: transform_option_value(event.storage),
+            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
+            pool_id: event.pool_id,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::RemoveStorer"),
