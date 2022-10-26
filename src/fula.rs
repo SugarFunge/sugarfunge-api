@@ -192,7 +192,7 @@ pub async fn remove_storer(
     let api = &data.api;
 
     let call = sugarfunge::tx()
-    .fula().remove_storing_manifest(storage, cid, req.pool_id);
+    .fula().remove_storer(storage, cid, req.pool_id);
 
     let result = api
         .tx()
@@ -219,7 +219,7 @@ pub async fn remove_storer(
     }
 }
 
-pub async fn remove_storing_manifest(
+pub async fn remove_stored_manifest(
     data: web::Data<AppState>,
     req: web::Json<RemoveStoringManifestInput>,
 ) -> error::Result<HttpResponse> {
@@ -234,7 +234,7 @@ pub async fn remove_storing_manifest(
     let api = &data.api;
 
     let call = sugarfunge::tx()
-    .fula().remove_storer(uploader, cid, req.pool_id);
+    .fula().remove_stored_manifest(uploader, cid, req.pool_id);
 
     let result = api
         .tx()
@@ -333,7 +333,7 @@ pub async fn get_all_manifests(
                 storage_vec.push(current_account);
             } 
             
-            let storers_count: u8 = storage_vec.len() as u8;
+            let storers_count: u16 = storage_vec.len() as u16;
             let replication_available = value.replication_factor - storers_count;
 
             result_array.push(Manifest { storage:storage_vec , manifest_data, replication_available });
@@ -373,7 +373,7 @@ pub async fn get_available_manifests(
              ManifestRuntime::<AccountId32,Vec<u8>>::decode(&mut &storage_data[..]);
             let value =value.unwrap(); 
 
-            let storers_count: u8 = value.storage.len() as u8;
+            let storers_count: u16 = value.storage.len() as u16;
             let replication_available = value.replication_factor - storers_count;
 
             if replication_available > 0 {

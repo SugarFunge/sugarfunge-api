@@ -107,7 +107,7 @@ async fn main() -> std::io::Result<()> {
             .route("fula/manifest", web::post().to(fula::get_all_manifests))
             .route("fula/manifest/remove", web::post().to(fula::remove_manifest))
             .route("fula/manifest/remove_storer", web::post().to(fula::remove_storer))
-            .route("fula/manifest/remove_storing_manifest", web::post().to(fula::remove_storing_manifest))
+            .route("fula/manifest/remove_stored_manifest", web::post().to(fula::remove_stored_manifest))
             .route("fula/manifest/upload", web::post().to(fula::upload_manifest))
             .route("fula/manifest/available", web::get().to(fula::get_available_manifests))
             .route("fula/manifest/storage",web::post().to(fula::storage_manifest))

@@ -7,7 +7,7 @@ pub struct UpdateManifestInput {
     pub storage: Account,
     pub manifest_metadata: serde_json::Value,
     pub pool_id: u16,
-    pub replication_factor: u8,
+    pub replication_factor: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -23,7 +23,7 @@ pub struct UploadManifestInput {
     pub seed: Seed,
     pub manifest_metadata: serde_json::Value,
     pub pool_id: u16,
-    pub replication_factor: u8,
+    pub replication_factor: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -114,12 +114,12 @@ pub struct ManifestData {
 pub struct Manifest {
     pub storage: Vec<Account>,
     pub manifest_data: ManifestData,
-    pub replication_available: u8,
+    pub replication_available: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManifestAvailable {
     pub manifest_data: ManifestData,
-    pub replication_available: u8
+    pub replication_available: u16
 }
 
