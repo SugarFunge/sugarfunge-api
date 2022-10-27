@@ -39,7 +39,7 @@ pub async fn update_manifest(
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_sf_err)?;
+        .map_err(map_fula_err)?;
     let result = result
         .find_first::<sugarfunge::fula::events::ManifestOutput>()
         .map_err(map_subxt_err)?;
@@ -81,7 +81,7 @@ pub async fn upload_manifest(
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_sf_err)?;
+        .map_err(map_fula_err)?;
     let result = result
         .find_first::<sugarfunge::fula::events::ManifestOutput>()
         .map_err(map_subxt_err)?;
@@ -121,7 +121,7 @@ pub async fn storage_manifest(
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_sf_err)?;
+        .map_err(map_fula_err)?;
     let result = result
         .find_first::<sugarfunge::fula::events::StorageManifestOutput>()
         .map_err(map_subxt_err)?;
@@ -160,7 +160,7 @@ pub async fn remove_manifest(
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_sf_err)?;
+        .map_err(map_fula_err)?;
     let result = result
         .find_first::<sugarfunge::fula::events::ManifestRemoved>()
         .map_err(map_subxt_err)?;
@@ -201,7 +201,7 @@ pub async fn remove_storer(
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_sf_err)?;
+        .map_err(map_fula_err)?;
     let result = result
         .find_first::<sugarfunge::fula::events::RemoveStorerOutput>()
         .map_err(map_subxt_err)?;
@@ -243,7 +243,7 @@ pub async fn remove_stored_manifest(
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
         .await
-        .map_err(map_sf_err)?;
+        .map_err(map_fula_err)?;
     let result = result
         .find_first::<sugarfunge::fula::events::RemoveStorerOutput>()
         .map_err(map_subxt_err)?;
@@ -271,9 +271,8 @@ pub async fn get_all_manifests(
     let mut query_key = sugarfunge::storage().fula().manifests_root().to_bytes();
     // println!("query_key manifests_root len: {}", query_key.len());
 
-    if let Some(value) = req.account.clone() {
-        let account = sp_core::crypto::AccountId32::try_from(&value).map_err(map_account_err)?;
-        StorageMapKey::new(&account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+    if let Some(value) = req.pool_id.clone() {
+        StorageMapKey::new(&value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
     }
     // println!("query_key account_to len: {}", query_key.len());
 
@@ -287,11 +286,10 @@ pub async fn get_all_manifests(
     for key in keys.iter() {
         // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
-        // let account_to_idx = 48;
-        // let account_to_key = key.0.as_slice()[account_to_idx..(account_to_idx + 32)].to_vec();
-        // let account_to_id = AccountId32::decode(&mut &account_to_key[..]);
-        // let account_to_id = Account::from(account_to_id.unwrap());
-        // println!("account_to_id: {:?}", account_to_id);
+        let account_to_idx = 48;
+        let account_to_key = key.0.as_slice()[account_to_idx..(account_to_idx + 16)].to_vec();
+        let account_to_id = u16::decode(&mut &account_to_key[..]);
+        let pool_id = account_to_id.unwrap();
 
         // let account_from_idx = 96;
         // let account_from_key = key.0.as_slice()[account_from_idx..(account_from_idx + 32)].to_vec();
@@ -336,7 +334,13 @@ pub async fn get_all_manifests(
             let storers_count: u16 = storage_vec.len() as u16;
             let replication_available = value.replication_factor - storers_count;
 
-            result_array.push(Manifest { storage:storage_vec , manifest_data, replication_available });
+            if let Some(account_filter) = req.account.clone(){
+                if sp_core::sr25519::Public::from_str(&manifest_data.uploader.as_str()) == sp_core::sr25519::Public::from_str(&account_filter.as_str()){
+                    result_array.push(Manifest { storage:storage_vec , manifest_data, replication_available, pool_id });
+                }
+            } else {
+                result_array.push(Manifest { storage:storage_vec , manifest_data, replication_available, pool_id });
+            }
         }
     }
     Ok(HttpResponse::Ok().json(GetAllManifestsOutput {
@@ -346,12 +350,17 @@ pub async fn get_all_manifests(
 
 pub async fn get_available_manifests(
     data: web::Data<AppState>,
+    req: web::Json<GetAvailableManifestsInput>,
 ) -> error::Result<HttpResponse> {
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().fula().manifests_root().to_bytes();
+    let mut query_key = sugarfunge::storage().fula().manifests_root().to_bytes();
     // println!("query_key manifests_root len: {}", query_key.len());
+
+    if let Some(value) = req.pool_id.clone() {
+        StorageMapKey::new(&value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+    }
 
     let keys = api
         .storage()
@@ -362,6 +371,10 @@ pub async fn get_available_manifests(
     // println!("Obtained keys:");
     for key in keys.iter() {
         // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+        let account_to_idx = 48;
+        let account_to_key = key.0.as_slice()[account_to_idx..(account_to_idx + 16)].to_vec();
+        let account_to_id = u16::decode(&mut &account_to_key[..]);
+        let pool_id = account_to_id.unwrap();
 
         if let Some(storage_data) = api
             .storage()
@@ -379,7 +392,7 @@ pub async fn get_available_manifests(
             if replication_available > 0 {
                 let manifest_metadata = serde_json::from_slice(value.manifest_data.manifest_metadata.as_slice()).unwrap_or_default();
                 let uploader = value.manifest_data.uploader.into();
-                result_array.push(ManifestAvailable{manifest_data: ManifestData { uploader, manifest_metadata}, replication_available});
+                result_array.push(ManifestAvailable{manifest_data: ManifestData { uploader, manifest_metadata}, replication_available, pool_id});
             }          
         }
     }

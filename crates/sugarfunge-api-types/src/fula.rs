@@ -74,6 +74,7 @@ pub struct RemoveStoringManifestOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetAllManifestsInput {
+    pub pool_id: Option<u16>,
     pub account: Option<Account>,
 }
 
@@ -82,6 +83,12 @@ pub struct GetAllManifestsInput {
 pub struct GetAllManifestsOutput {
     pub manifests: Vec<Manifest>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetAvailableManifestsInput {
+    pub pool_id: Option<u16>,
+}
+
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetAvailableManifestsOutput {
@@ -112,6 +119,7 @@ pub struct ManifestData {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Manifest {
+    pub pool_id: u16,
     pub storage: Vec<Account>,
     pub manifest_data: ManifestData,
     pub replication_available: u16,
@@ -119,7 +127,8 @@ pub struct Manifest {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManifestAvailable {
+    pub pool_id: u16,
     pub manifest_data: ManifestData,
-    pub replication_available: u16
+    pub replication_available: u16,
 }
 

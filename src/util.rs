@@ -40,6 +40,19 @@ pub fn map_sf_err(
     error::ErrorBadRequest(req_error)
 }
 
+pub fn map_fula_err(
+    e: subxt::Error,
+) -> actix_web::Error {
+
+    let json_err = json!(e.to_string().replace("\"", ""));
+    let req_error = RequestError {
+        message: json_err,
+        description: "Fula Pallet error".into(),
+    };
+    let req_error = serde_json::to_string_pretty(&req_error).unwrap();
+    error::ErrorBadRequest(req_error)
+}
+
 pub fn map_account_err(e: sp_core::crypto::PublicError) -> actix_web::Error {
     let json_err: serde_json::Value = json!("Invalid account");
     let req_error = RequestError {
