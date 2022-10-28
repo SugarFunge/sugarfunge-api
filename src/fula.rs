@@ -284,12 +284,13 @@ pub async fn get_all_manifests(
 
     // println!("Obtained keys:");
     for key in keys.iter() {
+        let mut meet_requirements = true;
         // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
-        let account_to_idx = 48;
-        let account_to_key = key.0.as_slice()[account_to_idx..(account_to_idx + 16)].to_vec();
-        let account_to_id = u16::decode(&mut &account_to_key[..]);
-        let pool_id = account_to_id.unwrap();
+        let pool_id_idx = 48;
+        let pool_id_key = key.0.as_slice()[pool_id_idx..(pool_id_idx + 16)].to_vec();
+        let pool_id_id = u16::decode(&mut &pool_id_key[..]);
+        let pool_id = pool_id_id.unwrap();
 
         // let account_from_idx = 96;
         // let account_from_key = key.0.as_slice()[account_from_idx..(account_from_idx + 32)].to_vec();
@@ -322,7 +323,7 @@ pub async fn get_all_manifests(
                 uploader: Account::from(value.manifest_data.uploader),
                 manifest_metadata:serde_json::from_slice(value.manifest_data.manifest_metadata.as_slice()).unwrap_or_default(),
             };
-            let storage = value.storage;
+            let storage = value.storage.to_owned();
 
             let mut storage_vec:Vec<Account> = Vec::new();
 
@@ -334,11 +335,22 @@ pub async fn get_all_manifests(
             let storers_count: u16 = storage_vec.len() as u16;
             let replication_available = value.replication_factor - storers_count;
 
-            if let Some(account_filter) = req.account.clone(){
-                if sp_core::sr25519::Public::from_str(&manifest_data.uploader.as_str()) == sp_core::sr25519::Public::from_str(&account_filter.as_str()){
-                    result_array.push(Manifest { storage:storage_vec , manifest_data, replication_available, pool_id });
+            if let Some(uploader_filter) = req.uploader.clone(){
+                if sp_core::crypto::AccountId32::from(sp_core::sr25519::Public::from_str(&manifest_data.uploader.as_str()).map_err(map_account_err)?) 
+                    != sp_core::crypto::AccountId32::from(sp_core::sr25519::Public::from_str(&uploader_filter.as_str()).map_err(map_account_err)?){
+                    meet_requirements = false;
                 }
-            } else {
+            }
+
+            if let Some(storage_filter) = req.storage.clone(){
+                if !value.storage.to_owned().contains(
+                    &sp_core::crypto::AccountId32::from(
+                        sp_core::sr25519::Public::from_str(&storage_filter.as_str()).map_err(map_account_err)?)){
+                    meet_requirements = false;
+                }
+            }
+
+            if meet_requirements {
                 result_array.push(Manifest { storage:storage_vec , manifest_data, replication_available, pool_id });
             }
         }

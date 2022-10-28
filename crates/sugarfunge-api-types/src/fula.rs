@@ -75,7 +75,8 @@ pub struct RemoveStoringManifestOutput {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetAllManifestsInput {
     pub pool_id: Option<u16>,
-    pub account: Option<Account>,
+    pub uploader: Option<Account>,
+    pub storage: Option<Account>,
 }
 
 
