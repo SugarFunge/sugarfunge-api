@@ -979,9 +979,9 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
-version = "0.8.4"
+version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
+checksum = "a12e6657c4c97ebab115a42dcee77225f7f482cdd841cf7088c657a42e9e00e7"
 dependencies = [
  "atty",
  "humantime",
@@ -1516,7 +1516,7 @@ dependencies = [
  "jsonrpsee-client-transport",
  "jsonrpsee-core",
  "jsonrpsee-http-client",
- "jsonrpsee-types 0.15.1",
+ "jsonrpsee-types",
 ]
 
 [[package]]
@@ -1528,7 +1528,7 @@ dependencies = [
  "futures-util",
  "http",
  "jsonrpsee-core",
- "jsonrpsee-types 0.15.1",
+ "jsonrpsee-types",
  "pin-project",
  "rustls-native-certs",
  "soketto",
@@ -1554,7 +1554,7 @@ dependencies = [
  "futures-timer",
  "futures-util",
  "hyper",
- "jsonrpsee-types 0.15.1",
+ "jsonrpsee-types",
  "rustc-hash",
  "serde",
  "serde_json",
@@ -1574,7 +1574,7 @@ dependencies = [
  "hyper",
  "hyper-rustls",
  "jsonrpsee-core",
- "jsonrpsee-types 0.15.1",
+ "jsonrpsee-types",
  "rustc-hash",
  "serde",
  "serde_json",
@@ -1582,25 +1582,6 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-futures",
-]
-
-[[package]]
-name = "jsonrpsee-types"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d822e0fc7be95e5085da5d61508bf5e3d5c1614dd235402086ec5c1cb15bdfa"
-dependencies = [
- "anyhow",
- "async-trait",
- "beef",
- "futures-channel",
- "futures-util",
- "hyper",
- "serde",
- "serde_json",
- "soketto",
- "thiserror",
- "tracing",
 ]
 
 [[package]]
@@ -3605,7 +3586,7 @@ dependencies = [
  "env_logger",
  "futures",
  "hex",
- "jsonrpsee-types 0.5.1",
+ "jsonrpsee-types",
  "parity-scale-codec",
  "rand 0.8.5",
  "scale-info",
