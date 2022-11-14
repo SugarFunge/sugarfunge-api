@@ -3,8 +3,9 @@ use crate::util::*;
 use actix_web::{error, web, HttpRequest, HttpResponse};
 use rand::prelude::*;
 use serde_json::json;
-use sp_core::Pair;
-use subxt::ext::{sp_runtime::traits::IdentifyAccount};
+use subxt::ext::sp_core;
+use subxt::ext::sp_core::Pair;
+use subxt::ext::sp_runtime::traits::IdentifyAccount;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::account::*;
 use sugarfunge_api_types::primitives::*;
@@ -17,7 +18,8 @@ pub async fn create(_req: HttpRequest) -> error::Result<HttpResponse> {
     let seed = format!("//{}", seed);
     let seed = Seed::from(seed);
     let pair = get_pair_from_seed(&seed)?;
-    let account = pair.public().into_account();
+    let account: subxt::ext::sp_core::sr25519::Public = pair.public().into();
+    let account = account.into_account();
     Ok(HttpResponse::Ok().json(CreateAccountOutput {
         seed,
         account: Account::from(format!("{}", account)),
@@ -41,12 +43,15 @@ pub async fn fund(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let account =
+        subxt::ext::sp_runtime::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let account = subxt::ext::sp_runtime::MultiAddress::Id(account);
     let amount_input = req.amount;
     let api = &data.api;
 
-    let call = sugarfunge::tx().balances().transfer(account, amount_input.into());
+    let call = sugarfunge::tx()
+        .balances()
+        .transfer(account, amount_input.into());
 
     let result = api
         .tx()
@@ -92,7 +97,7 @@ pub async fn balance(
             message: json!("Failed to find sugarfunge::balances::events::balance"),
             description: format!("Error in account::balance"),
         })),
-    }    
+    }
 }
 
 /// Check if account exists and is active
@@ -105,9 +110,9 @@ pub async fn exists(
     let api = &data.api;
 
     let call = sugarfunge::storage().system().account(&account);
-    
+
     let result = api.storage().fetch(&call, None).await;
-    let data = result.map_err(map_subxt_err)?;    
+    let data = result.map_err(map_subxt_err)?;
     match data {
         Some(data) => Ok(HttpResponse::Ok().json(AccountExistsOutput {
             account: account_out.into(),
