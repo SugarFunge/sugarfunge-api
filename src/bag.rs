@@ -4,12 +4,12 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
-use sp_core::crypto::AccountId32;
+use subxt::ext::sp_runtime::AccountId32;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::bag::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
 
 pub async fn register(
     data: web::Data<AppState>,
@@ -21,7 +21,9 @@ pub async fn register(
     let metadata = BoundedVec(metadata);
     let api = &data.api;
 
-    let call = sugarfunge::tx().bag().register(req.class_id.into(), metadata);
+    let call = sugarfunge::tx()
+        .bag()
+        .register(req.class_id.into(), metadata);
 
     let result = api
         .tx()
@@ -50,8 +52,8 @@ pub fn transform_owners_input(in_owners: Vec<String>) -> Vec<AccountId32> {
     in_owners
         .into_iter()
         .map(|current_owner| {
-            sp_core::crypto::AccountId32::from(
-                sp_core::sr25519::Public::from_str(&current_owner).unwrap(),
+            subxt::ext::sp_runtime::AccountId32::from(
+                subxt::ext::sp_core::sr25519::Public::from_str(&current_owner).unwrap(),
             )
         })
         .collect()
@@ -73,7 +75,11 @@ pub async fn create(
     let owners = transform_owners_input(transform_vec_account_to_string(req.owners.clone()));
     let api = &data.api;
 
-    let call = sugarfunge::tx().bag().create(req.class_id.into(),owners,transform_vec_balance_to_u128(&req.shares),);
+    let call = sugarfunge::tx().bag().create(
+        req.class_id.into(),
+        owners,
+        transform_vec_balance_to_u128(&req.shares),
+    );
 
     let result = api
         .tx()
@@ -106,8 +112,8 @@ pub async fn sweep(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let bag = sp_core::crypto::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let bag = AccountId32::try_from(&req.bag).map_err(map_account_err)?;
+    let to = AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = &data.api;
 
     let call = sugarfunge::tx().bag().sweep(to, bag);
@@ -142,10 +148,15 @@ pub async fn deposit(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let bag = sp_core::crypto::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
+    let bag = AccountId32::try_from(&req.bag).map_err(map_account_err)?;
     let api = &data.api;
 
-    let call = sugarfunge::tx().bag().deposit(bag,transform_vec_classid_to_u64(req.class_ids.clone()),transform_doublevec_assetid_to_u64(req.asset_ids.clone()),transform_doublevec_balance_to_u128(req.amounts.clone()),);
+    let call = sugarfunge::tx().bag().deposit(
+        bag,
+        transform_vec_classid_to_u64(req.class_ids.clone()),
+        transform_doublevec_assetid_to_u64(req.asset_ids.clone()),
+        transform_doublevec_balance_to_u128(req.amounts.clone()),
+    );
 
     let result = api
         .tx()
