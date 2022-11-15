@@ -1,18 +1,19 @@
-use std::str::FromStr;
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
+use codec::Decode;
 use serde_json::json;
-//use sp_core::offchain::storage;
+use std::str::FromStr;
+use subxt::ext::sp_core::sr25519::Public;
+use subxt::ext::sp_runtime::AccountId32;
 use subxt::storage::address::{StorageHasher, StorageMapKey};
 use subxt::tx::PairSigner;
-use sp_core::crypto::AccountId32;
 use sugarfunge_api_types::fula::*;
-use sugarfunge_api_types::primitives::{Account, Cid, transform_vec_string_to_account};
+use sugarfunge_api_types::primitives::{transform_vec_string_to_account, Account, Cid};
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
-use codec::Decode;
 use sugarfunge_api_types::sugarfunge::runtime_types::functionland_fula::Manifest as ManifestRuntime;
+// use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 
 pub async fn update_manifest(
     data: web::Data<AppState>,
@@ -20,17 +21,25 @@ pub async fn update_manifest(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account_storage = sp_core::crypto::AccountId32::try_from(&req.storage).map_err(map_account_err)?;
+    let account_storage = AccountId32::try_from(&req.storage).map_err(map_account_err)?;
 
-    let cid: Vec<u8> = req.manifest_metadata["job"]["uri"].to_string().replace("\"", "").into_bytes();
+    let cid: Vec<u8> = req.manifest_metadata["job"]["uri"]
+        .to_string()
+        .replace("\"", "")
+        .into_bytes();
     let cid = BoundedVec(cid);
 
     let manifest: Vec<u8> = serde_json::to_vec(&req.manifest_metadata).unwrap_or_default();
     let manifest = BoundedVec(manifest);
     let api = &data.api;
 
-    let call = sugarfunge::tx()
-    .fula().update_manifest(account_storage, manifest, cid, req.pool_id,req.replication_factor);
+    let call = sugarfunge::tx().fula().update_manifest(
+        account_storage,
+        manifest,
+        cid,
+        req.pool_id,
+        req.replication_factor,
+    );
 
     let result = api
         .tx()
@@ -47,7 +56,8 @@ pub async fn update_manifest(
         Some(event) => Ok(HttpResponse::Ok().json(ManifestOutput {
             uploader: event.uploader.into(),
             storage: transform_vec_string_to_account(transform_storage_output(event.storage)),
-            manifest_metadata: serde_json::from_slice(event.manifest.as_slice()).unwrap_or_default(),
+            manifest_metadata: serde_json::from_slice(event.manifest.as_slice())
+                .unwrap_or_default(),
             pool_id: event.pool_id,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -64,15 +74,20 @@ pub async fn upload_manifest(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
 
-    let cid: Vec<u8> = req.manifest_metadata["job"]["uri"].to_string().replace("\"", "").into_bytes();
+    let cid: Vec<u8> = req.manifest_metadata["job"]["uri"]
+        .to_string()
+        .replace("\"", "")
+        .into_bytes();
     let cid = BoundedVec(cid);
 
     let manifest: Vec<u8> = serde_json::to_vec(&req.manifest_metadata).unwrap_or_default();
     let manifest = BoundedVec(manifest);
     let api = &data.api;
- 
-    let call = sugarfunge::tx()
-    .fula().upload_manifest(manifest, cid, req.pool_id, req.replication_factor);
+
+    let call =
+        sugarfunge::tx()
+            .fula()
+            .upload_manifest(manifest, cid, req.pool_id, req.replication_factor);
 
     let result = api
         .tx()
@@ -89,7 +104,8 @@ pub async fn upload_manifest(
         Some(event) => Ok(HttpResponse::Ok().json(ManifestOutput {
             uploader: event.uploader.into(),
             storage: transform_vec_string_to_account(transform_storage_output(event.storage)),
-            manifest_metadata: serde_json::from_slice(event.manifest.as_slice()).unwrap_or_default(),
+            manifest_metadata: serde_json::from_slice(event.manifest.as_slice())
+                .unwrap_or_default(),
             pool_id: event.pool_id,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -107,12 +123,13 @@ pub async fn storage_manifest(
     let signer = PairSigner::new(pair);
     let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
     let cid = BoundedVec(cid);
-    let account_uploader = sp_core::crypto::AccountId32::try_from(&req.uploader).map_err(map_account_err)?;
+    let account_uploader = AccountId32::try_from(&req.uploader).map_err(map_account_err)?;
 
     let api = &data.api;
 
     let call = sugarfunge::tx()
-    .fula().storage_manifest(account_uploader, cid, req.pool_id);
+        .fula()
+        .storage_manifest(account_uploader, cid, req.pool_id);
 
     let result = api
         .tx()
@@ -150,8 +167,7 @@ pub async fn remove_manifest(
     let cid = BoundedVec(cid);
     let api = &data.api;
 
-    let call = sugarfunge::tx()
-    .fula().remove_manifest(cid, req.pool_id);
+    let call = sugarfunge::tx().fula().remove_manifest(cid, req.pool_id);
 
     let result = api
         .tx()
@@ -186,13 +202,14 @@ pub async fn remove_storer(
     let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
     // let cid: Vec<u8> = serde_json::to_vec(&req.cid.clone()).unwrap_or_default();
     let cid = BoundedVec(cid);
-    let storage = sp_core::sr25519::Public::from_str(&req.storage.as_str()).map_err(map_account_err)?;
-    let storage = sp_core::crypto::AccountId32::from(storage);
+    let storage = Public::from_str(&req.storage.as_str()).map_err(map_account_err)?;
+    let storage = AccountId32::from(storage);
 
     let api = &data.api;
 
     let call = sugarfunge::tx()
-    .fula().remove_storer(storage, cid, req.pool_id);
+        .fula()
+        .remove_storer(storage, cid, req.pool_id);
 
     let result = api
         .tx()
@@ -228,13 +245,14 @@ pub async fn remove_stored_manifest(
     let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
     // let cid: Vec<u8> = serde_json::to_vec(&req.cid.clone()).unwrap_or_default();
     let cid = BoundedVec(cid);
-    let uploader = sp_core::sr25519::Public::from_str(&req.uploader.as_str()).map_err(map_account_err)?;
-    let uploader = sp_core::crypto::AccountId32::from(uploader);
+    let uploader = Public::from_str(&req.uploader.as_str()).map_err(map_account_err)?;
+    let uploader = AccountId32::from(uploader);
 
     let api = &data.api;
 
     let call = sugarfunge::tx()
-    .fula().remove_stored_manifest(uploader, cid, req.pool_id);
+        .fula()
+        .remove_stored_manifest(uploader, cid, req.pool_id);
 
     let result = api
         .tx()
@@ -300,7 +318,7 @@ pub async fn get_all_manifests(
 
         // let manifest_idx = 144;
         // let manifest_key = key.0.as_slice()[manifest_idx..].to_vec();
-        // let manifest_id = 
+        // let manifest_id =
         //     ManifestRuntime::<AccountId32,Vec<u8>>::decode(&mut &manifest_key[..]);
         // let manifest_id =manifest_id.unwrap();
         // let manifest_value = Manifest{
@@ -316,42 +334,52 @@ pub async fn get_all_manifests(
             .await
             .map_err(map_subxt_err)?
         {
-            let value = 
-             ManifestRuntime::<AccountId32,Vec<u8>>::decode(&mut &storage_data[..]);
-            let value =value.unwrap();
-            let manifest_data = ManifestData{
+            let value = ManifestRuntime::<AccountId32, Vec<u8>>::decode(&mut &storage_data[..]);
+            let value = value.unwrap();
+            let manifest_data = ManifestData {
                 uploader: Account::from(value.manifest_data.uploader),
-                manifest_metadata:serde_json::from_slice(value.manifest_data.manifest_metadata.as_slice()).unwrap_or_default(),
+                manifest_metadata: serde_json::from_slice(
+                    value.manifest_data.manifest_metadata.as_slice(),
+                )
+                .unwrap_or_default(),
             };
             let storage = value.storage.to_owned();
 
-            let mut storage_vec:Vec<Account> = Vec::new();
+            let mut storage_vec: Vec<Account> = Vec::new();
 
             for storer in storage {
                 let current_account = Account::try_from(storer).unwrap();
                 storage_vec.push(current_account);
-            } 
-            
+            }
+
             let storers_count: u16 = storage_vec.len() as u16;
             let replication_available = value.replication_factor - storers_count;
 
-            if let Some(uploader_filter) = req.uploader.clone(){
-                if sp_core::crypto::AccountId32::from(sp_core::sr25519::Public::from_str(&manifest_data.uploader.as_str()).map_err(map_account_err)?) 
-                    != sp_core::crypto::AccountId32::from(sp_core::sr25519::Public::from_str(&uploader_filter.as_str()).map_err(map_account_err)?){
+            if let Some(uploader_filter) = req.uploader.clone() {
+                if AccountId32::from(
+                    Public::from_str(&manifest_data.uploader.as_str()).map_err(map_account_err)?,
+                ) != AccountId32::from(
+                    Public::from_str(&uploader_filter.as_str()).map_err(map_account_err)?,
+                ) {
                     meet_requirements = false;
                 }
             }
 
-            if let Some(storage_filter) = req.storage.clone(){
-                if !value.storage.to_owned().contains(
-                    &sp_core::crypto::AccountId32::from(
-                        sp_core::sr25519::Public::from_str(&storage_filter.as_str()).map_err(map_account_err)?)){
+            if let Some(storage_filter) = req.storage.clone() {
+                if !value.storage.to_owned().contains(&AccountId32::from(
+                    Public::from_str(&storage_filter.as_str()).map_err(map_account_err)?,
+                )) {
                     meet_requirements = false;
                 }
             }
 
             if meet_requirements {
-                result_array.push(Manifest { storage:storage_vec , manifest_data, replication_available, pool_id });
+                result_array.push(Manifest {
+                    storage: storage_vec,
+                    manifest_data,
+                    replication_available,
+                    pool_id,
+                });
             }
         }
     }
@@ -394,21 +422,29 @@ pub async fn get_available_manifests(
             .await
             .map_err(map_subxt_err)?
         {
-            let value = 
-             ManifestRuntime::<AccountId32,Vec<u8>>::decode(&mut &storage_data[..]);
-            let value =value.unwrap(); 
+            let value = ManifestRuntime::<AccountId32, Vec<u8>>::decode(&mut &storage_data[..]);
+            let value = value.unwrap();
 
             let storers_count: u16 = value.storage.len() as u16;
             let replication_available = value.replication_factor - storers_count;
 
             if replication_available > 0 {
-                let manifest_metadata = serde_json::from_slice(value.manifest_data.manifest_metadata.as_slice()).unwrap_or_default();
+                let manifest_metadata =
+                    serde_json::from_slice(value.manifest_data.manifest_metadata.as_slice())
+                        .unwrap_or_default();
                 let uploader = value.manifest_data.uploader.into();
-                result_array.push(ManifestAvailable{manifest_data: ManifestData { uploader, manifest_metadata}, replication_available, pool_id});
-            }          
+                result_array.push(ManifestAvailable {
+                    manifest_data: ManifestData {
+                        uploader,
+                        manifest_metadata,
+                    },
+                    replication_available,
+                    pool_id,
+                });
+            }
         }
     }
-    Ok(HttpResponse::Ok().json(GetAvailableManifestsOutput{
+    Ok(HttpResponse::Ok().json(GetAvailableManifestsOutput {
         manifests: result_array,
     }))
 }
@@ -420,9 +456,9 @@ pub fn transform_storage_output(storers: Vec<AccountId32>) -> Vec<String> {
         .collect()
 }
 
-fn transform_option_value(value: Option<AccountId32>)-> Option<Account> {
+fn transform_option_value(value: Option<AccountId32>) -> Option<Account> {
     if let Some(value) = value {
-        return Some(value.into())
+        return Some(value.into());
     }
     return None::<Account>;
 }

@@ -1,16 +1,19 @@
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
+use codec::Decode;
 use serde_json::json;
 use std::str::FromStr;
 use subxt::ext::sp_core;
+use subxt::ext::sp_core::sr25519::Public;
+use subxt::ext::sp_runtime::AccountId32;
+use subxt::storage::address::{StorageHasher, StorageMapKey};
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::asset::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use codec::Decode;
-use subxt::storage::address::{StorageHasher, StorageMapKey};
-use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
+// use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 
 /// Create an asset class for an account
 pub async fn create_class(
@@ -19,8 +22,8 @@ pub async fn create_class(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.owner.as_str()).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::from(to);
+    let to = Public::from_str(&req.owner.as_str()).map_err(map_account_err)?;
+    let to = AccountId32::from(to);
     let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
     let api = &data.api;
@@ -189,7 +192,7 @@ pub async fn mint(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let to = AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = &data.api;
 
     let call = sugarfunge::tx().asset().mint(
@@ -232,7 +235,7 @@ pub async fn burn(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let from = sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
+    let from = AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let api = &data.api;
 
     let call = sugarfunge::tx().asset().burn(
@@ -273,9 +276,8 @@ pub async fn balance(
     data: web::Data<AppState>,
     req: web::Json<AssetBalanceInput>,
 ) -> error::Result<HttpResponse> {
-    let account =
-        sp_core::sr25519::Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
-    let account = sp_core::crypto::AccountId32::from(account);
+    let account = Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
+    let account = AccountId32::from(account);
     let api = &data.api;
 
     let call = sugarfunge::storage().asset().balances(
@@ -302,9 +304,8 @@ pub async fn balances(
     data: web::Data<AppState>,
     req: web::Json<AssetBalancesInput>,
 ) -> error::Result<HttpResponse> {
-    let account =
-        sp_core::sr25519::Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
-    let account = sp_core::crypto::AccountId32::from(account);
+    let account = Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
+    let account = AccountId32::from(account);
     let api = &data.api;
 
     let mut result_array = Vec::new();
@@ -361,7 +362,7 @@ pub async fn balances(
             //     "Class_Id: {:?} AssetId: {:?}  Value: {:?}",
             //     class_id, asset_id, value
             // );
-            let item = AssetBalanceItemOutput{
+            let item = AssetBalanceItemOutput {
                 class_id: ClassId::from(class_id.unwrap()),
                 asset_id: AssetId::from(asset_id.unwrap()),
                 amount: Balance::from(value.unwrap()),
@@ -384,7 +385,7 @@ pub async fn transfer_from(
     let signer = PairSigner::new(pair);
     let account_from =
         sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
-    let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let account_to = AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = &data.api;
 
     let call = sugarfunge::tx().asset().transfer_from(

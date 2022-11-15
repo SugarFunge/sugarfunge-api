@@ -6,11 +6,13 @@ use hex::ToHex;
 use serde_json::json;
 use std::str::FromStr;
 use subxt::ext::sp_core;
+use subxt::ext::sp_runtime::AccountId32;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::bundle::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
+// use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 
 fn hash(s: &[u8]) -> sp_core::H256 {
     sp_io::hashing::blake2_256(s).into()
@@ -83,9 +85,8 @@ pub async fn mint_bundle(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account_from =
-        sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
-    let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let account_from = AccountId32::try_from(&req.from).map_err(map_account_err)?;
+    let account_to = AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;
 
@@ -128,9 +129,8 @@ pub async fn burn_bundle(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account_from =
-        sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
-    let account_to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let account_from = AccountId32::try_from(&req.from).map_err(map_account_err)?;
+    let account_to = AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;
 
