@@ -2,8 +2,9 @@ use actix_web::{error, web, HttpResponse};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use sp_core::Pair;
 use subxt::rpc::Health;
+use subxt::ext::sp_core;
+use subxt::ext::sp_core::Pair;
 use sugarfunge_api_types::primitives::*;
 use url::Url;
 
@@ -27,9 +28,7 @@ pub fn map_subxt_err(e: subxt::Error) -> actix_web::Error {
     error::ErrorBadRequest(req_error)
 }
 
-pub fn map_sf_err(
-    e: subxt::Error,
-) -> actix_web::Error {
+pub fn map_sf_err(e: subxt::Error) -> actix_web::Error {
     // TODO: json_err should be a json Value to improve UX
     let json_err = json!(e.to_string());
     let req_error = RequestError {
@@ -63,8 +62,8 @@ pub fn map_account_err(e: sp_core::crypto::PublicError) -> actix_web::Error {
     error::ErrorBadRequest(req_error)
 }
 
-pub fn get_pair_from_seed(seed: &Seed) -> error::Result<sp_core::sr25519::Pair> {
-    sp_core::sr25519::Pair::from_string(seed.as_str(), None).map_err(|e| {
+pub fn get_pair_from_seed(seed: &Seed) -> error::Result<subxt::ext::sp_core::sr25519::Pair> {
+    subxt::ext::sp_core::sr25519::Pair::from_string(seed.as_str(), None).map_err(|e| {
         let req_error = RequestError {
             message: json!(&format!("{:?}", e)),
             description: "API error".into(),

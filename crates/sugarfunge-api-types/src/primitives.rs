@@ -59,6 +59,12 @@ impl From<sp_core::crypto::AccountId32> for Account {
     }
 }
 
+impl From<subxt::ext::sp_runtime::AccountId32> for Account {
+    fn from(account: subxt::ext::sp_runtime::AccountId32) -> Account {
+        Account(account.to_string())
+    }
+}
+
 impl TryFrom<&Account> for sp_core::crypto::AccountId32 {
     type Error = sp_core::crypto::PublicError;
 
@@ -68,6 +74,20 @@ impl TryFrom<&Account> for sp_core::crypto::AccountId32 {
         let account = sp_core::sr25519::Public::from_str(account.as_str());
         match account {
             Ok(account) => Ok(sp_core::crypto::AccountId32::from(account)),
+            Err(err) => Err(err),
+        }
+    }
+}
+
+impl TryFrom<&Account> for subxt::ext::sp_runtime::AccountId32 {
+    type Error = subxt::ext::sp_core::crypto::PublicError;
+
+    fn try_from(
+        account: &Account,
+    ) -> Result<subxt::ext::sp_runtime::AccountId32, subxt::ext::sp_core::crypto::PublicError> {
+        let account = subxt::ext::sp_core::sr25519::Public::from_str(account.as_str());
+        match account {
+            Ok(account) => Ok(subxt::ext::sp_runtime::AccountId32::from(account)),
             Err(err) => Err(err),
         }
     }
