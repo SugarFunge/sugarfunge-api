@@ -118,9 +118,9 @@ pub async fn exists(
             account: account_out.into(),
             exists: data.providers > 0,
         })),
-        None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::balances::events::balance"),
-            description: format!("Error in account::exist"),
+        None => Ok(HttpResponse::Ok().json(AccountExistsOutput {
+            account: account_out.into(),
+            exists: false,
         })),
     }
 }
