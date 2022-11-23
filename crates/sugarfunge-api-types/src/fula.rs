@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::primitives::*;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateManifestInput {
@@ -79,7 +79,6 @@ pub struct GetAllManifestsInput {
     pub storage: Option<Account>,
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetAllManifestsOutput {
     pub manifests: Vec<Manifest>,
@@ -89,7 +88,6 @@ pub struct GetAllManifestsOutput {
 pub struct GetAvailableManifestsInput {
     pub pool_id: Option<u16>,
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetAvailableManifestsOutput {
@@ -132,4 +130,3 @@ pub struct ManifestAvailable {
     pub manifest_data: ManifestData,
     pub replication_available: u16,
 }
-

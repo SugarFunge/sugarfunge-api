@@ -15,5 +15,6 @@ pub mod bag;
 pub mod bundle;
 pub mod fula;
 pub mod market;
+pub mod pool;
 pub mod primitives;
 pub mod validator;

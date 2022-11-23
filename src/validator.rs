@@ -21,7 +21,7 @@ pub async fn add_validator(
     let call = sugarfunge::runtime_types::sugarfunge_validator_set::pallet::Call::add_validator {
         validator_id,
     };
-    let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::ValidatorSet(call);
+    let call = sugarfunge::runtime_types::sugarfunge_runtime::RuntimeCall::ValidatorSet(call);
     let api = &data.api;
 
     let call_value = sugarfunge::tx().sudo().sudo(call);
@@ -62,7 +62,7 @@ pub async fn remove_validator(
         sugarfunge::runtime_types::sugarfunge_validator_set::pallet::Call::remove_validator {
             validator_id,
         };
-    let call = sugarfunge::runtime_types::sugarfunge_runtime::Call::ValidatorSet(call);
+    let call = sugarfunge::runtime_types::sugarfunge_runtime::RuntimeCall::ValidatorSet(call);
     let api = &data.api;
 
     let call_value = sugarfunge::tx().sudo().sudo(call);

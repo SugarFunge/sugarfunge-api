@@ -6,10 +6,10 @@ use actix_web::{
 };
 use command::*;
 use state::*;
-use util::url_to_string;
 use std::sync::Arc;
 use structopt::StructOpt;
 use subxt::{client::OnlineClient, PolkadotConfig};
+use util::url_to_string;
 
 mod account;
 mod asset;
@@ -18,10 +18,11 @@ mod bundle;
 mod command;
 mod fula;
 mod market;
+mod pool;
 mod state;
+mod subscription;
 mod util;
 mod validator;
-mod subscription;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -103,14 +104,43 @@ async fn main() -> std::io::Result<()> {
                 "market/exchange_assets",
                 web::post().to(market::exchange_assets),
             )
-            .route("fula/manifest/update",web::post().to(fula::update_manifest),)
+            .route(
+                "fula/manifest/update",
+                web::post().to(fula::update_manifest),
+            )
             .route("fula/manifest", web::post().to(fula::get_all_manifests))
-            .route("fula/manifest/remove", web::post().to(fula::remove_manifest))
-            .route("fula/manifest/remove_storer", web::post().to(fula::remove_storer))
-            .route("fula/manifest/remove_stored_manifest", web::post().to(fula::remove_stored_manifest))
-            .route("fula/manifest/upload", web::post().to(fula::upload_manifest))
-            .route("fula/manifest/available", web::post().to(fula::get_available_manifests))
-            .route("fula/manifest/storage",web::post().to(fula::storage_manifest))
+            .route(
+                "fula/manifest/remove",
+                web::post().to(fula::remove_manifest),
+            )
+            .route(
+                "fula/manifest/remove_storer",
+                web::post().to(fula::remove_storer),
+            )
+            .route(
+                "fula/manifest/remove_stored_manifest",
+                web::post().to(fula::remove_stored_manifest),
+            )
+            .route(
+                "fula/manifest/upload",
+                web::post().to(fula::upload_manifest),
+            )
+            .route(
+                "fula/manifest/available",
+                web::post().to(fula::get_available_manifests),
+            )
+            .route(
+                "fula/manifest/storage",
+                web::post().to(fula::storage_manifest),
+            )
+            .route("fula/pool/create", web::post().to(pool::create_pool))
+            .route("fula/pool/leave", web::post().to(pool::leave_pool))
+            .route("fula/pool/join", web::post().to(pool::join_pool))
+            .route(
+                "fula/pool/cancel_join",
+                web::post().to(pool::cancel_join_pool),
+            )
+            .route("fula/pool/vote", web::post().to(pool::vote))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()

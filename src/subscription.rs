@@ -38,10 +38,9 @@ impl SubcriptionServiceWS {
         let tx = tx_origin.clone();
 
         let balances_task = async move {
-
             let mut balances_events = api.events().subscribe().await.unwrap().filter_events::<(
-                    sugarfunge::balances::events::Deposit,
-                    sugarfunge::balances::events::Transfer,
+                sugarfunge::balances::events::Deposit,
+                sugarfunge::balances::events::Transfer,
             )>();
 
             while let Some(event) = balances_events.next().await {
@@ -57,13 +56,12 @@ impl SubcriptionServiceWS {
                 }
             }
         }
-
         .into_actor(self);
 
         let api = self.data.api.clone();
 
         let tx = tx_origin.clone();
-        
+
         let asset_task = async move {
             let mut asset_events = api.events().subscribe().await.unwrap().filter_events::<(
                 sugarfunge::asset::events::Transferred,
@@ -83,7 +81,6 @@ impl SubcriptionServiceWS {
                 }
             }
         }
-
         .into_actor(self);
 
         let api = self.data.api.clone();
@@ -109,7 +106,6 @@ impl SubcriptionServiceWS {
                 }
             }
         }
-
         .into_actor(self);
 
         let sub: SpawnHandle = ctx.spawn(balances_task);
@@ -130,8 +126,6 @@ impl SubcriptionServiceWS {
             }
         });
     }
-
-
 
     fn heartbeat(&self, ctx: &mut <Self as Actor>::Context) {
         ctx.run_interval(HEARTBEAT_INTERVAL, |act, ctx| {
