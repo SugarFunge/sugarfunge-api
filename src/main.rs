@@ -141,6 +141,12 @@ async fn main() -> std::io::Result<()> {
                 web::post().to(pool::cancel_join_pool),
             )
             .route("fula/pool/vote", web::post().to(pool::vote))
+            .route("fula/pool/all", web::get().to(pool::get_all_pools))
+            .route(
+                "fula/pool/poolrequests",
+                web::get().to(pool::get_all_pool_requests),
+            )
+            .route("fula/pool/users", web::post().to(pool::get_all_pool_users))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()
