@@ -11,6 +11,7 @@ use subxt::ext::sp_runtime::AccountId32;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::pool::*;
 use sugarfunge_api_types::primitives::Account;
+use sugarfunge_api_types::primitives::PoolId;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::functionland_pool::Pool as PoolRuntime;
 use sugarfunge_api_types::sugarfunge::runtime_types::functionland_pool::PoolRequest as PoolRequestRuntime;
@@ -25,9 +26,9 @@ pub async fn create_pool(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
 
-    let pool_name = req.pool_name.clone().into_bytes();
+    let pool_name = String::from(&req.pool_name).into_bytes();
 
-    let peer_id = req.peer_id.clone().into_bytes();
+    let peer_id = String::from(&req.peer_id).into_bytes();
     let peer_id = BoundedVec(peer_id);
 
     let api = &data.api;
@@ -47,8 +48,8 @@ pub async fn create_pool(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreatePoolOutput {
-            owner: transform_option_value(event.owner).into(),
-            pool_id: event.pool_id,
+            owner: transform_option_account_value(event.owner).into(),
+            pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::pool::events::PoolCreated"),
@@ -66,7 +67,7 @@ pub async fn leave_pool(
 
     let api = &data.api;
 
-    let call = sugarfunge::tx().pool().leave_pool(req.pool_id);
+    let call = sugarfunge::tx().pool().leave_pool(req.pool_id.into());
 
     let result = api
         .tx()
@@ -82,7 +83,7 @@ pub async fn leave_pool(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(LeavePoolOutput {
             account: event.account.into(),
-            pool_id: event.pool_id,
+            pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::pool::events::ParticipantLeft"),
@@ -98,12 +99,12 @@ pub async fn join_pool(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
 
-    let peer_id = req.peer_id.clone().into_bytes();
+    let peer_id = String::from(&req.peer_id).into_bytes();
     let peer_id = BoundedVec(peer_id);
 
     let api = &data.api;
 
-    let call = sugarfunge::tx().pool().join(req.pool_id, peer_id);
+    let call = sugarfunge::tx().pool().join(req.pool_id.into(), peer_id);
 
     let result = api
         .tx()
@@ -119,7 +120,7 @@ pub async fn join_pool(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(JoinPoolOutput {
             account: event.account.into(),
-            pool_id: event.pool_id,
+            pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::pool::events::ParticipantLeft"),
@@ -137,7 +138,7 @@ pub async fn cancel_join_pool(
 
     let api = &data.api;
 
-    let call = sugarfunge::tx().pool().cancel_join(req.pool_id);
+    let call = sugarfunge::tx().pool().cancel_join(req.pool_id.into());
 
     let result = api
         .tx()
@@ -153,7 +154,7 @@ pub async fn cancel_join_pool(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CancelJoinPoolOutput {
             account: event.account.into(),
-            pool_id: event.pool_id,
+            pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::pool::events::RequestWithdrawn"),
@@ -175,7 +176,7 @@ pub async fn vote(
 
     let call = sugarfunge::tx()
         .pool()
-        .vote(req.pool_id, account, req.vote_value);
+        .vote(req.pool_id.into(), account, req.vote_value);
 
     let result = api
         .tx()
@@ -191,7 +192,7 @@ pub async fn vote(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(VoteOutput {
             account: event.account.into(),
-            pool_id: event.pool_id,
+            pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::pool::events::Accepted"),
@@ -242,10 +243,12 @@ pub async fn get_all_pools(data: web::Data<AppState>) -> error::Result<HttpRespo
             }
 
             result_array.push(PoolData {
-                pool_id,
-                pool_name: String::from_utf8(pool_value.name.0).unwrap_or_default(),
-                owner: transform_option_value(pool_value.owner),
-                parent: pool_value.parent,
+                pool_id: pool_id.into(),
+                pool_name: String::from_utf8(pool_value.name.0)
+                    .unwrap_or_default()
+                    .into(),
+                owner: transform_option_account_value(pool_value.owner),
+                parent: transform_option_pool_value(pool_value.parent),
                 participants: storage_vec,
             });
         }
@@ -303,11 +306,13 @@ pub async fn get_all_pool_requests(data: web::Data<AppState>) -> error::Result<H
             }
 
             result_array.push(PoolRequestData {
-                pool_id,
+                pool_id: pool_id.into(),
                 account: account_id,
                 voted: voters_vec,
                 positive_votes: poolrequest_value.positive_votes,
-                peer_id: String::from_utf8(poolrequest_value.peer_id.0).unwrap_or_default(),
+                peer_id: String::from_utf8(poolrequest_value.peer_id.0)
+                    .unwrap_or_default()
+                    .into(),
             });
         }
     }
@@ -370,9 +375,11 @@ pub async fn get_all_pool_users(
             if meet_requirements {
                 result_array.push(PoolUserData {
                     account: account_id,
-                    pool_id: user_value.pool_id,
-                    request_pool_id: user_value.request_pool_id,
-                    peer_id: String::from_utf8(user_value.peer_id.0).unwrap_or_default(),
+                    pool_id: transform_option_pool_value(user_value.pool_id),
+                    request_pool_id: transform_option_pool_value(user_value.request_pool_id),
+                    peer_id: String::from_utf8(user_value.peer_id.0)
+                        .unwrap_or_default()
+                        .into(),
                 });
             }
         }
@@ -382,9 +389,16 @@ pub async fn get_all_pool_users(
     }))
 }
 
-fn transform_option_value(value: Option<AccountId32>) -> Option<Account> {
+fn transform_option_account_value(value: Option<AccountId32>) -> Option<Account> {
     if let Some(value) = value {
         return Some(value.into());
     }
     return None::<Account>;
+}
+
+fn transform_option_pool_value(value: Option<u32>) -> Option<PoolId> {
+    if let Some(value) = value {
+        return Some(value.into());
+    }
+    return None::<PoolId>;
 }

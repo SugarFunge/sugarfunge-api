@@ -37,8 +37,8 @@ pub async fn update_manifest(
         account_storage,
         manifest,
         cid,
-        req.pool_id,
-        req.replication_factor,
+        req.pool_id.into(),
+        req.replication_factor.into(),
     );
 
     let result = api
@@ -58,7 +58,7 @@ pub async fn update_manifest(
             storage: transform_vec_string_to_account(transform_storage_output(event.storage)),
             manifest_metadata: serde_json::from_slice(event.manifest.as_slice())
                 .unwrap_or_default(),
-            pool_id: event.pool_id,
+            pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::UpdateManifests"),
@@ -84,10 +84,12 @@ pub async fn upload_manifest(
     let manifest = BoundedVec(manifest);
     let api = &data.api;
 
-    let call =
-        sugarfunge::tx()
-            .fula()
-            .upload_manifest(manifest, cid, req.pool_id, req.replication_factor);
+    let call = sugarfunge::tx().fula().upload_manifest(
+        manifest,
+        cid,
+        req.pool_id.into(),
+        req.replication_factor.into(),
+    );
 
     let result = api
         .tx()
@@ -106,7 +108,7 @@ pub async fn upload_manifest(
             storage: transform_vec_string_to_account(transform_storage_output(event.storage)),
             manifest_metadata: serde_json::from_slice(event.manifest.as_slice())
                 .unwrap_or_default(),
-            pool_id: event.pool_id,
+            pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::UploadManifests"),
@@ -129,7 +131,7 @@ pub async fn storage_manifest(
 
     let call = sugarfunge::tx()
         .fula()
-        .storage_manifest(account_uploader, cid, req.pool_id);
+        .storage_manifest(account_uploader, cid, req.pool_id.into());
 
     let result = api
         .tx()
@@ -147,7 +149,7 @@ pub async fn storage_manifest(
             uploader: event.uploader.into(),
             storage: event.storage.into(),
             cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
-            pool_id: event.pool_id,
+            pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::StorageManifest"),
@@ -167,7 +169,9 @@ pub async fn remove_manifest(
     let cid = BoundedVec(cid);
     let api = &data.api;
 
-    let call = sugarfunge::tx().fula().remove_manifest(cid, req.pool_id);
+    let call = sugarfunge::tx()
+        .fula()
+        .remove_manifest(cid, req.pool_id.into());
 
     let result = api
         .tx()
@@ -184,7 +188,7 @@ pub async fn remove_manifest(
         Some(event) => Ok(HttpResponse::Ok().json(RemoveManifestOutput {
             uploader: event.uploader.into(),
             cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
-            pool_id: event.pool_id,
+            pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::RemoveManifest"),
@@ -209,7 +213,7 @@ pub async fn remove_storer(
 
     let call = sugarfunge::tx()
         .fula()
-        .remove_storer(storage, cid, req.pool_id);
+        .remove_storer(storage, cid, req.pool_id.into());
 
     let result = api
         .tx()
@@ -227,7 +231,7 @@ pub async fn remove_storer(
             uploader: event.uploader.into(),
             storage: transform_option_value(event.storage),
             cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
-            pool_id: event.pool_id,
+            pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::RemoveStorer"),
@@ -252,7 +256,7 @@ pub async fn remove_stored_manifest(
 
     let call = sugarfunge::tx()
         .fula()
-        .remove_stored_manifest(uploader, cid, req.pool_id);
+        .remove_stored_manifest(uploader, cid, req.pool_id.into());
 
     let result = api
         .tx()
@@ -270,7 +274,7 @@ pub async fn remove_stored_manifest(
             uploader: event.uploader.into(),
             storage: transform_option_value(event.storage),
             cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
-            pool_id: event.pool_id,
+            pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::RemoveStorer"),
@@ -290,7 +294,8 @@ pub async fn get_all_manifests(
     // println!("query_key manifests_root len: {}", query_key.len());
 
     if let Some(value) = req.pool_id.clone() {
-        StorageMapKey::new(&value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        let key_value: u32 = value.into();
+        StorageMapKey::new(&key_value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
     }
     // println!("query_key account_to len: {}", query_key.len());
 
@@ -306,8 +311,8 @@ pub async fn get_all_manifests(
         // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
         let pool_id_idx = 48;
-        let pool_id_key = key.0.as_slice()[pool_id_idx..(pool_id_idx + 16)].to_vec();
-        let pool_id_id = u16::decode(&mut &pool_id_key[..]);
+        let pool_id_key = key.0.as_slice()[pool_id_idx..(pool_id_idx + 4)].to_vec();
+        let pool_id_id = u32::decode(&mut &pool_id_key[..]);
         let pool_id = pool_id_id.unwrap();
 
         // let account_from_idx = 96;
@@ -377,8 +382,8 @@ pub async fn get_all_manifests(
                 result_array.push(Manifest {
                     storage: storage_vec,
                     manifest_data,
-                    replication_available,
-                    pool_id,
+                    replication_available: replication_available.into(),
+                    pool_id: pool_id.into(),
                 });
             }
         }
@@ -399,7 +404,8 @@ pub async fn get_available_manifests(
     // println!("query_key manifests_root len: {}", query_key.len());
 
     if let Some(value) = req.pool_id.clone() {
-        StorageMapKey::new(&value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        let key_value: u32 = value.into();
+        StorageMapKey::new(&key_value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
     }
 
     let keys = api
@@ -411,10 +417,10 @@ pub async fn get_available_manifests(
     // println!("Obtained keys:");
     for key in keys.iter() {
         // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
-        let account_to_idx = 48;
-        let account_to_key = key.0.as_slice()[account_to_idx..(account_to_idx + 16)].to_vec();
-        let account_to_id = u16::decode(&mut &account_to_key[..]);
-        let pool_id = account_to_id.unwrap();
+        let pool_id_idx = 48;
+        let pool_id_key = key.0.as_slice()[pool_id_idx..(pool_id_idx + 4)].to_vec();
+        let pool_id_id = u32::decode(&mut &pool_id_key[..]);
+        let pool_id = pool_id_id.unwrap();
 
         if let Some(storage_data) = api
             .storage()
@@ -438,8 +444,8 @@ pub async fn get_available_manifests(
                         uploader,
                         manifest_metadata,
                     },
-                    replication_available,
-                    pool_id,
+                    replication_available: replication_available.into(),
+                    pool_id: pool_id.into(),
                 });
             }
         }

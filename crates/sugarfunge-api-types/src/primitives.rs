@@ -24,6 +24,48 @@ impl Seed {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PeerId(String);
+
+impl From<String> for PeerId {
+    fn from(peer_id: String) -> PeerId {
+        PeerId(peer_id.clone())
+    }
+}
+
+impl From<&PeerId> for String {
+    fn from(peer_id: &PeerId) -> String {
+        peer_id.0.clone()
+    }
+}
+
+impl PeerId {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Name(String);
+
+impl From<String> for Name {
+    fn from(name: String) -> Name {
+        Name(name.clone())
+    }
+}
+
+impl From<&Name> for String {
+    fn from(name: &Name) -> String {
+        name.0.clone()
+    }
+}
+
+impl Name {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Cid(String);
 
 impl From<String> for Cid {
@@ -116,6 +158,36 @@ impl From<u64> for MarketId {
 
 impl From<MarketId> for u64 {
     fn from(id: MarketId) -> u64 {
+        id.0
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct PoolId(u32);
+
+impl From<u32> for PoolId {
+    fn from(id: u32) -> PoolId {
+        PoolId(id)
+    }
+}
+
+impl From<PoolId> for u32 {
+    fn from(id: PoolId) -> u32 {
+        id.0
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct ReplicationFactor(u16);
+
+impl From<u16> for ReplicationFactor {
+    fn from(id: u16) -> ReplicationFactor {
+        ReplicationFactor(id)
+    }
+}
+
+impl From<ReplicationFactor> for u16 {
+    fn from(id: ReplicationFactor) -> u16 {
         id.0
     }
 }
