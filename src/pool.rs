@@ -10,8 +10,7 @@ use subxt::ext::sp_runtime::AccountId32;
 // use subxt::storage::address::{StorageHasher, StorageMapKey};
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::pool::*;
-use sugarfunge_api_types::primitives::Account;
-use sugarfunge_api_types::primitives::PoolId;
+use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::functionland_pool::Pool as PoolRuntime;
 use sugarfunge_api_types::sugarfunge::runtime_types::functionland_pool::PoolRequest as PoolRequestRuntime;
@@ -387,18 +386,4 @@ pub async fn get_all_pool_users(
     Ok(HttpResponse::Ok().json(GetAllPoolUsersOutput {
         users: result_array,
     }))
-}
-
-fn transform_option_account_value(value: Option<AccountId32>) -> Option<Account> {
-    if let Some(value) = value {
-        return Some(value.into());
-    }
-    return None::<Account>;
-}
-
-fn transform_option_pool_value(value: Option<u32>) -> Option<PoolId> {
-    if let Some(value) = value {
-        return Some(value.into());
-    }
-    return None::<PoolId>;
 }

@@ -9,7 +9,7 @@ use subxt::ext::sp_runtime::AccountId32;
 use subxt::storage::address::{StorageHasher, StorageMapKey};
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::fula::*;
-use sugarfunge_api_types::primitives::{transform_vec_string_to_account, Account, Cid};
+use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::functionland_fula::Manifest as ManifestRuntime;
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
@@ -229,7 +229,7 @@ pub async fn remove_storer(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveStorerOutput {
             uploader: event.uploader.into(),
-            storage: transform_option_value(event.storage),
+            storage: transform_option_account_value(event.storage),
             cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
             pool_id: event.pool_id.into(),
         })),
@@ -272,7 +272,7 @@ pub async fn remove_stored_manifest(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveStoringManifestOutput {
             uploader: event.uploader.into(),
-            storage: transform_option_value(event.storage),
+            storage: transform_option_account_value(event.storage),
             cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
             pool_id: event.pool_id.into(),
         })),
@@ -453,18 +453,4 @@ pub async fn get_available_manifests(
     Ok(HttpResponse::Ok().json(GetAvailableManifestsOutput {
         manifests: result_array,
     }))
-}
-
-pub fn transform_storage_output(storers: Vec<AccountId32>) -> Vec<String> {
-    storers
-        .into_iter()
-        .map(|current_storer| current_storer.to_string())
-        .collect()
-}
-
-fn transform_option_value(value: Option<AccountId32>) -> Option<Account> {
-    if let Some(value) = value {
-        return Some(value.into());
-    }
-    return None::<Account>;
 }

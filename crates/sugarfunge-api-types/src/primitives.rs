@@ -1,6 +1,6 @@
-use std::str::FromStr;
-
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
+use subxt::ext::sp_runtime::AccountId32;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Seed(String);
@@ -358,5 +358,26 @@ pub fn transform_doublevec_balance_to_u128(in_vec: Vec<Vec<Balance>>) -> Vec<Vec
                 .map(|balance| u128::from(balance))
                 .collect()
         })
+        .collect()
+}
+
+pub fn transform_option_account_value(value: Option<AccountId32>) -> Option<Account> {
+    if let Some(value) = value {
+        return Some(value.into());
+    }
+    return None::<Account>;
+}
+
+pub fn transform_option_pool_value(value: Option<u32>) -> Option<PoolId> {
+    if let Some(value) = value {
+        return Some(value.into());
+    }
+    return None::<PoolId>;
+}
+
+pub fn transform_storage_output(storers: Vec<AccountId32>) -> Vec<String> {
+    storers
+        .into_iter()
+        .map(|current_storer| current_storer.to_string())
         .collect()
 }
