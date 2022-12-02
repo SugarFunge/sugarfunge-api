@@ -4,10 +4,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateManifestInput {
     pub seed: Seed,
-    pub storage: Account,
     pub manifest_metadata: serde_json::Value,
     pub pool_id: PoolId,
-    pub replication_factor: ReplicationFactor,
+    pub active_days: i32,
+    pub active_cycles: u16,
+    pub missed_cycles: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -16,6 +17,16 @@ pub struct ManifestOutput {
     pub storage: Vec<Account>,
     pub manifest_metadata: serde_json::Value,
     pub pool_id: PoolId,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ManifestUpdatedOutput {
+    pub uploader: Account,
+    pub pool_id: PoolId,
+    pub cid: Cid,
+    pub active_days: i32,
+    pub active_cycles: u16,
+    pub missed_cycles: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -116,12 +127,20 @@ pub struct ManifestData {
     pub manifest_metadata: serde_json::Value,
 }
 
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub struct ManifestStorageData {
+    pub active_cycles: u16,
+    pub missed_cycles: u16,
+    pub active_days: i32,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Manifest {
     pub pool_id: PoolId,
     pub storage: Vec<Account>,
-    pub manifest_data: ManifestData,
     pub replication_available: ReplicationFactor,
+    pub manifest_data: ManifestData,
+    pub manifest_storage_data: ManifestStorageData,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

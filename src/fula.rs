@@ -21,7 +21,6 @@ pub async fn update_manifest(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account_storage = AccountId32::try_from(&req.storage).map_err(map_account_err)?;
 
     let cid: Vec<u8> = req.manifest_metadata["job"]["uri"]
         .to_string()
@@ -29,16 +28,14 @@ pub async fn update_manifest(
         .into_bytes();
     let cid = BoundedVec(cid);
 
-    let manifest: Vec<u8> = serde_json::to_vec(&req.manifest_metadata).unwrap_or_default();
-    let manifest = BoundedVec(manifest);
     let api = &data.api;
 
     let call = sugarfunge::tx().fula().update_manifest(
-        account_storage,
-        manifest,
         cid,
         req.pool_id.into(),
-        req.replication_factor.into(),
+        req.active_cycles,
+        req.missed_cycles,
+        req.active_days,
     );
 
     let result = api
@@ -50,15 +47,16 @@ pub async fn update_manifest(
         .await
         .map_err(map_fula_err)?;
     let result = result
-        .find_first::<sugarfunge::fula::events::ManifestOutput>()
+        .find_first::<sugarfunge::fula::events::ManifestStorageUpdated>()
         .map_err(map_subxt_err)?;
     match result {
-        Some(event) => Ok(HttpResponse::Ok().json(ManifestOutput {
+        Some(event) => Ok(HttpResponse::Ok().json(ManifestUpdatedOutput {
             uploader: event.uploader.into(),
-            storage: transform_vec_string_to_account(transform_storage_output(event.storage)),
-            manifest_metadata: serde_json::from_slice(event.manifest.as_slice())
-                .unwrap_or_default(),
             pool_id: event.pool_id.into(),
+            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
+            active_days: event.active_days,
+            active_cycles: event.active_cycles,
+            missed_cycles: event.missed_cycles,
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::UpdateManifests"),
@@ -348,6 +346,11 @@ pub async fn get_all_manifests(
                 )
                 .unwrap_or_default(),
             };
+            let manifest_storage_data = ManifestStorageData {
+                active_cycles: value.manifest_storage_data.active_cycles,
+                missed_cycles: value.manifest_storage_data.missed_cycles,
+                active_days: value.manifest_storage_data.active_days,
+            };
             let storage = value.storage.to_owned();
 
             let mut storage_vec: Vec<Account> = Vec::new();
@@ -384,6 +387,7 @@ pub async fn get_all_manifests(
                     manifest_data,
                     replication_available: replication_available.into(),
                     pool_id: pool_id.into(),
+                    manifest_storage_data,
                 });
             }
         }
