@@ -133,6 +133,10 @@ async fn main() -> std::io::Result<()> {
                 "fula/manifest/storage",
                 web::post().to(fula::storage_manifest),
             )
+            .route(
+                "fula/manifest/storer_data",
+                web::post().to(fula::get_all_manifests_storer_data),
+            )
             .route("fula/pool/create", web::post().to(pool::create_pool))
             .route("fula/pool/leave", web::post().to(pool::leave_pool))
             .route("fula/pool/join", web::post().to(pool::join_pool))

@@ -12,6 +12,7 @@ use sugarfunge_api_types::fula::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::functionland_fula::Manifest as ManifestRuntime;
+use sugarfunge_api_types::sugarfunge::runtime_types::functionland_fula::ManifestStorageData as ManifestStorageDataRuntime;
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
 // use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 
@@ -51,7 +52,7 @@ pub async fn update_manifest(
         .map_err(map_subxt_err)?;
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(ManifestUpdatedOutput {
-            uploader: event.uploader.into(),
+            storer: event.storer.into(),
             pool_id: event.pool_id.into(),
             cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
             active_days: event.active_days,
@@ -346,11 +347,6 @@ pub async fn get_all_manifests(
                 )
                 .unwrap_or_default(),
             };
-            let manifest_storage_data = ManifestStorageData {
-                active_cycles: value.manifest_storage_data.active_cycles,
-                missed_cycles: value.manifest_storage_data.missed_cycles,
-                active_days: value.manifest_storage_data.active_days,
-            };
             let storage = value.storage.to_owned();
 
             let mut storage_vec: Vec<Account> = Vec::new();
@@ -387,7 +383,6 @@ pub async fn get_all_manifests(
                     manifest_data,
                     replication_available: replication_available.into(),
                     pool_id: pool_id.into(),
-                    manifest_storage_data,
                 });
             }
         }
@@ -455,6 +450,90 @@ pub async fn get_available_manifests(
         }
     }
     Ok(HttpResponse::Ok().json(GetAvailableManifestsOutput {
+        manifests: result_array,
+    }))
+}
+
+pub async fn get_all_manifests_storer_data(
+    data: web::Data<AppState>,
+    req: web::Json<GetAllManifestsStorerDataInput>,
+) -> error::Result<HttpResponse> {
+    let api = &data.api;
+    let mut result_array = Vec::new();
+
+    let mut query_key = sugarfunge::storage()
+        .fula()
+        .manifests_storer_data_root()
+        .to_bytes();
+    println!("query_key manifests_root len: {}", query_key.len());
+
+    if let Some(value) = req.pool_id.clone() {
+        let key_value: u32 = value.into();
+        StorageMapKey::new(&key_value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        println!("query_key pool_id len: {}", query_key.len());
+    }
+
+    let keys = api
+        .storage()
+        .fetch_keys(&query_key, 1000, None, None)
+        .await
+        .map_err(map_subxt_err)?;
+
+    println!("Obtained keys:");
+    for key in keys.iter() {
+        let mut meet_requirements = true;
+        println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+
+        let pool_id_idx = 48;
+        let pool_id_key = key.0.as_slice()[pool_id_idx..(pool_id_idx + 4)].to_vec();
+        let pool_id_id = u32::decode(&mut &pool_id_key[..]);
+        let pool_id = pool_id_id.unwrap();
+        println!("pool_id: {:?}", pool_id);
+
+        let account_idx = 68;
+        let account_key = key.0.as_slice()[account_idx..(account_idx + 32)].to_vec();
+        let account_id = AccountId32::decode(&mut &account_key[..]);
+        let account_id = Account::from(account_id.unwrap());
+        println!("account_id: {:?}", account_id);
+
+        let cid_idx = 116;
+        let cid_key = key.0.as_slice()[cid_idx..].to_vec();
+        let cid_id = String::decode(&mut &cid_key[..]);
+        let cid_id = cid_id.unwrap();
+        println!("cid_id: {:?}", cid_id);
+
+        if let Some(storage_data) = api
+            .storage()
+            .fetch_raw(&key.0, None)
+            .await
+            .map_err(map_subxt_err)?
+        {
+            let value = ManifestStorageDataRuntime::decode(&mut &storage_data[..]);
+            let manifest_value = value.unwrap();
+
+            if let Some(uploader_filter) = req.storer.clone() {
+                if AccountId32::from(
+                    Public::from_str(&account_id.as_str()).map_err(map_account_err)?,
+                ) != AccountId32::from(
+                    Public::from_str(&uploader_filter.as_str()).map_err(map_account_err)?,
+                ) {
+                    meet_requirements = false;
+                }
+            }
+
+            if meet_requirements {
+                result_array.push(ManifestStorageData {
+                    active_cycles: manifest_value.active_cycles,
+                    missed_cycles: manifest_value.missed_cycles,
+                    active_days: manifest_value.active_days,
+                    pool_id: pool_id.into(),
+                    account: account_id,
+                    cid: cid_id.into(),
+                });
+            }
+        }
+    }
+    Ok(HttpResponse::Ok().json(GetAllManifestsStorerDataOutput {
         manifests: result_array,
     }))
 }

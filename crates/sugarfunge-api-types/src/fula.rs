@@ -21,7 +21,7 @@ pub struct ManifestOutput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManifestUpdatedOutput {
-    pub uploader: Account,
+    pub storer: Account,
     pub pool_id: PoolId,
     pub cid: Cid,
     pub active_days: i32,
@@ -91,6 +91,17 @@ pub struct GetAllManifestsInput {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct GetAllManifestsStorerDataInput {
+    pub pool_id: Option<PoolId>,
+    pub storer: Option<Account>,
+    pub cid: Option<Cid>,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetAllManifestsStorerDataOutput {
+    pub manifests: Vec<ManifestStorageData>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GetAllManifestsOutput {
     pub manifests: Vec<Manifest>,
 }
@@ -127,11 +138,14 @@ pub struct ManifestData {
     pub manifest_metadata: serde_json::Value,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ManifestStorageData {
+    pub pool_id: PoolId,
+    pub account: Account,
+    pub cid: Cid,
+    pub active_days: i32,
     pub active_cycles: u16,
     pub missed_cycles: u16,
-    pub active_days: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -140,7 +154,6 @@ pub struct Manifest {
     pub storage: Vec<Account>,
     pub replication_available: ReplicationFactor,
     pub manifest_data: ManifestData,
-    pub manifest_storage_data: ManifestStorageData,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
