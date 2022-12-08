@@ -23,10 +23,7 @@ pub async fn update_manifest(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
 
-    let cid: Vec<u8> = req.manifest_metadata["job"]["uri"]
-        .to_string()
-        .replace("\"", "")
-        .into_bytes();
+    let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
     let cid = BoundedVec(cid);
 
     let api = &data.api;
@@ -465,12 +462,12 @@ pub async fn get_all_manifests_storer_data(
         .fula()
         .manifests_storer_data_root()
         .to_bytes();
-    println!("query_key manifests_root len: {}", query_key.len());
+    // println!("query_key manifests_root len: {}", query_key.len());
 
     if let Some(value) = req.pool_id.clone() {
         let key_value: u32 = value.into();
         StorageMapKey::new(&key_value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
-        println!("query_key pool_id len: {}", query_key.len());
+        // println!("query_key pool_id len: {}", query_key.len());
     }
 
     let keys = api
@@ -479,28 +476,28 @@ pub async fn get_all_manifests_storer_data(
         .await
         .map_err(map_subxt_err)?;
 
-    println!("Obtained keys:");
+    // println!("Obtained keys:");
     for key in keys.iter() {
         let mut meet_requirements = true;
-        println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+        // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
         let pool_id_idx = 48;
         let pool_id_key = key.0.as_slice()[pool_id_idx..(pool_id_idx + 4)].to_vec();
         let pool_id_id = u32::decode(&mut &pool_id_key[..]);
         let pool_id = pool_id_id.unwrap();
-        println!("pool_id: {:?}", pool_id);
+        // println!("pool_id: {:?}", pool_id);
 
         let account_idx = 68;
         let account_key = key.0.as_slice()[account_idx..(account_idx + 32)].to_vec();
         let account_id = AccountId32::decode(&mut &account_key[..]);
         let account_id = Account::from(account_id.unwrap());
-        println!("account_id: {:?}", account_id);
+        // println!("account_id: {:?}", account_id);
 
         let cid_idx = 116;
         let cid_key = key.0.as_slice()[cid_idx..].to_vec();
         let cid_id = String::decode(&mut &cid_key[..]);
         let cid_id = cid_id.unwrap();
-        println!("cid_id: {:?}", cid_id);
+        // println!("cid_id: {:?}", cid_id);
 
         if let Some(storage_data) = api
             .storage()

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateManifestInput {
     pub seed: Seed,
-    pub manifest_metadata: serde_json::Value,
+    pub cid: Cid,
     pub pool_id: PoolId,
     pub active_days: i32,
     pub active_cycles: u16,
