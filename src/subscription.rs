@@ -34,64 +34,66 @@ impl SubcriptionServiceWS {
 
     fn subscribe(&mut self, ctx: &mut <Self as Actor>::Context) {
         let (tx_origin, rx) = channel::unbounded();
+
         let api = self.data.api.clone();
         let tx = tx_origin.clone();
 
         let balances_task = async move {
             // Subscribe to (in this case, finalized) blocks.
-            let mut block_sub = api.blocks().subscribe_finalized().await?;
+            let mut block_sub = api.blocks().subscribe_finalized().await.unwrap();
             while let Some(block) = block_sub.next().await {
-                let block = block?;
-        
+                let block = block.unwrap();        
                 // Ask for the events for this block.
-                let events = block.events().await?;
-        
-                //let block_hash = block.hash();
+                let events = block.events().await.unwrap();
 
-                let mut balances_events = events.find::<(
-                    sugarfunge::balances::events::Deposit,
-                    sugarfunge::balances::events::Transfer,
-                )>();
-
-                /*for event in events.iter() {
-                    let event = event?;
-                    let is_deposit_event = event
-                        .as_event::<sugarfunge::balances::events::Deposit>()?
-                        .is_some();
-                    let pallet = event.pallet_name();
-                    let variant = event.variant_name();
-                    println!(
-                        "    {pallet}::{variant} (is balance transfer? {is_deposit_event})"
-                    );
-                }            */
-
-                
+                for event in events.iter() {
+                    let event = event.unwrap();
+                    
+                    if event.as_event::<sugarfunge::balances::events::Deposit>().unwrap().is_some() == true {
+                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::balances::events::Deposit>().unwrap());
+                        if let Ok(event) = event {
+                            tx.send(event).unwrap();
+                        }
+                    } else if event.as_event::<sugarfunge::balances::events::Transfer>().unwrap().is_some() == true {
+                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::balances::events::Deposit>().unwrap());
+                        if let Ok(event) = event {
+                            tx.send(event).unwrap();
+                        }
+                    } else {
+                        panic!("Invalid event");
+                    }                    
+                }
             }
-            
         }
 
         .into_actor(self);
 
-        /*let api = self.data.api.clone();
-
+        let api = self.data.api.clone();
         let tx = tx_origin.clone();
         
         let asset_task = async move {
-            let mut asset_events = api.events().subscribe().await.unwrap().filter_events::<(
-                sugarfunge::asset::events::Transferred,
-                sugarfunge::asset::events::Mint,
-            )>();
+            let mut block_sub = api.blocks().subscribe_finalized().await.unwrap();
+            while let Some(block) = block_sub.next().await {
+                let block = block.unwrap();        
+                // Ask for the events for this block.
+                let events = block.events().await.unwrap();
 
-            while let Some(event) = asset_events.next().await {
-                if let Ok(event) = event {
-                    let event = match event.event {
-                        (None, Some(event)) => serde_json::to_string_pretty(&event),
-                        (Some(event), None) => serde_json::to_string_pretty(&event),
-                        _ => panic!("Invalid event"),
-                    };
-                    if let Ok(event) = event {
-                        tx.send(event).unwrap();
-                    }
+                for event in events.iter() {
+                    let event = event.unwrap();
+                    
+                    if event.as_event::<sugarfunge::asset::events::Transferred>().unwrap().is_some() == true {
+                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::asset::events::Transferred>().unwrap());
+                        if let Ok(event) = event {
+                            tx.send(event).unwrap();
+                        }
+                    } else if event.as_event::<sugarfunge::asset::events::Mint>().unwrap().is_some() == true {
+                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::asset::events::Mint>().unwrap());
+                        if let Ok(event) = event {
+                            tx.send(event).unwrap();
+                        }
+                    } else {
+                        panic!("Invalid event");
+                    }                    
                 }
             }
         }
@@ -103,38 +105,45 @@ impl SubcriptionServiceWS {
         let tx = tx_origin.clone();
 
         let bag_task = async move {
-            let mut bag_events = api.events().subscribe().await.unwrap().filter_events::<(
-                sugarfunge::bag::events::Created,
-                sugarfunge::bag::events::Deposit,
-            )>();
+            let mut block_sub = api.blocks().subscribe_finalized().await.unwrap();
+            while let Some(block) = block_sub.next().await {
+                let block = block.unwrap();        
+                // Ask for the events for this block.
+                let events = block.events().await.unwrap();
 
-            while let Some(event) = bag_events.next().await {
-                if let Ok(event) = event {
-                    let event = match event.event {
-                        (None, Some(event)) => serde_json::to_string_pretty(&event),
-                        (Some(event), None) => serde_json::to_string_pretty(&event),
-                        _ => panic!("Invalid event"),
-                    };
-                    if let Ok(event) = event {
-                        tx.send(event).unwrap();
-                    }
+                for event in events.iter() {
+                    let event = event.unwrap();
+                    
+                    if event.as_event::<sugarfunge::bag::events::Created>().unwrap().is_some() == true {
+                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::bag::events::Created>().unwrap());
+                        if let Ok(event) = event {
+                            tx.send(event).unwrap();
+                        }
+                    } else if event.as_event::<sugarfunge::bag::events::Deposit>().unwrap().is_some() == true {
+                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::bag::events::Deposit>().unwrap());
+                        if let Ok(event) = event {
+                            tx.send(event).unwrap();
+                        }
+                    } else {
+                        panic!("Invalid event");
+                    }                    
                 }
             }
         }
 
-        .into_actor(self);*/
+        .into_actor(self);
 
         let sub: SpawnHandle = ctx.spawn(balances_task);
 
         self.subs.insert("balances_events".into(), sub);
 
-        /*let sub: SpawnHandle = ctx.spawn(asset_task);
+        let sub: SpawnHandle = ctx.spawn(asset_task);
 
         self.subs.insert("asset_events".into(), sub);
 
         let sub: SpawnHandle = ctx.spawn(bag_task);
 
-        self.subs.insert("bag_events".into(), sub);*/
+        self.subs.insert("bag_events".into(), sub);
 
         ctx.run_interval(HEARTBEAT_INTERVAL, move |_act, ctx| {
             if let Ok(event) = rx.try_recv() {
