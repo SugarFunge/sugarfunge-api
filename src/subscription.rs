@@ -59,9 +59,7 @@ impl SubcriptionServiceWS {
                         if let Ok(event) = event {
                             tx.send(event).unwrap();
                         }
-                    } else {
-                        panic!("Invalid event");
-                    }                    
+                    }                 
                 }
             }
         }
@@ -91,9 +89,7 @@ impl SubcriptionServiceWS {
                         if let Ok(event) = event {
                             tx.send(event).unwrap();
                         }
-                    } else {
-                        panic!("Invalid event");
-                    }                    
+                    }              
                 }
             }
         }
@@ -124,9 +120,7 @@ impl SubcriptionServiceWS {
                         if let Ok(event) = event {
                             tx.send(event).unwrap();
                         }
-                    } else {
-                        panic!("Invalid event");
-                    }                    
+                    }                   
                 }
             }
         }
