@@ -52,12 +52,14 @@ impl SubcriptionServiceWS {
                     if event.as_event::<sugarfunge::balances::events::Deposit>().unwrap().is_some() == true {
                         let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::balances::events::Deposit>().unwrap());
                         if let Ok(event) = event {
-                            tx.send(event).unwrap();
+                            let event_msg = String::from("Balance Deposit: ") + &event;
+                            tx.send(event_msg).unwrap();
                         }
                     } else if event.as_event::<sugarfunge::balances::events::Transfer>().unwrap().is_some() == true {
-                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::balances::events::Deposit>().unwrap());
+                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::balances::events::Transfer>().unwrap());
                         if let Ok(event) = event {
-                            tx.send(event).unwrap();
+                            let event_msg = String::from("Balance Transfer: ") + &event;
+                            tx.send(event_msg).unwrap();
                         }
                     }                 
                 }
@@ -82,12 +84,14 @@ impl SubcriptionServiceWS {
                     if event.as_event::<sugarfunge::asset::events::Transferred>().unwrap().is_some() == true {
                         let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::asset::events::Transferred>().unwrap());
                         if let Ok(event) = event {
-                            tx.send(event).unwrap();
+                            let event_msg = String::from("Asset Transferred: ") + &event;
+                            tx.send(event_msg).unwrap();
                         }
                     } else if event.as_event::<sugarfunge::asset::events::Mint>().unwrap().is_some() == true {
                         let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::asset::events::Mint>().unwrap());
                         if let Ok(event) = event {
-                            tx.send(event).unwrap();
+                            let event_msg = String::from("Asset Minted: ") + &event;
+                            tx.send(event_msg).unwrap();
                         }
                     }              
                 }
@@ -113,12 +117,14 @@ impl SubcriptionServiceWS {
                     if event.as_event::<sugarfunge::bag::events::Created>().unwrap().is_some() == true {
                         let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::bag::events::Created>().unwrap());
                         if let Ok(event) = event {
-                            tx.send(event).unwrap();
+                            let event_msg = String::from("Bag Created: ") + &event;
+                            tx.send(event_msg).unwrap();
                         }
                     } else if event.as_event::<sugarfunge::bag::events::Deposit>().unwrap().is_some() == true {
                         let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::bag::events::Deposit>().unwrap());
                         if let Ok(event) = event {
-                            tx.send(event).unwrap();
+                            let event_msg = String::from("Bag Deposit: ") + &event;
+                            tx.send(event_msg).unwrap();
                         }
                     }                   
                 }
