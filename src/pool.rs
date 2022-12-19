@@ -12,9 +12,9 @@ use subxt::tx::PairSigner;
 use sugarfunge_api_types::pool::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::functionland_pool::Pool as PoolRuntime;
-use sugarfunge_api_types::sugarfunge::runtime_types::functionland_pool::PoolRequest as PoolRequestRuntime;
-use sugarfunge_api_types::sugarfunge::runtime_types::functionland_pool::User as UserRuntime;
+use sugarfunge_api_types::sugarfunge::runtime_types::fula_pool::Pool as PoolRuntime;
+use sugarfunge_api_types::sugarfunge::runtime_types::fula_pool::PoolRequest as PoolRequestRuntime;
+use sugarfunge_api_types::sugarfunge::runtime_types::fula_pool::User as UserRuntime;
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
 // use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 
