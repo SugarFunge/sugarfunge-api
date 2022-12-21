@@ -12,24 +12,18 @@ pub enum AmountOp {
     GreaterEqualThan,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-pub enum AmountOpInput {
-    Transfer,
-    Mint,
-    Burn,
-    HasEqual,
-    HasLessThan,
-    HasLessEqualThan,
-    HasGreaterThan,
-    HasGreaterEqualThan,
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum AMM {
+    Constant,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum RateAction {
-    Transfer,
-    Mint,
-    Burn,
-    Has(AmountOp),
+    Transfer(Amount),
+    MarketTransfer(AMM, ClassId, AssetId),
+    Mint(Amount),
+    Burn(Amount),
+    Has(AmountOp, Amount),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -39,28 +33,11 @@ pub enum RateAccount {
     Buyer,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-pub struct AssetRateInput {
-    pub class_id: ClassId,
-    pub asset_id: AssetId,
-    pub action: AmountOpInput,
-    pub amount: i128,
-    pub from: Account,
-    pub to: Account,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct RatesInput {
-    pub rates: Vec<AssetRateInput>,
-    pub metadata: serde_json::Value,
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AssetRate {
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub action: RateAction,
-    pub amount: i128,
     pub from: RateAccount,
     pub to: RateAccount,
 }
@@ -68,26 +45,13 @@ pub struct AssetRate {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RateBalance {
     pub rate: AssetRate,
-    pub balance: i128,
+    pub balance: Amount,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Rates {
     pub rates: Vec<AssetRate>,
     pub metadata: serde_json::Value,
-}
-
-impl Into<AssetRate> for AssetRateInput {
-    fn into(self) -> AssetRate {
-        AssetRate {
-            class_id: self.class_id,
-            asset_id: self.asset_id,
-            action: self.action.into(),
-            amount: self.amount,
-            from: self.from.into(),
-            to: self.to.into(),
-        }
-    }
 }
 
 impl Into<sugarfunge_market::AmountOp> for AmountOp {
@@ -114,20 +78,36 @@ impl Into<AmountOp> for sugarfunge_market::AmountOp {
     }
 }
 
-impl Into<sugarfunge_market::RateAccount<subxt::sp_runtime::AccountId32>> for RateAccount {
-    fn into(self) -> sugarfunge_market::RateAccount<subxt::sp_runtime::AccountId32> {
+impl Into<sugarfunge_market::AMM> for AMM {
+    fn into(self) -> sugarfunge_market::AMM {
+        match self {
+            AMM::Constant => sugarfunge_market::AMM::Constant,
+        }
+    }
+}
+
+impl Into<AMM> for sugarfunge_market::AMM {
+    fn into(self) -> AMM {
+        match self {
+            sugarfunge_market::AMM::Constant => AMM::Constant,
+        }
+    }
+}
+
+impl Into<sugarfunge_market::RateAccount<subxt::ext::sp_runtime::AccountId32>> for RateAccount {
+    fn into(self) -> sugarfunge_market::RateAccount<subxt::ext::sp_runtime::AccountId32> {
         match self {
             RateAccount::Buyer => sugarfunge_market::RateAccount::Buyer,
             RateAccount::Market => sugarfunge_market::RateAccount::Market,
             RateAccount::Account(account) => {
-                let account = sp_core::crypto::AccountId32::try_from(&account).unwrap();
+                let account = subxt::ext::sp_runtime::AccountId32::try_from(&account).unwrap();
                 sugarfunge_market::RateAccount::Account(account)
             }
         }
     }
 }
 
-impl Into<RateAccount> for sugarfunge_market::RateAccount<subxt::sp_runtime::AccountId32> {
+impl Into<RateAccount> for sugarfunge_market::RateAccount<subxt::ext::sp_runtime::AccountId32> {
     fn into(self) -> RateAccount {
         match self {
             sugarfunge_market::RateAccount::Buyer => RateAccount::Buyer,
@@ -140,35 +120,55 @@ impl Into<RateAccount> for sugarfunge_market::RateAccount<subxt::sp_runtime::Acc
     }
 }
 
-impl Into<sugarfunge_market::RateAction> for RateAction {
-    fn into(self) -> sugarfunge_market::RateAction {
+impl Into<sugarfunge_market::RateAction<u64, u64>> for RateAction {
+    fn into(self) -> sugarfunge_market::RateAction<u64, u64> {
         match self {
-            RateAction::Transfer => sugarfunge_market::RateAction::Transfer,
-            RateAction::Mint => sugarfunge_market::RateAction::Mint,
-            RateAction::Burn => sugarfunge_market::RateAction::Burn,
-            RateAction::Has(op) => sugarfunge_market::RateAction::Has(op.into()),
+            RateAction::Transfer(amount) => {
+                sugarfunge_market::RateAction::Transfer(i128::from(amount))
+            }
+            RateAction::Mint(amount) => sugarfunge_market::RateAction::Mint(i128::from(amount)),
+            RateAction::Burn(amount) => sugarfunge_market::RateAction::Burn(i128::from(amount)),
+            RateAction::Has(op, amount) => {
+                sugarfunge_market::RateAction::Has(op.into(), i128::from(amount))
+            }
+            RateAction::MarketTransfer(amm, class_id, asset_id) => {
+                sugarfunge_market::RateAction::MarketTransfer(
+                    amm.into(),
+                    class_id.into(),
+                    asset_id.into(),
+                )
+            }
         }
     }
 }
 
-impl Into<RateAction> for sugarfunge_market::RateAction {
+impl Into<RateAction> for sugarfunge_market::RateAction<u64, u64> {
     fn into(self) -> RateAction {
         match self {
-            sugarfunge_market::RateAction::Transfer => RateAction::Transfer,
-            sugarfunge_market::RateAction::Mint => RateAction::Mint,
-            sugarfunge_market::RateAction::Burn => RateAction::Burn,
-            sugarfunge_market::RateAction::Has(op) => RateAction::Has(op.into()),
+            sugarfunge_market::RateAction::Transfer(amount) => {
+                RateAction::Transfer(Amount::from(amount))
+            }
+            sugarfunge_market::RateAction::Mint(amount) => RateAction::Mint(Amount::from(amount)),
+            sugarfunge_market::RateAction::Burn(amount) => RateAction::Burn(Amount::from(amount)),
+            sugarfunge_market::RateAction::Has(op, amount) => {
+                RateAction::Has(op.into(), Amount::from(amount))
+            }
+            sugarfunge_market::RateAction::MarketTransfer(amm, class_id, asset_id) => {
+                RateAction::MarketTransfer(amm.into(), class_id.into(), asset_id.into())
+            }
+            sugarfunge_market::RateAction::__Ignore(_) => RateAction::Transfer(Amount::from(0)),
         }
     }
 }
 
-impl Into<sugarfunge_market::AssetRate<subxt::sp_runtime::AccountId32, u64, u64>> for AssetRate {
-    fn into(self) -> sugarfunge_market::AssetRate<subxt::sp_runtime::AccountId32, u64, u64> {
-        sugarfunge_market::AssetRate::<subxt::sp_runtime::AccountId32, u64, u64> {
+impl Into<sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64>>
+    for AssetRate
+{
+    fn into(self) -> sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64> {
+        sugarfunge_market::AssetRate::<subxt::ext::sp_runtime::AccountId32, u64, u64> {
             class_id: self.class_id.into(),
             asset_id: self.asset_id.into(),
             action: self.action.into(),
-            amount: self.amount,
             from: self.from.into(),
             to: self.to.into(),
             __subxt_unused_type_params: Default::default(),
@@ -176,13 +176,14 @@ impl Into<sugarfunge_market::AssetRate<subxt::sp_runtime::AccountId32, u64, u64>
     }
 }
 
-impl Into<AssetRate> for sugarfunge_market::AssetRate<subxt::sp_runtime::AccountId32, u64, u64> {
+impl Into<AssetRate>
+    for sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64>
+{
     fn into(self) -> AssetRate {
         AssetRate {
             class_id: self.class_id.into(),
             asset_id: self.asset_id.into(),
             action: self.action.into(),
-            amount: self.amount,
             from: self.from.into(),
             to: self.to.into(),
         }
@@ -190,27 +191,12 @@ impl Into<AssetRate> for sugarfunge_market::AssetRate<subxt::sp_runtime::Account
 }
 
 impl Into<RateBalance>
-    for sugarfunge_market::RateBalance<subxt::sp_runtime::AccountId32, u64, u64>
+    for sugarfunge_market::RateBalance<subxt::ext::sp_runtime::AccountId32, u64, u64>
 {
     fn into(self) -> RateBalance {
         RateBalance {
             rate: self.rate.into(),
-            balance: self.balance,
-        }
-    }
-}
-
-impl Into<RateAction> for AmountOpInput {
-    fn into(self) -> RateAction {
-        match self {
-            AmountOpInput::Transfer => RateAction::Transfer,
-            AmountOpInput::Mint => RateAction::Mint,
-            AmountOpInput::Burn => RateAction::Burn,
-            AmountOpInput::HasEqual => RateAction::Has(AmountOp::Equal),
-            AmountOpInput::HasLessThan => RateAction::Has(AmountOp::LessThan),
-            AmountOpInput::HasLessEqualThan => RateAction::Has(AmountOp::LessEqualThan),
-            AmountOpInput::HasGreaterThan => RateAction::Has(AmountOp::GreaterThan),
-            AmountOpInput::HasGreaterEqualThan => RateAction::Has(AmountOp::GreaterEqualThan),
+            balance: Amount::from(self.balance),
         }
     }
 }
@@ -224,63 +210,63 @@ impl Into<RateAccount> for Account {
         }
     }
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketInput {
     pub seed: Seed,
     pub market_id: MarketId,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketOutput {
     pub market_id: MarketId,
     pub who: Account,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketRateInput {
     pub seed: Seed,
     pub market_id: MarketId,
-    pub market_rate_id: u64,
-    pub rates: RatesInput,
+    pub market_rate_id: MarketId,
+    pub rates: Rates,
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMarketRateOutput {
     pub market_id: MarketId,
-    pub market_rate_id: u64,
+    pub market_rate_id: MarketId,
     pub who: Account,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DepositAssetsInput {
     pub seed: Seed,
     pub market_id: MarketId,
-    pub market_rate_id: u64,
+    pub market_rate_id: MarketId,
     pub amount: Balance,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DepositAssetsOutput {
     pub who: Account,
     pub market_id: MarketId,
-    pub market_rate_id: u64,
+    pub market_rate_id: MarketId,
     pub amount: Balance,
     pub balances: Vec<RateBalance>,
     pub success: bool,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ExchangeAssetsInput {
     pub seed: Seed,
     pub market_id: MarketId,
-    pub market_rate_id: u64,
+    pub market_rate_id: MarketId,
     pub amount: Balance,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ExchangeAssetsOutput {
     pub buyer: Account,
     pub market_id: MarketId,
-    pub market_rate_id: u64,
+    pub market_rate_id: MarketId,
     pub amount: Balance,
     pub balances: Vec<RateBalance>,
     pub success: bool,

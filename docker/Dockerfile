@@ -1,9 +1,10 @@
-# Based on https://github.com/paritytech/polkadot/blob/master/scripts/dockerfiles/polkadot/polkadot_builder.Dockerfile
+FROM rustlang/rust:nightly AS builder
 
-FROM paritytech/ci-linux:production AS builder
 WORKDIR /sugarfunge-api
+
 COPY . /sugarfunge-api
-RUN cargo +nightly build --locked --release
+
+RUN cargo build --locked --release
 
 FROM gcr.io/distroless/cc-debian11
 

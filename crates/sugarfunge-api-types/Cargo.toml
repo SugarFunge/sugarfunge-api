@@ -7,17 +7,16 @@ edition = "2021"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-scale-info = { version = "1.0.0", default-features = false, features = [] }
-codec = { package = "parity-scale-codec", version = "2", default-features = false, features = ["derive", "full"] }
+serde_json = "1.0.87"
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive", "full", "bit-vec"] }
+scale-info = { version = "2.0.0", features = ["bit-vec"] }
 
 [dependencies.subxt]
-# path = "../subxt"
 git = "https://github.com/SugarFunge/subxt.git"
-rev = "15b4f70c40d72ceb259a63bf8c62fb3022e29a86"
+branch = "feature/polkadot-v0.9.30"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.17"
+branch = "polkadot-v0.9.30"
 package = "sp-core"
 features = ["full_crypto"]

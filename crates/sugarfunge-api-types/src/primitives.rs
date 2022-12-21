@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+use subxt::ext::sp_runtime::AccountId32;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Seed(String);
 
 impl From<String> for Seed {
@@ -23,6 +24,69 @@ impl Seed {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PeerId(String);
+
+impl From<String> for PeerId {
+    fn from(peer_id: String) -> PeerId {
+        PeerId(peer_id.clone())
+    }
+}
+
+impl From<&PeerId> for String {
+    fn from(peer_id: &PeerId) -> String {
+        peer_id.0.clone()
+    }
+}
+
+impl PeerId {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Name(String);
+
+impl From<String> for Name {
+    fn from(name: String) -> Name {
+        Name(name.clone())
+    }
+}
+
+impl From<&Name> for String {
+    fn from(name: &Name) -> String {
+        name.0.clone()
+    }
+}
+
+impl Name {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Cid(String);
+
+impl From<String> for Cid {
+    fn from(cid: String) -> Cid {
+        Cid(cid.clone())
+    }
+}
+
+impl From<&Cid> for String {
+    fn from(cid: &Cid) -> String {
+        cid.0.clone()
+    }
+}
+
+impl Cid {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Account(String);
 
 impl From<String> for Account {
@@ -33,6 +97,12 @@ impl From<String> for Account {
 
 impl From<sp_core::crypto::AccountId32> for Account {
     fn from(account: sp_core::crypto::AccountId32) -> Account {
+        Account(account.to_string())
+    }
+}
+
+impl From<subxt::ext::sp_runtime::AccountId32> for Account {
+    fn from(account: subxt::ext::sp_runtime::AccountId32) -> Account {
         Account(account.to_string())
     }
 }
@@ -51,6 +121,20 @@ impl TryFrom<&Account> for sp_core::crypto::AccountId32 {
     }
 }
 
+impl TryFrom<&Account> for subxt::ext::sp_runtime::AccountId32 {
+    type Error = subxt::ext::sp_core::crypto::PublicError;
+
+    fn try_from(
+        account: &Account,
+    ) -> Result<subxt::ext::sp_runtime::AccountId32, subxt::ext::sp_core::crypto::PublicError> {
+        let account = subxt::ext::sp_core::sr25519::Public::from_str(account.as_str());
+        match account {
+            Ok(account) => Ok(subxt::ext::sp_runtime::AccountId32::from(account)),
+            Err(err) => Err(err),
+        }
+    }
+}
+
 impl From<&Account> for String {
     fn from(account: &Account) -> String {
         account.0.clone()
@@ -63,7 +147,7 @@ impl Account {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct MarketId(u64);
 
 impl From<u64> for MarketId {
@@ -74,6 +158,36 @@ impl From<u64> for MarketId {
 
 impl From<MarketId> for u64 {
     fn from(id: MarketId) -> u64 {
+        id.0
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct PoolId(u32);
+
+impl From<u32> for PoolId {
+    fn from(id: u32) -> PoolId {
+        PoolId(id)
+    }
+}
+
+impl From<PoolId> for u32 {
+    fn from(id: PoolId) -> u32 {
+        id.0
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct ReplicationFactor(u16);
+
+impl From<u16> for ReplicationFactor {
+    fn from(id: u16) -> ReplicationFactor {
+        ReplicationFactor(id)
+    }
+}
+
+impl From<ReplicationFactor> for u16 {
+    fn from(id: ReplicationFactor) -> u16 {
         id.0
     }
 }
@@ -121,4 +235,149 @@ impl From<Balance> for u128 {
     fn from(id: Balance) -> u128 {
         id.0
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct Amount(i128);
+
+impl From<i128> for Amount {
+    fn from(id: i128) -> Amount {
+        Amount(id)
+    }
+}
+
+impl From<Amount> for i128 {
+    fn from(id: Amount) -> i128 {
+        id.0
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct BundleId(String);
+
+impl From<String> for BundleId {
+    fn from(bundleid: String) -> BundleId {
+        BundleId(bundleid.clone())
+    }
+}
+
+impl From<&BundleId> for String {
+    fn from(bundleid: &BundleId) -> String {
+        bundleid.0.clone()
+    }
+}
+
+impl BundleId {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl FromIterator<char> for BundleId {
+    fn from_iter<I: IntoIterator<Item = char>>(iter: I) -> BundleId {
+        let mut buf = String::new();
+        buf.extend(iter);
+        BundleId::from(buf)
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ValidatorId(String);
+
+impl From<String> for ValidatorId {
+    fn from(validatorid: String) -> ValidatorId {
+        ValidatorId(validatorid.clone())
+    }
+}
+
+impl From<&ValidatorId> for String {
+    fn from(validatorid: &ValidatorId) -> String {
+        validatorid.0.clone()
+    }
+}
+
+impl ValidatorId {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+pub fn transform_vec_account_to_string(in_vec: Vec<Account>) -> Vec<String> {
+    in_vec
+        .into_iter()
+        .map(|account| String::from(&account))
+        .collect()
+}
+
+pub fn transform_vec_string_to_account(in_vec: Vec<String>) -> Vec<Account> {
+    in_vec
+        .into_iter()
+        .map(|account| Account::from(account))
+        .collect()
+}
+
+pub fn transform_vec_balance_to_u128(in_vec: &Vec<Balance>) -> Vec<u128> {
+    in_vec
+        .into_iter()
+        .map(|balance| u128::from(*balance))
+        .collect()
+}
+
+pub fn transform_vec_classid_to_u64(in_vec: Vec<ClassId>) -> Vec<u64> {
+    in_vec
+        .into_iter()
+        .map(|classid| u64::from(classid))
+        .collect()
+}
+
+pub fn transform_vec_assetid_to_u64(in_vec: Vec<AssetId>) -> Vec<u64> {
+    in_vec
+        .into_iter()
+        .map(|assetid| u64::from(assetid))
+        .collect()
+}
+
+pub fn transform_doublevec_assetid_to_u64(in_vec: Vec<Vec<AssetId>>) -> Vec<Vec<u64>> {
+    in_vec
+        .into_iter()
+        .map(|assetid| {
+            assetid
+                .into_iter()
+                .map(|assetid| u64::from(assetid))
+                .collect()
+        })
+        .collect()
+}
+
+pub fn transform_doublevec_balance_to_u128(in_vec: Vec<Vec<Balance>>) -> Vec<Vec<u128>> {
+    in_vec
+        .into_iter()
+        .map(|balance| {
+            balance
+                .into_iter()
+                .map(|balance| u128::from(balance))
+                .collect()
+        })
+        .collect()
+}
+
+pub fn transform_option_account_value(value: Option<AccountId32>) -> Option<Account> {
+    if let Some(value) = value {
+        return Some(value.into());
+    }
+    return None::<Account>;
+}
+
+pub fn transform_option_pool_value(value: Option<u32>) -> Option<PoolId> {
+    if let Some(value) = value {
+        return Some(value.into());
+    }
+    return None::<PoolId>;
+}
+
+pub fn transform_storage_output(storers: Vec<AccountId32>) -> Vec<String> {
+    storers
+        .into_iter()
+        .map(|current_storer| current_storer.to_string())
+        .collect()
 }
