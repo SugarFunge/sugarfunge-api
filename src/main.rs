@@ -148,7 +148,7 @@ async fn main() -> std::io::Result<()> {
             .route("fula/pool/all", web::get().to(pool::get_all_pools))
             .route(
                 "fula/pool/poolrequests",
-                web::get().to(pool::get_all_pool_requests),
+                web::post().to(pool::get_all_pool_requests),
             )
             .route("fula/pool/users", web::post().to(pool::get_all_pool_users))
     })

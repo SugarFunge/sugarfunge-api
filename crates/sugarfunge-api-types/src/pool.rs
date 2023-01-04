@@ -98,6 +98,12 @@ pub struct GetAllPoolUsersOutput {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct GetAllPoolRequestInput {
+    pub pool_id: Option<PoolId>,
+    pub account: Option<Account>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PoolRequestData {
     pub pool_id: PoolId,
     pub account: Account,

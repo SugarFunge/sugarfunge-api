@@ -7,7 +7,7 @@ use codec::Decode;
 use serde_json::json;
 use subxt::ext::sp_core::sr25519::Public;
 use subxt::ext::sp_runtime::AccountId32;
-// use subxt::storage::address::{StorageHasher, StorageMapKey};
+use subxt::storage::address::{StorageHasher, StorageMapKey};
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::pool::*;
 use sugarfunge_api_types::primitives::*;
@@ -257,12 +257,19 @@ pub async fn get_all_pools(data: web::Data<AppState>) -> error::Result<HttpRespo
     }))
 }
 
-pub async fn get_all_pool_requests(data: web::Data<AppState>) -> error::Result<HttpResponse> {
+pub async fn get_all_pool_requests(data: web::Data<AppState>, 
+    req: web::Json<GetAllPoolRequestInput>,) -> error::Result<HttpResponse> {
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().pool().pool_requests_root().to_bytes();
+    let mut query_key = sugarfunge::storage().pool().pool_requests_root().to_bytes();
     // println!("query_key pool_root len: {}", query_key.len());
+
+    if let Some(value) = req.pool_id.clone() {
+        let key_value: u32 = value.into();
+        StorageMapKey::new(&key_value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        // println!("query_key pool_id len: {}", query_key.len());
+    }
 
     let keys = api
         .storage()
@@ -272,6 +279,7 @@ pub async fn get_all_pool_requests(data: web::Data<AppState>) -> error::Result<H
 
     // println!("Obtained keys:");
     for key in keys.iter() {
+        let mut meet_requirements = true;
         // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
         let pool_id_idx = 48;
@@ -304,15 +312,27 @@ pub async fn get_all_pool_requests(data: web::Data<AppState>) -> error::Result<H
                 voters_vec.push(current_account);
             }
 
-            result_array.push(PoolRequestData {
-                pool_id: pool_id.into(),
-                account: account_id,
-                voted: voters_vec,
-                positive_votes: poolrequest_value.positive_votes,
-                peer_id: String::from_utf8(poolrequest_value.peer_id.0)
-                    .unwrap_or_default()
-                    .into(),
-            });
+            if let Some(account_filter) = req.account.clone() {
+                if AccountId32::from(
+                    Public::from_str(&account_id.as_str()).map_err(map_account_err)?,
+                ) != AccountId32::from(
+                    Public::from_str(&account_filter.as_str()).map_err(map_account_err)?,
+                ) {
+                    meet_requirements = false;
+                }
+            }
+
+            if meet_requirements {
+                result_array.push(PoolRequestData {
+                    pool_id: pool_id.into(),
+                    account: account_id,
+                    voted: voters_vec,
+                    positive_votes: poolrequest_value.positive_votes,
+                    peer_id: String::from_utf8(poolrequest_value.peer_id.0)
+                        .unwrap_or_default()
+                        .into(),
+                }); 
+            }
         }
     }
     Ok(HttpResponse::Ok().json(GetAllPoolRequestsOutput {
