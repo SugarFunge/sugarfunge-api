@@ -27,12 +27,16 @@ pub async fn create_pool(
 
     let pool_name = String::from(&req.pool_name).into_bytes();
 
+    let region = &req.region;
+    let region: Region = region.into();
+    let region: Vec<u8> = region.into();
+
     let peer_id = String::from(&req.peer_id).into_bytes();
     let peer_id = BoundedVec(peer_id);
 
     let api = &data.api;
 
-    let call = sugarfunge::tx().pool().create(pool_name, peer_id);
+    let call = sugarfunge::tx().pool().create(pool_name, region, peer_id);
 
     let result = api
         .tx()
@@ -200,7 +204,10 @@ pub async fn vote(
     }
 }
 
-pub async fn get_all_pools(data: web::Data<AppState>) -> error::Result<HttpResponse> {
+pub async fn get_all_pools(
+    data: web::Data<AppState>,
+    req: web::Json<GetAllPoolInput>,
+) -> error::Result<HttpResponse> {
     let api = &data.api;
     let mut result_array = Vec::new();
 
@@ -215,6 +222,7 @@ pub async fn get_all_pools(data: web::Data<AppState>) -> error::Result<HttpRespo
 
     // println!("Obtained keys:");
     for key in keys.iter() {
+        let mut meet_requirements = true;
         // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
         let pool_id_idx = 48;
@@ -241,15 +249,26 @@ pub async fn get_all_pools(data: web::Data<AppState>) -> error::Result<HttpRespo
                 storage_vec.push(current_account);
             }
 
-            result_array.push(PoolData {
-                pool_id: pool_id.into(),
-                pool_name: String::from_utf8(pool_value.name.0)
-                    .unwrap_or_default()
-                    .into(),
-                owner: transform_option_account_value(pool_value.owner),
-                parent: transform_option_pool_value(pool_value.parent),
-                participants: storage_vec,
-            });
+            let pool_region = String::from_utf8(pool_value.region.0).unwrap_or_default();
+
+            if let Some(region) = &req.region {
+                if *region != pool_region {
+                    meet_requirements = false;
+                }
+            }
+
+            if meet_requirements {
+                result_array.push(PoolData {
+                    pool_id: pool_id.into(),
+                    pool_name: String::from_utf8(pool_value.name.0)
+                        .unwrap_or_default()
+                        .into(),
+                    region: pool_region,
+                    owner: transform_option_account_value(pool_value.owner),
+                    parent: transform_option_pool_value(pool_value.parent),
+                    participants: storage_vec,
+                });
+            }
         }
     }
     Ok(HttpResponse::Ok().json(GetAllPoolsOutput {
@@ -257,8 +276,10 @@ pub async fn get_all_pools(data: web::Data<AppState>) -> error::Result<HttpRespo
     }))
 }
 
-pub async fn get_all_pool_requests(data: web::Data<AppState>, 
-    req: web::Json<GetAllPoolRequestInput>,) -> error::Result<HttpResponse> {
+pub async fn get_all_pool_requests(
+    data: web::Data<AppState>,
+    req: web::Json<GetAllPoolRequestInput>,
+) -> error::Result<HttpResponse> {
     let api = &data.api;
     let mut result_array = Vec::new();
 
@@ -331,7 +352,7 @@ pub async fn get_all_pool_requests(data: web::Data<AppState>,
                     peer_id: String::from_utf8(poolrequest_value.peer_id.0)
                         .unwrap_or_default()
                         .into(),
-                }); 
+                });
             }
         }
     }

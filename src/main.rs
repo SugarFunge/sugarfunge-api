@@ -145,7 +145,7 @@ async fn main() -> std::io::Result<()> {
                 web::post().to(pool::cancel_join_pool),
             )
             .route("fula/pool/vote", web::post().to(pool::vote))
-            .route("fula/pool/all", web::get().to(pool::get_all_pools))
+            .route("fula/pool", web::post().to(pool::get_all_pools))
             .route(
                 "fula/pool/poolrequests",
                 web::post().to(pool::get_all_pool_requests),
