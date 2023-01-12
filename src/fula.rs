@@ -1,3 +1,4 @@
+use crate::account;
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
@@ -67,7 +68,7 @@ pub async fn upload_manifest(
     data: web::Data<AppState>,
     req: web::Json<UploadManifestInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.seed)?;
+    let pair = get_pair_from_seed(&req.seed.clone())?;
     let signer = PairSigner::new(pair);
 
     let cid: Vec<u8> = req.manifest_metadata["job"]["uri"]
@@ -98,6 +99,9 @@ pub async fn upload_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::ManifestOutput>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(ManifestOutput {
             uploader: event.uploader.into(),
@@ -140,6 +144,9 @@ pub async fn storage_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::StorageManifestOutput>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(StorageManifestOutput {
             uploader: event.uploader.into(),
@@ -180,6 +187,9 @@ pub async fn remove_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::ManifestRemoved>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveManifestOutput {
             uploader: event.uploader.into(),
@@ -222,6 +232,9 @@ pub async fn remove_storer(
     let result = result
         .find_first::<sugarfunge::fula::events::RemoveStorerOutput>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveStorerOutput {
             uploader: event.uploader.into(),
@@ -265,6 +278,9 @@ pub async fn remove_stored_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::RemoveStorerOutput>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveStoringManifestOutput {
             uploader: event.uploader.into(),

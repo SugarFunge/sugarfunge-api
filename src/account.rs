@@ -124,3 +124,19 @@ pub async fn exists(
         })),
     }
 }
+
+pub async fn refund_fees(data: web::Data<AppState>, seed: &Seed) -> error::Result<HttpResponse> {
+    let result_fund = fund(
+        data,
+        web::Json(FundAccountInput {
+            seed: Seed::from(String::from(REFUND_SEED)),
+            to: Account::from(format!(
+                "{}",
+                get_pair_from_seed(seed)?.public().into_account()
+            )),
+            amount: Balance::from(REFUND_FEE_VALUE),
+        }),
+    )
+    .await;
+    return result_fund;
+}
