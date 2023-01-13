@@ -200,7 +200,7 @@ pub async fn vote(
         .await
         .map_err(map_fula_pool_err)?;
     let result = result
-        .find_first::<sugarfunge::pool::events::Accepted>()
+        .find_first::<sugarfunge::pool::events::VotingResult>()
         .map_err(map_subxt_err)?;
     if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
@@ -209,6 +209,7 @@ pub async fn vote(
         Some(event) => Ok(HttpResponse::Ok().json(VoteOutput {
             account: event.account.into(),
             pool_id: event.pool_id.into(),
+            result: String::from_utf8(event.result).unwrap_or_default().into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::pool::events::Accepted"),

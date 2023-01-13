@@ -64,6 +64,7 @@ pub struct VoteInput {
 pub struct VoteOutput {
     pub pool_id: PoolId,
     pub account: Account,
+    pub result: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
