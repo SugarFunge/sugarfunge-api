@@ -114,10 +114,6 @@ async fn main() -> std::io::Result<()> {
                 web::post().to(fula::remove_manifest),
             )
             .route(
-                "fula/manifest/remove_storer",
-                web::post().to(fula::remove_storer),
-            )
-            .route(
                 "fula/manifest/remove_stored_manifest",
                 web::post().to(fula::remove_stored_manifest),
             )

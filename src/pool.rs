@@ -278,7 +278,7 @@ pub async fn get_all_pools(
                         .unwrap_or_default()
                         .into(),
                     region: pool_region,
-                    owner: transform_option_account_value(pool_value.owner),
+                    creator: transform_option_account_value(pool_value.owner),
                     parent: transform_option_pool_value(pool_value.parent),
                     participants: storage_vec,
                 });

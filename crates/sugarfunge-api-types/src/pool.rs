@@ -70,7 +70,7 @@ pub struct VoteOutput {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PoolData {
     pub pool_id: PoolId,
-    pub owner: Option<Account>,
+    pub creator: Option<Account>,
     pub pool_name: Name,
     pub region: String,
     pub parent: Option<PoolId>,
