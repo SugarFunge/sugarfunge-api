@@ -125,13 +125,12 @@ pub async fn storage_manifest(
     let signer = PairSigner::new(pair);
     let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
     let cid = BoundedVec(cid);
-    let account_uploader = AccountId32::try_from(&req.uploader).map_err(map_account_err)?;
 
     let api = &data.api;
 
     let call = sugarfunge::tx()
         .fula()
-        .storage_manifest(account_uploader, cid, req.pool_id.into());
+        .storage_manifest(cid, req.pool_id.into());
 
     let result = api
         .tx()
@@ -147,11 +146,10 @@ pub async fn storage_manifest(
     if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
-    match result {
+    match result {        
         Some(event) => Ok(HttpResponse::Ok().json(StorageManifestOutput {
-            uploader: event.uploader.into(),
-            storage: event.storage.into(),
-            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
+            storer: event.storer.into(),
+            cid: transform_vec_string_to_cid(transform_vec_u8_to_string(event.cid)),
             pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -159,6 +157,20 @@ pub async fn storage_manifest(
             description: format!(""),
         })),
     }
+}
+
+pub fn transform_vec_u8_to_string(in_vec: Vec<u8>) -> Vec<String> {
+    in_vec
+        .into_iter()
+        .map(|cid| cid.to_string())
+        .collect()
+}
+
+pub fn transform_vec_string_to_cid(in_vec: Vec<String>) -> Vec<Cid> {
+    in_vec
+        .into_iter()
+        .map(|cid| Cid::from(cid))
+        .collect()
 }
 
 pub async fn remove_manifest(
@@ -193,7 +205,7 @@ pub async fn remove_manifest(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveManifestOutput {
             uploader: event.uploader.into(),
-            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
+            cid: transform_vec_string_to_cid(transform_vec_u8_to_string(event.cid)),
             pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -203,51 +215,51 @@ pub async fn remove_manifest(
     }
 }
 
-pub async fn remove_storer(
-    data: web::Data<AppState>,
-    req: web::Json<RemoveStorerInput>,
-) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.seed)?;
-    let signer = PairSigner::new(pair);
-    let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
-    // let cid: Vec<u8> = serde_json::to_vec(&req.cid.clone()).unwrap_or_default();
-    let cid = BoundedVec(cid);
-    let storage = Public::from_str(&req.storage.as_str()).map_err(map_account_err)?;
-    let storage = AccountId32::from(storage);
+// pub async fn remove_storer(
+//     data: web::Data<AppState>,
+//     req: web::Json<RemoveStorerInput>,
+// ) -> error::Result<HttpResponse> {
+//     let pair = get_pair_from_seed(&req.seed)?;
+//     let signer = PairSigner::new(pair);
+//     let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
+//     // let cid: Vec<u8> = serde_json::to_vec(&req.cid.clone()).unwrap_or_default();
+//     let cid = BoundedVec(cid);
+//     let storage = Public::from_str(&req.storage.as_str()).map_err(map_account_err)?;
+//     let storage = AccountId32::from(storage);
 
-    let api = &data.api;
+//     let api = &data.api;
 
-    let call = sugarfunge::tx()
-        .fula()
-        .remove_storer(storage, cid, req.pool_id.into());
+//     let call = sugarfunge::tx()
+//         .fula()
+//         .remove_storer(storage, cid, req.pool_id.into());
 
-    let result = api
-        .tx()
-        .sign_and_submit_then_watch(&call, &signer, Default::default())
-        .await
-        .map_err(map_subxt_err)?
-        .wait_for_finalized_success()
-        .await
-        .map_err(map_fula_err)?;
-    let result = result
-        .find_first::<sugarfunge::fula::events::RemoveStorerOutput>()
-        .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
-        return Err(value_error);
-    }
-    match result {
-        Some(event) => Ok(HttpResponse::Ok().json(RemoveStorerOutput {
-            uploader: event.uploader.into(),
-            storage: transform_option_account_value(event.storage),
-            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
-            pool_id: event.pool_id.into(),
-        })),
-        None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::fula::events::RemoveStorer"),
-            description: format!(""),
-        })),
-    }
-}
+//     let result = api
+//         .tx()
+//         .sign_and_submit_then_watch(&call, &signer, Default::default())
+//         .await
+//         .map_err(map_subxt_err)?
+//         .wait_for_finalized_success()
+//         .await
+//         .map_err(map_fula_err)?;
+//     let result = result
+//         .find_first::<sugarfunge::fula::events::RemoveStorerOutput>()
+//         .map_err(map_subxt_err)?;
+//     if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
+//         return Err(value_error);
+//     }
+//     match result {
+//         Some(event) => Ok(HttpResponse::Ok().json(RemoveStorerOutput {
+//             uploader: event.uploader.into(),
+//             storage: transform_option_account_value(event.storage),
+//             cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
+//             pool_id: event.pool_id.into(),
+//         })),
+//         None => Ok(HttpResponse::BadRequest().json(RequestError {
+//             message: json!("Failed to find sugarfunge::fula::events::RemoveStorer"),
+//             description: format!(""),
+//         })),
+//     }
+// }
 
 pub async fn remove_stored_manifest(
     data: web::Data<AppState>,
@@ -265,7 +277,7 @@ pub async fn remove_stored_manifest(
 
     let call = sugarfunge::tx()
         .fula()
-        .remove_stored_manifest(uploader, cid, req.pool_id.into());
+        .remove_stored_manifest(cid, req.pool_id.into());
 
     let result = api
         .tx()
@@ -283,9 +295,8 @@ pub async fn remove_stored_manifest(
     }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveStoringManifestOutput {
-            uploader: event.uploader.into(),
             storage: transform_option_account_value(event.storage),
-            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
+            cid: transform_vec_string_to_cid(transform_vec_u8_to_string(event.cid)),
             pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {

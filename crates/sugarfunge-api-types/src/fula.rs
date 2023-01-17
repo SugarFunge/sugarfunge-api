@@ -47,7 +47,7 @@ pub struct RemoveManifestInput {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RemoveManifestOutput {
     pub uploader: Account,
-    pub cid: Cid,
+    pub cid: Vec<Cid>,
     pub pool_id: PoolId,
 }
 
@@ -77,9 +77,8 @@ pub struct RemoveStoringManifestInput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RemoveStoringManifestOutput {
-    pub uploader: Account,
     pub storage: Option<Account>,
-    pub cid: Cid,
+    pub cid: Vec<Cid>,
     pub pool_id: PoolId,
 }
 
@@ -119,16 +118,14 @@ pub struct GetAvailableManifestsOutput {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct StorageManifestInput {
     pub seed: Seed,
-    pub uploader: Account,
     pub cid: Cid,
     pub pool_id: PoolId,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct StorageManifestOutput {
-    pub storage: Account,
-    pub uploader: Account,
-    pub cid: Cid,
+    pub storer: Account,
+    pub cid: Vec<Cid>,
     pub pool_id: PoolId,
 }
 
