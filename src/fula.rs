@@ -150,7 +150,7 @@ pub async fn storage_manifest(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(StorageManifestOutput {
             storer: event.storer.into(),
-            cid: transform_vec_string_to_cid(transform_vec_u8_to_string(event.cid)),
+            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
             pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -158,14 +158,6 @@ pub async fn storage_manifest(
             description: format!(""),
         })),
     }
-}
-
-pub fn transform_vec_u8_to_string(in_vec: Vec<u8>) -> Vec<String> {
-    in_vec.into_iter().map(|cid| cid.to_string()).collect()
-}
-
-pub fn transform_vec_string_to_cid(in_vec: Vec<String>) -> Vec<Cid> {
-    in_vec.into_iter().map(|cid| Cid::from(cid)).collect()
 }
 
 pub async fn remove_manifest(
@@ -200,7 +192,7 @@ pub async fn remove_manifest(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveManifestOutput {
             uploader: event.uploader.into(),
-            cid: transform_vec_string_to_cid(transform_vec_u8_to_string(event.cid)),
+            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
             pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
@@ -243,7 +235,7 @@ pub async fn remove_stored_manifest(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveStoringManifestOutput {
             storer: transform_option_account_value(event.storage),
-            cid: transform_vec_string_to_cid(transform_vec_u8_to_string(event.cid)),
+            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
             pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {

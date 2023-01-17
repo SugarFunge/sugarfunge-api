@@ -52,7 +52,7 @@ pub struct RemoveManifestInput {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RemoveManifestOutput {
     pub uploader: Account,
-    pub cid: Vec<Cid>,
+    pub cid: Cid,
     pub pool_id: PoolId,
 }
 
@@ -67,7 +67,7 @@ pub struct RemoveStoringManifestInput {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RemoveStoringManifestOutput {
     pub storer: Option<Account>,
-    pub cid: Vec<Cid>,
+    pub cid: Cid,
     pub pool_id: PoolId,
 }
 
@@ -139,7 +139,7 @@ pub struct StorageManifestInput {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct StorageManifestOutput {
     pub storer: Account,
-    pub cid: Vec<Cid>,
+    pub cid: Cid,
     pub pool_id: PoolId,
 }
 
