@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 pub struct UploadManifestInput {
     pub seed: Seed,
     pub manifest_metadata: serde_json::Value,
+    pub cid: Cid,
     pub pool_id: PoolId,
     pub replication_factor: ReplicationFactor,
 }
@@ -17,6 +18,24 @@ pub struct UploadManifestOutput {
     pub storers: Vec<Account>,
     pub manifest_metadata: serde_json::Value,
     pub pool_id: PoolId,
+}
+
+// BATCH UPLOAD MANIFEST STRUCTS
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BatchUploadManifestInput {
+    pub seed: Seed,
+    pub manifest_metadata: Vec<serde_json::Value>,
+    pub cid: Vec<Cid>,
+    pub pool_id: Vec<PoolId>,
+    pub replication_factor: Vec<ReplicationFactor>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BatchUploadManifestOutput {
+    pub uploader: Account,
+    pub pool_id: Vec<PoolId>,
+    pub manifest_metadata: Vec<serde_json::Value>,
 }
 
 //UPDATE MANIFESTS STRUCTS
@@ -56,6 +75,21 @@ pub struct RemoveManifestOutput {
     pub pool_id: PoolId,
 }
 
+// BATCH REMOVE MANIFEST STRUCTS
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BatchRemoveManifestInput {
+    pub seed: Seed,
+    pub pool_id: Vec<PoolId>,
+    pub cid: Vec<Cid>,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BatchRemoveManifestOutput {
+    pub uploader: Account,
+    pub pool_id: Vec<PoolId>,
+    pub cid: Vec<Cid>,
+}
+
 // REMOVE STORING A MANIFEST STRUCTS
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -69,6 +103,21 @@ pub struct RemoveStoringManifestOutput {
     pub storer: Option<Account>,
     pub cid: Cid,
     pub pool_id: PoolId,
+}
+
+// BATCH REMOVE STORING A MANIFEST STRUCTS
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BatchRemoveStoringManifestInput {
+    pub seed: Seed,
+    pub pool_id: PoolId,
+    pub cid: Vec<Cid>,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BatchRemoveStoringManifestOutput {
+    pub storer: Account,
+    pub pool_id: PoolId,
+    pub cid: Vec<Cid>,
 }
 
 // GET MANIFESTS STRUCTS
@@ -141,6 +190,22 @@ pub struct StorageManifestOutput {
     pub storer: Account,
     pub cid: Cid,
     pub pool_id: PoolId,
+}
+
+// BATCH STORAGE MANIFEST STRUCTS
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BatchStorageManifestInput {
+    pub seed: Seed,
+    pub pool_id: PoolId,
+    pub cid: Vec<Cid>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BatchStorageManifestOutput {
+    pub storer: Account,
+    pub pool_id: PoolId,
+    pub cid: Vec<Cid>,
 }
 
 // GENERAL MANIFEST STRUCTS

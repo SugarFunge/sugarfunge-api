@@ -114,12 +114,24 @@ async fn main() -> std::io::Result<()> {
                 web::post().to(fula::remove_manifest),
             )
             .route(
+                "fula/manifest/batch_remove",
+                web::post().to(fula::batch_remove_manifest),
+            )
+            .route(
                 "fula/manifest/remove_stored_manifest",
                 web::post().to(fula::remove_stored_manifest),
             )
             .route(
+                "fula/manifest/batch_remove_stored_manifest",
+                web::post().to(fula::batch_remove_stored_manifest),
+            )
+            .route(
                 "fula/manifest/upload",
                 web::post().to(fula::upload_manifest),
+            )
+            .route(
+                "fula/manifest/batch_upload",
+                web::post().to(fula::batch_upload_manifest),
             )
             .route(
                 "fula/manifest/available",
@@ -128,6 +140,10 @@ async fn main() -> std::io::Result<()> {
             .route(
                 "fula/manifest/storage",
                 web::post().to(fula::storage_manifest),
+            )
+            .route(
+                "fula/manifest/batch_storage",
+                web::post().to(fula::batch_storage_manifest),
             )
             .route(
                 "fula/manifest/storer_data",

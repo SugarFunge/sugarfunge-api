@@ -72,10 +72,7 @@ pub async fn upload_manifest(
     let pair = get_pair_from_seed(&req.seed.clone())?;
     let signer = PairSigner::new(pair);
 
-    let cid: Vec<u8> = req.manifest_metadata["job"]["uri"]
-        .to_string()
-        .replace("\"", "")
-        .into_bytes();
+    let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
     let cid = BoundedVec(cid);
 
     let manifest: Vec<u8> = serde_json::to_vec(&req.manifest_metadata).unwrap_or_default();
@@ -106,13 +103,102 @@ pub async fn upload_manifest(
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(UploadManifestOutput {
             uploader: event.uploader.into(),
-            storers: transform_vec_string_to_account(transform_storage_output(event.storage)),
+            storers: transform_vec_string_to_account(transform_storage_output(event.storer)),
             manifest_metadata: serde_json::from_slice(event.manifest.as_slice())
                 .unwrap_or_default(),
             pool_id: event.pool_id.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::UploadManifests"),
+            description: format!(""),
+        })),
+    }
+}
+
+fn get_vec_cids_from_input(cids: Vec<Cid>) -> Vec<BoundedVec<u8>> {
+    return cids
+        .iter()
+        .map(|cid| BoundedVec(String::from(&cid.clone()).into_bytes()))
+        .collect();
+}
+
+fn get_vec_cids_from_node(cids: Vec<Vec<u8>>) -> Vec<Cid> {
+    return cids
+        .iter()
+        .map(|cid| Cid::from(String::from_utf8(cid.to_vec()).unwrap_or_default()))
+        .collect();
+}
+
+fn get_vec_manifests_from_input(manifests: Vec<serde_json::Value>) -> Vec<BoundedVec<u8>> {
+    return manifests
+        .iter()
+        .map(|manifest_data| BoundedVec(serde_json::to_vec(manifest_data).unwrap_or_default()))
+        .collect();
+}
+
+fn get_vec_manifests_from_node(manifests: Vec<Vec<u8>>) -> Vec<serde_json::Value> {
+    return manifests
+        .iter()
+        .map(|manifest_data| serde_json::from_slice(manifest_data.as_slice()).unwrap_or_default())
+        .collect();
+}
+
+fn get_vec_pool_id_from_input(pool_ids: Vec<PoolId>) -> Vec<u32> {
+    return pool_ids.iter().map(|pool_id| (*pool_id).into()).collect();
+}
+
+fn get_vec_pool_id_from_node(pool_ids: Vec<u32>) -> Vec<PoolId> {
+    return pool_ids.iter().map(|pool_id| (*pool_id).into()).collect();
+}
+
+fn get_vec_replication_factor_from_input(repliaction_factors: Vec<ReplicationFactor>) -> Vec<u16> {
+    return repliaction_factors
+        .iter()
+        .map(|repliaction_factor| (*repliaction_factor).into())
+        .collect();
+}
+
+pub async fn batch_upload_manifest(
+    data: web::Data<AppState>,
+    req: web::Json<BatchUploadManifestInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed.clone())?;
+    let signer = PairSigner::new(pair);
+
+    let pool_ids = get_vec_pool_id_from_input(req.pool_id.to_vec());
+    let cids = get_vec_cids_from_input(req.cid.to_vec());
+    let manifests = get_vec_manifests_from_input(req.manifest_metadata.to_vec());
+    let replication_factors =
+        get_vec_replication_factor_from_input(req.replication_factor.to_vec());
+
+    let api = &data.api;
+
+    let call = sugarfunge::tx().fula().batch_upload_manifest(
+        manifests,
+        cids,
+        pool_ids,
+        replication_factors,
+    );
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_fula_err)?;
+    let result = result
+        .find_first::<sugarfunge::fula::events::BatchManifestOutput>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(BatchUploadManifestOutput {
+            uploader: event.uploader.into(),
+            manifest_metadata: get_vec_manifests_from_node(event.manifests),
+            pool_id: get_vec_pool_id_from_node(event.pool_ids),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::fula::events::BatchUploadManifests"),
             description: format!(""),
         })),
     }
@@ -160,6 +246,45 @@ pub async fn storage_manifest(
     }
 }
 
+pub async fn batch_storage_manifest(
+    data: web::Data<AppState>,
+    req: web::Json<BatchStorageManifestInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed.clone())?;
+    let signer = PairSigner::new(pair);
+
+    let cids = get_vec_cids_from_input(req.cid.to_vec());
+
+    let api = &data.api;
+
+    let call = sugarfunge::tx()
+        .fula()
+        .batch_storage_manifest(cids, req.pool_id.into());
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_fula_err)?;
+    let result = result
+        .find_first::<sugarfunge::fula::events::BatchStorageManifestOutput>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(BatchStorageManifestOutput {
+            storer: event.storer.into(),
+            pool_id: event.pool_id.into(),
+            cid: get_vec_cids_from_node(event.cids),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::fula::events::BatchStorageManifestOutput"),
+            description: format!(""),
+        })),
+    }
+}
+
 pub async fn remove_manifest(
     data: web::Data<AppState>,
     req: web::Json<RemoveManifestInput>,
@@ -167,7 +292,6 @@ pub async fn remove_manifest(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
-    // let cid: Vec<u8> = serde_json::to_vec(&req.cid.clone()).unwrap_or_default();
     let cid = BoundedVec(cid);
     let api = &data.api;
 
@@ -194,6 +318,46 @@ pub async fn remove_manifest(
             uploader: event.uploader.into(),
             cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
             pool_id: event.pool_id.into(),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::fula::events::RemoveManifest"),
+            description: format!(""),
+        })),
+    }
+}
+
+pub async fn batch_remove_manifest(
+    data: web::Data<AppState>,
+    req: web::Json<BatchRemoveManifestInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed)?;
+    let signer = PairSigner::new(pair);
+
+    let cids = get_vec_cids_from_input(req.cid.to_vec());
+    let pool_ids = get_vec_pool_id_from_input(req.pool_id.to_vec());
+
+    let api = &data.api;
+
+    let call = sugarfunge::tx()
+        .fula()
+        .batch_remove_manifest(cids, pool_ids);
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_fula_err)?;
+    let result = result
+        .find_first::<sugarfunge::fula::events::BatchManifestRemoved>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(BatchRemoveManifestOutput {
+            uploader: event.uploader.into(),
+            cid: get_vec_cids_from_node(event.cids),
+            pool_id: get_vec_pool_id_from_node(event.pool_ids),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::RemoveManifest"),
@@ -234,9 +398,48 @@ pub async fn remove_stored_manifest(
     }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveStoringManifestOutput {
-            storer: transform_option_account_value(event.storage),
+            storer: transform_option_account_value(event.storer),
             cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
             pool_id: event.pool_id.into(),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::fula::events::RemoveStorer"),
+            description: format!(""),
+        })),
+    }
+}
+
+pub async fn batch_remove_stored_manifest(
+    data: web::Data<AppState>,
+    req: web::Json<BatchRemoveStoringManifestInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed)?;
+    let signer = PairSigner::new(pair);
+
+    let cids = get_vec_cids_from_input(req.cid.to_vec());
+
+    let api = &data.api;
+
+    let call = sugarfunge::tx()
+        .fula()
+        .batch_remove_stored_manifest(cids, req.pool_id.into());
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_fula_err)?;
+    let result = result
+        .find_first::<sugarfunge::fula::events::BatchRemoveStorerOutput>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(BatchRemoveStoringManifestOutput {
+            storer: event.storer.into(),
+            pool_id: event.pool_id.into(),
+            cid: get_vec_cids_from_node(event.cids),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::RemoveStorer"),
@@ -386,8 +589,11 @@ pub fn transform_vec_uploader_data_runtime_to_vec_uploader_data(
     for user_data in users {
         result_array.push(UploaderData {
             uploader: user_data.uploader.into(),
-            storers: transform_vec_string_to_account(transform_storage_output(user_data.storers)),
-            replication_available: user_data.replication_factor.into(),
+            storers: transform_vec_string_to_account(transform_storage_output(
+                user_data.storers.to_vec(),
+            )),
+            replication_available: (user_data.replication_factor - user_data.storers.len() as u16)
+                .into(),
         });
     }
     return result_array;
