@@ -185,11 +185,14 @@ pub async fn vote(
 
     let account = AccountId32::try_from(&req.account).map_err(map_account_err)?;
 
+    let peer_id = String::from(&req.peer_id).into_bytes();
+    let peer_id = BoundedVec(peer_id);
+
     let api = &data.api;
 
     let call = sugarfunge::tx()
         .pool()
-        .vote(req.pool_id.into(), account, req.vote_value);
+        .vote(req.pool_id.into(), account, req.vote_value, peer_id);
 
     let result = api
         .tx()

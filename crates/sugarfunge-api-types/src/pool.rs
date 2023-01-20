@@ -1,6 +1,8 @@
 use crate::primitives::*;
 use serde::{Deserialize, Serialize};
 
+// CREATE POOL
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreatePoolInput {
     pub seed: Seed,
@@ -15,6 +17,8 @@ pub struct CreatePoolOutput {
     pub pool_id: PoolId,
 }
 
+// LEAVE POOL
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LeavePoolInput {
     pub seed: Seed,
@@ -26,6 +30,8 @@ pub struct LeavePoolOutput {
     pub pool_id: PoolId,
     pub account: Account,
 }
+
+// JOIN POOL
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct JoinPoolInput {
@@ -40,6 +46,8 @@ pub struct JoinPoolOutput {
     pub account: Account,
 }
 
+// CANCEL JOIN POOL
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CancelJoinPoolInput {
     pub seed: Seed,
@@ -52,12 +60,15 @@ pub struct CancelJoinPoolOutput {
     pub account: Account,
 }
 
+// VOTE
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct VoteInput {
     pub seed: Seed,
     pub pool_id: PoolId,
     pub account: Account,
     pub vote_value: bool,
+    pub peer_id: PeerId,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -67,15 +78,7 @@ pub struct VoteOutput {
     pub result: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct PoolData {
-    pub pool_id: PoolId,
-    pub creator: Option<Account>,
-    pub pool_name: Name,
-    pub region: String,
-    pub parent: Option<PoolId>,
-    pub participants: Vec<Account>,
-}
+// GET POOLS
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetAllPoolInput {
@@ -88,12 +91,16 @@ pub struct GetAllPoolsOutput {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct PoolUserData {
-    pub account: Account,
-    pub pool_id: Option<PoolId>,
-    pub request_pool_id: Option<PoolId>,
-    pub peer_id: PeerId,
+pub struct PoolData {
+    pub pool_id: PoolId,
+    pub creator: Option<Account>,
+    pub pool_name: Name,
+    pub region: String,
+    pub parent: Option<PoolId>,
+    pub participants: Vec<Account>,
 }
+
+// GET USERS
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetAllPoolUsersInput {
@@ -106,9 +113,24 @@ pub struct GetAllPoolUsersOutput {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct PoolUserData {
+    pub account: Account,
+    pub pool_id: Option<PoolId>,
+    pub request_pool_id: Option<PoolId>,
+    pub peer_id: PeerId,
+}
+
+// GET POOLREQUESTS
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GetAllPoolRequestInput {
     pub pool_id: Option<PoolId>,
     pub account: Option<Account>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetAllPoolRequestsOutput {
+    pub poolrequests: Vec<PoolRequestData>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -120,10 +142,7 @@ pub struct PoolRequestData {
     pub peer_id: PeerId,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct GetAllPoolRequestsOutput {
-    pub poolrequests: Vec<PoolRequestData>,
-}
+// FUNCTIONS TO MANAGE THE REGIONS
 
 #[derive(Serialize, Deserialize, Debug)]
 /// An enum that represents the region of the pool
