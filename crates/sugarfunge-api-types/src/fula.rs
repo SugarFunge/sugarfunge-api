@@ -1,6 +1,20 @@
 use crate::primitives::*;
 use serde::{Deserialize, Serialize};
 
+// VERIFY MANIFEST STRUCTS
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct VerifyManifestsInput {
+    pub seed: Seed,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct VerifyManifestsOutput {
+    pub storer: Account,
+    pub valid_manifests: Vec<Cid>,
+    pub invalid_manifests: Vec<Cid>,
+}
+
 // UPLOAD MANIFEST STRUCTS
 
 #[derive(Serialize, Deserialize, Debug)]

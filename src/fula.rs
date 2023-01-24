@@ -18,6 +18,43 @@ use sugarfunge_api_types::sugarfunge::runtime_types::functionland_fula::Uploader
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
 // use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 
+pub async fn verify_manifest(
+    data: web::Data<AppState>,
+    req: web::Json<VerifyManifestsInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed.clone())?;
+    let signer = PairSigner::new(pair);
+
+    let api = &data.api;
+
+    let call = sugarfunge::tx().fula().verify_manifests();
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_fula_err)?;
+    let result = result
+        .find_first::<sugarfunge::fula::events::VerifiedStorerManifests>()
+        .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
+        return Err(value_error);
+    }
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(VerifyManifestsOutput {
+            storer: event.storer.into(),
+            valid_manifests: get_vec_cids_from_node(event.valid_cids),
+            invalid_manifests: get_vec_cids_from_node(event.invalid_cids),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::fula::events::UploadManifests"),
+            description: format!(""),
+        })),
+    }
+}
 pub async fn update_manifest(
     data: web::Data<AppState>,
     req: web::Json<UpdateManifestInput>,
