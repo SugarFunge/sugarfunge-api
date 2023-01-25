@@ -74,6 +74,39 @@ pub struct UpdatedManifestOutput {
     pub missed_cycles: u16,
 }
 
+// STORAGE MANIFEST STRUCTS
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct StorageManifestInput {
+    pub seed: Seed,
+    pub cid: Cid,
+    pub pool_id: PoolId,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct StorageManifestOutput {
+    pub storer: Account,
+    pub cid: Cid,
+    pub pool_id: PoolId,
+}
+
+// BATCH STORAGE MANIFEST STRUCTS
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BatchStorageManifestInput {
+    pub seed: Seed,
+    pub pool_id: PoolId,
+    pub cid: Vec<Cid>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BatchStorageManifestOutput {
+    pub storer: Account,
+    pub pool_id: PoolId,
+    pub cid: Vec<Cid>,
+}
+
+
 // REMOVE MANIFEST STRUCTS
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -188,38 +221,6 @@ pub struct ManifestAvailable {
     pub pool_id: PoolId,
     pub manifest_metadata: serde_json::Value,
     pub replication_available: ReplicationFactor,
-}
-
-// STORAGE MANIFEST STRUCTS
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct StorageManifestInput {
-    pub seed: Seed,
-    pub cid: Cid,
-    pub pool_id: PoolId,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct StorageManifestOutput {
-    pub storer: Account,
-    pub cid: Cid,
-    pub pool_id: PoolId,
-}
-
-// BATCH STORAGE MANIFEST STRUCTS
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct BatchStorageManifestInput {
-    pub seed: Seed,
-    pub pool_id: PoolId,
-    pub cid: Vec<Cid>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct BatchStorageManifestOutput {
-    pub storer: Account,
-    pub pool_id: PoolId,
-    pub cid: Vec<Cid>,
 }
 
 // GENERAL MANIFEST STRUCTS
