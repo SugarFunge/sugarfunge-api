@@ -2,6 +2,8 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
+use sp_core;
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Seed(String);
 
@@ -38,8 +40,8 @@ impl From<sp_core::crypto::AccountId32> for Account {
     }
 }
 
-impl From<subxt::ext::sp_runtime::AccountId32> for Account {
-    fn from(account: subxt::ext::sp_runtime::AccountId32) -> Account {
+impl From<subxt::utils::AccountId32> for Account {
+    fn from(account: subxt::utils::AccountId32) -> Account {
         Account(account.to_string())
     }
 }
@@ -58,15 +60,15 @@ impl TryFrom<&Account> for sp_core::crypto::AccountId32 {
     }
 }
 
-impl TryFrom<&Account> for subxt::ext::sp_runtime::AccountId32 {
-    type Error = subxt::ext::sp_core::crypto::PublicError;
+impl TryFrom<&Account> for subxt::utils::AccountId32 {
+    type Error = sp_core::crypto::PublicError;
 
     fn try_from(
         account: &Account,
-    ) -> Result<subxt::ext::sp_runtime::AccountId32, subxt::ext::sp_core::crypto::PublicError> {
-        let account = subxt::ext::sp_core::sr25519::Public::from_str(account.as_str());
+    ) -> Result<subxt::utils::AccountId32, sp_core::crypto::PublicError> {
+        let account = sp_core::sr25519::Public::from_str(account.as_str());
         match account {
-            Ok(account) => Ok(subxt::ext::sp_runtime::AccountId32::from(account)),
+            Ok(account) => Ok(subxt::utils::AccountId32::from(account.as_array_ref().to_owned())),
             Err(err) => Err(err),
         }
     }

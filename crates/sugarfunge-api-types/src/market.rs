@@ -94,20 +94,20 @@ impl Into<AMM> for sugarfunge_market::AMM {
     }
 }
 
-impl Into<sugarfunge_market::RateAccount<subxt::ext::sp_runtime::AccountId32>> for RateAccount {
-    fn into(self) -> sugarfunge_market::RateAccount<subxt::ext::sp_runtime::AccountId32> {
+impl Into<sugarfunge_market::RateAccount<subxt::utils::AccountId32>> for RateAccount {
+    fn into(self) -> sugarfunge_market::RateAccount<subxt::utils::AccountId32> {
         match self {
             RateAccount::Buyer => sugarfunge_market::RateAccount::Buyer,
             RateAccount::Market => sugarfunge_market::RateAccount::Market,
             RateAccount::Account(account) => {
-                let account = subxt::ext::sp_runtime::AccountId32::try_from(&account).unwrap();
+                let account = subxt::utils::AccountId32::try_from(&account).unwrap();
                 sugarfunge_market::RateAccount::Account(account)
             }
         }
     }
 }
 
-impl Into<RateAccount> for sugarfunge_market::RateAccount<subxt::ext::sp_runtime::AccountId32> {
+impl Into<RateAccount> for sugarfunge_market::RateAccount<subxt::utils::AccountId32> {
     fn into(self) -> RateAccount {
         match self {
             sugarfunge_market::RateAccount::Buyer => RateAccount::Buyer,
@@ -161,11 +161,11 @@ impl Into<RateAction> for sugarfunge_market::RateAction<u64, u64> {
     }
 }
 
-impl Into<sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64>>
+impl Into<sugarfunge_market::AssetRate<subxt::utils::AccountId32, u64, u64>>
     for AssetRate
 {
-    fn into(self) -> sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64> {
-        sugarfunge_market::AssetRate::<subxt::ext::sp_runtime::AccountId32, u64, u64> {
+    fn into(self) -> sugarfunge_market::AssetRate<subxt::utils::AccountId32, u64, u64> {
+        sugarfunge_market::AssetRate::<subxt::utils::AccountId32, u64, u64> {
             class_id: self.class_id.into(),
             asset_id: self.asset_id.into(),
             action: self.action.into(),
@@ -177,7 +177,7 @@ impl Into<sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64,
 }
 
 impl Into<AssetRate>
-    for sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64>
+    for sugarfunge_market::AssetRate<subxt::utils::AccountId32, u64, u64>
 {
     fn into(self) -> AssetRate {
         AssetRate {
@@ -191,7 +191,7 @@ impl Into<AssetRate>
 }
 
 impl Into<RateBalance>
-    for sugarfunge_market::RateBalance<subxt::ext::sp_runtime::AccountId32, u64, u64>
+    for sugarfunge_market::RateBalance<subxt::utils::AccountId32, u64, u64>
 {
     fn into(self) -> RateBalance {
         RateBalance {

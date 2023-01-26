@@ -11,13 +11,13 @@ use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_market;
 
 fn extrinsinc_rates(
     in_rates: &Vec<AssetRate>,
-) -> BoundedVec<sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64>> {
+) -> BoundedVec<sugarfunge_market::AssetRate<subxt::utils::AccountId32, u64, u64>> {
     BoundedVec(
         in_rates
             .iter()
             .map(|rate| {
                 <AssetRate as Into<
-                    sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64>,
+                    sugarfunge_market::AssetRate<subxt::utils::AccountId32, u64, u64>,
                 >>::into(rate.clone())
             })
             .collect(),
@@ -25,7 +25,7 @@ fn extrinsinc_rates(
 }
 
 fn transform_balances(
-    in_balances: Vec<sugarfunge_market::RateBalance<subxt::ext::sp_runtime::AccountId32, u64, u64>>,
+    in_balances: Vec<sugarfunge_market::RateBalance<subxt::utils::AccountId32, u64, u64>>,
 ) -> Vec<RateBalance> {
     in_balances
         .into_iter()

@@ -4,7 +4,7 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
-use subxt::ext::sp_runtime::AccountId32;
+use sp_runtime::AccountId32;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::bag::*;
 use sugarfunge_api_types::primitives::*;
@@ -52,8 +52,8 @@ pub fn transform_owners_input(in_owners: Vec<String>) -> Vec<AccountId32> {
     in_owners
         .into_iter()
         .map(|current_owner| {
-            subxt::ext::sp_runtime::AccountId32::from(
-                subxt::ext::sp_core::sr25519::Public::from_str(&current_owner).unwrap(),
+            sp_runtime::AccountId32::from(
+                sp_core::sr25519::Public::from_str(&current_owner).unwrap(),
             )
         })
         .collect()
@@ -148,7 +148,7 @@ pub async fn deposit(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let bag = AccountId32::try_from(&req.bag).map_err(map_account_err)?;
+    let bag = subxt::utils::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
     let api = &data.api;
 
     let call = sugarfunge::tx().bag().deposit(
