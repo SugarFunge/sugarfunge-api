@@ -1,8 +1,9 @@
 use std::str::FromStr;
 
+use bevy_derive::{Deref, DerefMut};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Deref, DerefMut)]
 pub struct Seed(String);
 
 impl From<String> for Seed {
@@ -23,7 +24,7 @@ impl Seed {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Deref, DerefMut)]
 pub struct Account(String);
 
 impl From<String> for Account {
@@ -84,7 +85,7 @@ impl Account {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Deref, DerefMut)]
 pub struct MarketId(u64);
 
 impl From<u64> for MarketId {
@@ -99,7 +100,7 @@ impl From<MarketId> for u64 {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Deref, DerefMut)]
 pub struct ClassId(u64);
 
 impl From<u64> for ClassId {
@@ -114,7 +115,7 @@ impl From<ClassId> for u64 {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Deref, DerefMut)]
 pub struct AssetId(u64);
 
 impl From<u64> for AssetId {
@@ -129,7 +130,7 @@ impl From<AssetId> for u64 {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Deref, DerefMut)]
 pub struct Balance(u128);
 
 impl From<u128> for Balance {
@@ -144,7 +145,7 @@ impl From<Balance> for u128 {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Deref, DerefMut)]
 pub struct Amount(i128);
 
 impl From<i128> for Amount {
@@ -159,7 +160,7 @@ impl From<Amount> for i128 {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Deref, DerefMut)]
 pub struct BundleId(String);
 
 impl From<String> for BundleId {
@@ -188,7 +189,7 @@ impl FromIterator<char> for BundleId {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Deref, DerefMut)]
 pub struct ValidatorId(String);
 
 impl From<String> for ValidatorId {

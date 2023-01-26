@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::sugarfunge::runtime_types::sugarfunge_market;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum AmountOp {
     Equal,
     LessThan,
@@ -12,7 +12,7 @@ pub enum AmountOp {
     GreaterEqualThan,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum AMM {
     Constant,
 }
