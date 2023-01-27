@@ -43,6 +43,7 @@ pub async fn fund(
     req: web::Json<FundAccountInput>,
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
+    //let signer = sp_core::sr25519::Pair::try_from(pair).unwrap();
     let signer = PairSigner::new(pair);
     let account =
         subxt::utils::AccountId32::try_from(&req.to).map_err(map_account_err)?;
