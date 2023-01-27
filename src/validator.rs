@@ -14,9 +14,8 @@ pub async fn add_validator(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let validator_id =
-        sp_core::sr25519::Public::from_str(&req.validator_id.as_str()).map_err(map_account_err)?;
-    let validator_id = sp_core::crypto::AccountId32::from(validator_id);
+    let validator_id = sp_core::sp_std::str::FromStr::from_str(&req.validator_id.as_str()).map_err(map_account_err)?;
+    let validator_id = subxt::utils::AccountId32::from(validator_id);
     let call = sugarfunge::runtime_types::sugarfunge_validator_set::pallet::Call::add_validator {
         validator_id,
     };
