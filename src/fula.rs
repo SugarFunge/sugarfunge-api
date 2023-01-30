@@ -12,95 +12,14 @@ use subxt::tx::PairSigner;
 use sugarfunge_api_types::fula::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::functionland_fula::Manifest as ManifestRuntime;
-use sugarfunge_api_types::sugarfunge::runtime_types::functionland_fula::ManifestStorageData as ManifestStorageDataRuntime;
-use sugarfunge_api_types::sugarfunge::runtime_types::functionland_fula::UploaderData as UploaderDataRuntime;
+use sugarfunge_api_types::sugarfunge::runtime_types::functionland_fula::{
+    Manifest as ManifestRuntime, ManifestAvailable as ManifestAvailableRuntime,
+    ManifestStorageData as ManifestStorageDataRuntime,
+    ManifestWithPoolId as ManifestWithPoolIdRuntime, StorerData as StorerDataRuntime,
+    UploaderData as UploaderDataRuntime,
+};
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
 // use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
-
-pub async fn verify_manifest(
-    data: web::Data<AppState>,
-    req: web::Json<VerifyManifestsInput>,
-) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.seed.clone())?;
-    let signer = PairSigner::new(pair);
-
-    let api = &data.api;
-
-    let call = sugarfunge::tx().fula().verify_manifests();
-
-    let result = api
-        .tx()
-        .sign_and_submit_then_watch(&call, &signer, Default::default())
-        .await
-        .map_err(map_subxt_err)?
-        .wait_for_finalized_success()
-        .await
-        .map_err(map_fula_err)?;
-    let result = result
-        .find_first::<sugarfunge::fula::events::VerifiedStorerManifests>()
-        .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
-        return Err(value_error);
-    }
-    match result {
-        Some(event) => Ok(HttpResponse::Ok().json(VerifyManifestsOutput {
-            storer: event.storer.into(),
-            valid_manifests: get_vec_cids_from_node(event.valid_cids),
-            invalid_manifests: get_vec_cids_from_node(event.invalid_cids),
-        })),
-        None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::fula::events::UploadManifests"),
-            description: format!(""),
-        })),
-    }
-}
-pub async fn update_manifest(
-    data: web::Data<AppState>,
-    req: web::Json<UpdateManifestInput>,
-) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.seed)?;
-    let signer = PairSigner::new(pair);
-
-    let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
-    let cid = BoundedVec(cid);
-
-    let api = &data.api;
-
-    let call = sugarfunge::tx().fula().update_manifest(
-        cid,
-        req.pool_id.into(),
-        req.active_cycles,
-        req.missed_cycles,
-        req.active_days,
-    );
-
-    let result = api
-        .tx()
-        .sign_and_submit_then_watch(&call, &signer, Default::default())
-        .await
-        .map_err(map_subxt_err)?
-        .wait_for_finalized_success()
-        .await
-        .map_err(map_fula_err)?;
-    let result = result
-        .find_first::<sugarfunge::fula::events::ManifestStorageUpdated>()
-        .map_err(map_subxt_err)?;
-    match result {
-        Some(event) => Ok(HttpResponse::Ok().json(UpdatedManifestOutput {
-            storer: event.storer.into(),
-            pool_id: event.pool_id.into(),
-            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
-            active_days: event.active_days,
-            active_cycles: event.active_cycles,
-            missed_cycles: event.missed_cycles,
-        })),
-        None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::fula::events::UpdateManifests"),
-            description: format!(""),
-        })),
-    }
-}
 
 pub async fn upload_manifest(
     data: web::Data<AppState>,
@@ -150,49 +69,6 @@ pub async fn upload_manifest(
             description: format!(""),
         })),
     }
-}
-
-fn get_vec_cids_from_input(cids: Vec<Cid>) -> Vec<BoundedVec<u8>> {
-    return cids
-        .iter()
-        .map(|cid| BoundedVec(String::from(&cid.clone()).into_bytes()))
-        .collect();
-}
-
-fn get_vec_cids_from_node(cids: Vec<Vec<u8>>) -> Vec<Cid> {
-    return cids
-        .iter()
-        .map(|cid| Cid::from(String::from_utf8(cid.to_vec()).unwrap_or_default()))
-        .collect();
-}
-
-fn get_vec_manifests_from_input(manifests: Vec<serde_json::Value>) -> Vec<BoundedVec<u8>> {
-    return manifests
-        .iter()
-        .map(|manifest_data| BoundedVec(serde_json::to_vec(manifest_data).unwrap_or_default()))
-        .collect();
-}
-
-fn get_vec_manifests_from_node(manifests: Vec<Vec<u8>>) -> Vec<serde_json::Value> {
-    return manifests
-        .iter()
-        .map(|manifest_data| serde_json::from_slice(manifest_data.as_slice()).unwrap_or_default())
-        .collect();
-}
-
-fn get_vec_pool_id_from_input(pool_ids: Vec<PoolId>) -> Vec<u32> {
-    return pool_ids.iter().map(|pool_id| (*pool_id).into()).collect();
-}
-
-fn get_vec_pool_id_from_node(pool_ids: Vec<u32>) -> Vec<PoolId> {
-    return pool_ids.iter().map(|pool_id| (*pool_id).into()).collect();
-}
-
-fn get_vec_replication_factor_from_input(repliaction_factors: Vec<ReplicationFactor>) -> Vec<u16> {
-    return repliaction_factors
-        .iter()
-        .map(|repliaction_factor| (*repliaction_factor).into())
-        .collect();
 }
 
 pub async fn batch_upload_manifest(
@@ -485,6 +361,90 @@ pub async fn batch_remove_stored_manifest(
     }
 }
 
+pub async fn verify_manifest(
+    data: web::Data<AppState>,
+    req: web::Json<VerifyManifestsInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed.clone())?;
+    let signer = PairSigner::new(pair);
+
+    let api = &data.api;
+
+    let call = sugarfunge::tx().fula().verify_manifests();
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_fula_err)?;
+    let result = result
+        .find_first::<sugarfunge::fula::events::VerifiedStorerManifests>()
+        .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
+        return Err(value_error);
+    }
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(VerifyManifestsOutput {
+            storer: event.storer.into(),
+            valid_manifests: get_vec_cids_from_node(event.valid_cids),
+            invalid_manifests: get_vec_cids_from_node(event.invalid_cids),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::fula::events::UploadManifests"),
+            description: format!(""),
+        })),
+    }
+}
+pub async fn update_manifest(
+    data: web::Data<AppState>,
+    req: web::Json<UpdateManifestInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed)?;
+    let signer = PairSigner::new(pair);
+
+    let cid: Vec<u8> = String::from(&req.cid.clone()).into_bytes();
+    let cid = BoundedVec(cid);
+
+    let api = &data.api;
+
+    let call = sugarfunge::tx().fula().update_manifest(
+        cid,
+        req.pool_id.into(),
+        req.active_cycles,
+        req.missed_cycles,
+        req.active_days,
+    );
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_fula_err)?;
+    let result = result
+        .find_first::<sugarfunge::fula::events::ManifestStorageUpdated>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(UpdatedManifestOutput {
+            storer: event.storer.into(),
+            pool_id: event.pool_id.into(),
+            cid: Cid::from(String::from_utf8(event.cid).unwrap_or_default()),
+            active_days: event.active_days,
+            active_cycles: event.active_cycles,
+            missed_cycles: event.missed_cycles,
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::fula::events::UpdateManifests"),
+            description: format!(""),
+        })),
+    }
+}
+
 pub async fn get_all_manifests(
     data: web::Data<AppState>,
     req: web::Json<GetAllManifestsInput>,
@@ -604,7 +564,7 @@ pub async fn get_available_manifests(
 
             let uploaders_data =
                 transform_vec_uploader_data_runtime_to_vec_uploader_data(value.users_data);
-            if verify_availability(uploaders_data.to_owned()) {
+            if verify_availability(uploaders_data.to_vec()) {
                 result_array.push(ManifestAvailable {
                     pool_id: pool_id.into(),
                     manifest_metadata: serde_json::from_slice(value.manifest_metadata.as_slice())
@@ -617,71 +577,6 @@ pub async fn get_available_manifests(
     Ok(HttpResponse::Ok().json(GetAvailableManifestsOutput {
         manifests: result_array,
     }))
-}
-
-pub fn transform_vec_uploader_data_runtime_to_vec_uploader_data(
-    users: Vec<UploaderDataRuntime<AccountId32>>,
-) -> Vec<UploaderData> {
-    let mut result_array = Vec::new();
-    for user_data in users {
-        result_array.push(UploaderData {
-            uploader: user_data.uploader.into(),
-            storers: transform_vec_string_to_account(transform_storage_output(
-                user_data.storers.to_vec(),
-            )),
-            replication_available: (user_data.replication_factor - user_data.storers.len() as u16)
-                .into(),
-        });
-    }
-    return result_array;
-}
-
-pub fn verify_contains_storer(
-    uploaders: Vec<UploaderData>,
-    account: Account,
-) -> Result<bool, actix_web::Error> {
-    let mut result = false;
-    for user_data in uploaders.iter() {
-        for storer_data in user_data.storers.iter() {
-            if AccountId32::from(Public::from_str(&storer_data.as_str()).map_err(map_account_err)?)
-                == AccountId32::from(Public::from_str(&account.as_str()).map_err(map_account_err)?)
-            {
-                result = true;
-            }
-        }
-    }
-    return Ok(result);
-}
-
-pub fn verify_contains_uploader(
-    uploaders: Vec<UploaderData>,
-    account: Account,
-) -> Result<bool, actix_web::Error> {
-    let mut result = false;
-    for user_data in uploaders.iter() {
-        if AccountId32::from(
-            Public::from_str(&user_data.uploader.as_str()).map_err(map_account_err)?,
-        ) == AccountId32::from(Public::from_str(&account.as_str()).map_err(map_account_err)?)
-        {
-            result = true;
-        }
-    }
-    return Ok(result);
-}
-
-pub fn verify_availability(uploaders: Vec<UploaderData>) -> bool {
-    return uploaders
-        .iter()
-        .position(|x| u16::from(x.replication_available) - x.storers.len() as u16 > 0)
-        .is_some();
-}
-
-pub fn get_added_replication(uploaders: Vec<UploaderData>) -> ReplicationFactor {
-    let mut result = 0;
-    for user_data in uploaders {
-        result += u16::from(user_data.replication_available) - user_data.storers.len() as u16;
-    }
-    return result.into();
 }
 
 pub async fn get_all_manifests_storer_data(
@@ -766,4 +661,296 @@ pub async fn get_all_manifests_storer_data(
     Ok(HttpResponse::Ok().json(GetAllManifestsStorerDataOutput {
         manifests: result_array,
     }))
+}
+
+pub async fn get_all_manifests_alter(
+    data: web::Data<AppState>,
+    req: web::Json<GetAllManifestsInput>,
+) -> error::Result<HttpResponse> {
+    let pool_id = transform_option_pool_id_value_reverse(req.pool_id);
+    let uploader = transform_option_account_value_reverse(req.uploader.clone()).await;
+    let storer = transform_option_account_value_reverse(req.storer.clone()).await;
+
+    let pair = get_pair_from_seed(&Seed::from(String::from("//Alice")))?;
+    let signer = PairSigner::new(pair);
+
+    let api = &data.api;
+
+    let call = sugarfunge::tx()
+        .fula()
+        .get_manifests(pool_id, uploader.unwrap(), storer.unwrap());
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_fula_err)?;
+    let result = result
+        .find_first::<sugarfunge::fula::events::GetManifests>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(GetAllManifestsOutput {
+            manifests: transform_get_manifests(event.manifests),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::fula::events::GetManifests"),
+            description: format!(""),
+        })),
+    }
+}
+
+pub async fn get_all_available_manifests_alter(
+    data: web::Data<AppState>,
+    req: web::Json<GetAvailableManifestsInput>,
+) -> error::Result<HttpResponse> {
+    let pool_id = transform_option_pool_id_value_reverse(req.pool_id);
+
+    let pair = get_pair_from_seed(&Seed::from(String::from("//Alice")))?;
+    let signer = PairSigner::new(pair);
+
+    let api = &data.api;
+
+    let call = sugarfunge::tx().fula().get_available_manifests(pool_id);
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_fula_err)?;
+    let result = result
+        .find_first::<sugarfunge::fula::events::GetAvailableManifests>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(GetAvailableManifestsOutput {
+            manifests: transform_get_available_manifests(event.manifests),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::fula::events::GetManifests"),
+            description: format!(""),
+        })),
+    }
+}
+
+pub async fn get_all_manifests_storer_data_alter(
+    data: web::Data<AppState>,
+    req: web::Json<GetAllManifestsStorerDataInput>,
+) -> error::Result<HttpResponse> {
+    let pool_id = transform_option_pool_id_value_reverse(req.pool_id);
+
+    let storer = transform_option_account_value_reverse(req.storer.clone()).await;
+
+    let pair = get_pair_from_seed(&Seed::from(String::from("//Alice")))?;
+    let signer = PairSigner::new(pair);
+
+    let api = &data.api;
+
+    let call = sugarfunge::tx()
+        .fula()
+        .get_manifests_storer_data(pool_id, storer.unwrap());
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_fula_err)?;
+    let result = result
+        .find_first::<sugarfunge::fula::events::GetManifestsStorerData>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(GetAllManifestsStorerDataOutput {
+            manifests: transform_get_manifests_storer_data(event.manifests),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::fula::events::GetManifests"),
+            description: format!(""),
+        })),
+    }
+}
+
+// AUXILIAR FUNCTIONS
+
+pub fn transform_vec_uploader_data_runtime_to_vec_uploader_data(
+    users: Vec<UploaderDataRuntime<AccountId32>>,
+) -> Vec<UploaderData> {
+    let mut result_array = Vec::new();
+    for user_data in users {
+        result_array.push(UploaderData {
+            uploader: user_data.uploader.into(),
+            storers: transform_vec_string_to_account(transform_storage_output(
+                user_data.storers.to_vec(),
+            )),
+            replication_available: (user_data.replication_factor - user_data.storers.len() as u16)
+                .into(),
+        });
+    }
+    return result_array;
+}
+
+pub fn verify_contains_storer(
+    uploaders: Vec<UploaderData>,
+    account: Account,
+) -> Result<bool, actix_web::Error> {
+    let mut result = false;
+    for user_data in uploaders.iter() {
+        for storer_data in user_data.storers.iter() {
+            if AccountId32::from(Public::from_str(&storer_data.as_str()).map_err(map_account_err)?)
+                == AccountId32::from(Public::from_str(&account.as_str()).map_err(map_account_err)?)
+            {
+                result = true;
+            }
+        }
+    }
+    return Ok(result);
+}
+
+pub fn verify_contains_uploader(
+    uploaders: Vec<UploaderData>,
+    account: Account,
+) -> Result<bool, actix_web::Error> {
+    let mut result = false;
+    for user_data in uploaders.iter() {
+        if AccountId32::from(
+            Public::from_str(&user_data.uploader.as_str()).map_err(map_account_err)?,
+        ) == AccountId32::from(Public::from_str(&account.as_str()).map_err(map_account_err)?)
+        {
+            result = true;
+        }
+    }
+    return Ok(result);
+}
+
+pub fn get_vec_cids_from_input(cids: Vec<Cid>) -> Vec<BoundedVec<u8>> {
+    return cids
+        .iter()
+        .map(|cid| BoundedVec(String::from(&cid.clone()).into_bytes()))
+        .collect();
+}
+
+pub fn get_vec_manifests_from_input(manifests: Vec<serde_json::Value>) -> Vec<BoundedVec<u8>> {
+    return manifests
+        .iter()
+        .map(|manifest_data| BoundedVec(serde_json::to_vec(manifest_data).unwrap_or_default()))
+        .collect();
+}
+
+pub fn get_vec_cids_from_node(cids: Vec<Vec<u8>>) -> Vec<Cid> {
+    return cids
+        .iter()
+        .map(|cid| Cid::from(String::from_utf8(cid.to_vec()).unwrap_or_default()))
+        .collect();
+}
+
+pub fn get_vec_manifests_from_node(manifests: Vec<Vec<u8>>) -> Vec<serde_json::Value> {
+    return manifests
+        .iter()
+        .map(|manifest_data| serde_json::from_slice(manifest_data.as_slice()).unwrap_or_default())
+        .collect();
+}
+
+pub fn get_vec_pool_id_from_input(pool_ids: Vec<PoolId>) -> Vec<u32> {
+    return pool_ids.iter().map(|pool_id| (*pool_id).into()).collect();
+}
+
+pub fn get_vec_pool_id_from_node(pool_ids: Vec<u32>) -> Vec<PoolId> {
+    return pool_ids.iter().map(|pool_id| (*pool_id).into()).collect();
+}
+
+pub fn get_vec_replication_factor_from_input(
+    repliaction_factors: Vec<ReplicationFactor>,
+) -> Vec<u16> {
+    return repliaction_factors
+        .iter()
+        .map(|repliaction_factor| (*repliaction_factor).into())
+        .collect();
+}
+
+pub fn verify_availability(uploaders: Vec<UploaderData>) -> bool {
+    return uploaders
+        .iter()
+        .position(|x| u16::from(x.replication_available) > 0)
+        .is_some();
+}
+
+pub fn get_added_replication(uploaders: Vec<UploaderData>) -> ReplicationFactor {
+    let mut result = 0;
+    for user_data in uploaders {
+        result += u16::from(user_data.replication_available);
+    }
+    return result.into();
+}
+
+pub async fn transform_option_account_value_reverse(
+    value: Option<Account>,
+) -> Result<Option<AccountId32>, actix_web::Error> {
+    if let Some(value) = value {
+        return Ok(Some(
+            AccountId32::try_from(&value).map_err(map_account_err)?,
+        ));
+    }
+    return Ok(None::<AccountId32>);
+}
+
+pub fn transform_option_pool_id_value_reverse(value: Option<PoolId>) -> Option<u32> {
+    if let Some(value) = value {
+        return Some(value.into());
+    }
+    return None::<u32>;
+}
+
+pub fn transform_get_manifests(
+    manifests: Vec<ManifestWithPoolIdRuntime<u32, AccountId32, BoundedVec<u8>>>,
+) -> Vec<Manifest> {
+    let mut result = Vec::new();
+    for manifest in manifests {
+        result.push(Manifest {
+            pool_id: manifest.pool_id.into(),
+            uploaders: transform_vec_uploader_data_runtime_to_vec_uploader_data(
+                manifest.users_data,
+            ),
+            manifest_metadata: serde_json::from_slice(manifest.manifest_metadata.0.as_slice())
+                .unwrap_or_default(),
+        })
+    }
+    return result;
+}
+
+pub fn transform_get_available_manifests(
+    manifests: Vec<ManifestAvailableRuntime<u32, BoundedVec<u8>>>,
+) -> Vec<ManifestAvailable> {
+    let mut result = Vec::new();
+    for manifest in manifests {
+        result.push(ManifestAvailable {
+            pool_id: manifest.pool_id.into(),
+            manifest_metadata: serde_json::from_slice(manifest.manifest_metadata.0.as_slice())
+                .unwrap_or_default(),
+            replication_available: manifest.replication_factor.into(),
+        })
+    }
+    return result;
+}
+
+pub fn transform_get_manifests_storer_data(
+    manifests: Vec<StorerDataRuntime<u32, BoundedVec<u8>, AccountId32>>,
+) -> Vec<ManifestStorageData> {
+    let mut result = Vec::new();
+    for manifest in manifests {
+        result.push(ManifestStorageData {
+            pool_id: manifest.pool_id.into(),
+            account: manifest.account.into(),
+            cid: Cid::from(String::from_utf8(manifest.cid.0).unwrap_or_default()),
+            active_days: manifest.manifest_data.active_days,
+            active_cycles: manifest.manifest_data.active_cycles,
+            missed_cycles: manifest.manifest_data.missed_cycles,
+        })
+    }
+    return result;
 }

@@ -106,7 +106,6 @@ pub struct BatchStorageManifestOutput {
     pub cid: Vec<Cid>,
 }
 
-
 // REMOVE MANIFEST STRUCTS
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -186,7 +185,6 @@ pub struct GetAllManifestsOutput {
 pub struct GetAllManifestsStorerDataInput {
     pub pool_id: Option<PoolId>,
     pub storer: Option<Account>,
-    pub cid: Option<Cid>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

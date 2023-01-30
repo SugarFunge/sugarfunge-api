@@ -381,13 +381,3 @@ pub fn transform_storage_output(storers: Vec<AccountId32>) -> Vec<String> {
         .map(|current_storer| current_storer.to_string())
         .collect()
 }
-
-// FULA PRIMITIVES ---------------------------------------------------------------------------------------
-
-pub fn transform_vec_u8_to_string(in_vec: Vec<u8>) -> Vec<String> {
-    in_vec.into_iter().map(|cid| cid.to_string()).collect()
-}
-
-pub fn transform_vec_string_to_cid(in_vec: Vec<String>) -> Vec<Cid> {
-    in_vec.into_iter().map(|cid| Cid::from(cid)).collect()
-}

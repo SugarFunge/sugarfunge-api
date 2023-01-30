@@ -110,6 +110,10 @@ async fn main() -> std::io::Result<()> {
             )
             .route("fula/manifest", web::post().to(fula::get_all_manifests))
             .route(
+                "fula/manifest/alter",
+                web::post().to(fula::get_all_manifests_alter),
+            )
+            .route(
                 "fula/manifest/remove",
                 web::post().to(fula::remove_manifest),
             )
@@ -138,6 +142,10 @@ async fn main() -> std::io::Result<()> {
                 web::post().to(fula::get_available_manifests),
             )
             .route(
+                "fula/manifest/available/alter",
+                web::post().to(fula::get_all_available_manifests_alter),
+            )
+            .route(
                 "fula/manifest/storage",
                 web::post().to(fula::storage_manifest),
             )
@@ -148,6 +156,10 @@ async fn main() -> std::io::Result<()> {
             .route(
                 "fula/manifest/storer_data",
                 web::post().to(fula::get_all_manifests_storer_data),
+            )
+            .route(
+                "fula/manifest/storer_data/alter",
+                web::post().to(fula::get_all_manifests_storer_data_alter),
             )
             .route(
                 "fula/manifest/verify",
