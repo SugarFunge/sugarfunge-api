@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use crate::account;
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
@@ -7,7 +8,7 @@ use codec::Decode;
 use serde_json::json;
 use subxt::ext::sp_core::sr25519::Public;
 use subxt::ext::sp_runtime::AccountId32;
-// use subxt::storage::address::{StorageHasher, StorageMapKey};
+use subxt::storage::address::{StorageHasher, StorageMapKey};
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::pool::*;
 use sugarfunge_api_types::primitives::*;
@@ -27,12 +28,16 @@ pub async fn create_pool(
 
     let pool_name = String::from(&req.pool_name).into_bytes();
 
+    let region = &req.region;
+    let region: Region = region.into();
+    let region: Vec<u8> = region.into();
+
     let peer_id = String::from(&req.peer_id).into_bytes();
     let peer_id = BoundedVec(peer_id);
 
     let api = &data.api;
 
-    let call = sugarfunge::tx().pool().create(pool_name, peer_id);
+    let call = sugarfunge::tx().pool().create(pool_name, region, peer_id);
 
     let result = api
         .tx()
@@ -79,6 +84,9 @@ pub async fn leave_pool(
     let result = result
         .find_first::<sugarfunge::pool::events::ParticipantLeft>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(LeavePoolOutput {
             account: event.account.into(),
@@ -116,6 +124,9 @@ pub async fn join_pool(
     let result = result
         .find_first::<sugarfunge::pool::events::JoinRequested>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(JoinPoolOutput {
             account: event.account.into(),
@@ -150,6 +161,9 @@ pub async fn cancel_join_pool(
     let result = result
         .find_first::<sugarfunge::pool::events::RequestWithdrawn>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CancelJoinPoolOutput {
             account: event.account.into(),
@@ -171,11 +185,14 @@ pub async fn vote(
 
     let account = AccountId32::try_from(&req.account).map_err(map_account_err)?;
 
+    let peer_id = String::from(&req.peer_id).into_bytes();
+    let peer_id = BoundedVec(peer_id);
+
     let api = &data.api;
 
     let call = sugarfunge::tx()
         .pool()
-        .vote(req.pool_id.into(), account, req.vote_value);
+        .vote(req.pool_id.into(), account, req.vote_value, peer_id);
 
     let result = api
         .tx()
@@ -186,12 +203,16 @@ pub async fn vote(
         .await
         .map_err(map_fula_pool_err)?;
     let result = result
-        .find_first::<sugarfunge::pool::events::Accepted>()
+        .find_first::<sugarfunge::pool::events::VotingResult>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(VoteOutput {
             account: event.account.into(),
             pool_id: event.pool_id.into(),
+            result: String::from_utf8(event.result).unwrap_or_default().into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::pool::events::Accepted"),
@@ -200,7 +221,10 @@ pub async fn vote(
     }
 }
 
-pub async fn get_all_pools(data: web::Data<AppState>) -> error::Result<HttpResponse> {
+pub async fn get_all_pools(
+    data: web::Data<AppState>,
+    req: web::Json<GetAllPoolInput>,
+) -> error::Result<HttpResponse> {
     let api = &data.api;
     let mut result_array = Vec::new();
 
@@ -215,6 +239,7 @@ pub async fn get_all_pools(data: web::Data<AppState>) -> error::Result<HttpRespo
 
     // println!("Obtained keys:");
     for key in keys.iter() {
+        let mut meet_requirements = true;
         // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
         let pool_id_idx = 48;
@@ -241,15 +266,26 @@ pub async fn get_all_pools(data: web::Data<AppState>) -> error::Result<HttpRespo
                 storage_vec.push(current_account);
             }
 
-            result_array.push(PoolData {
-                pool_id: pool_id.into(),
-                pool_name: String::from_utf8(pool_value.name.0)
-                    .unwrap_or_default()
-                    .into(),
-                owner: transform_option_account_value(pool_value.owner),
-                parent: transform_option_pool_value(pool_value.parent),
-                participants: storage_vec,
-            });
+            let pool_region = String::from_utf8(pool_value.region.0).unwrap_or_default();
+
+            if let Some(region) = &req.region {
+                if *region != pool_region {
+                    meet_requirements = false;
+                }
+            }
+
+            if meet_requirements {
+                result_array.push(PoolData {
+                    pool_id: pool_id.into(),
+                    pool_name: String::from_utf8(pool_value.name.0)
+                        .unwrap_or_default()
+                        .into(),
+                    region: pool_region,
+                    creator: transform_option_account_value(pool_value.owner),
+                    parent: transform_option_pool_value(pool_value.parent),
+                    participants: storage_vec,
+                });
+            }
         }
     }
     Ok(HttpResponse::Ok().json(GetAllPoolsOutput {
@@ -257,12 +293,21 @@ pub async fn get_all_pools(data: web::Data<AppState>) -> error::Result<HttpRespo
     }))
 }
 
-pub async fn get_all_pool_requests(data: web::Data<AppState>) -> error::Result<HttpResponse> {
+pub async fn get_all_pool_requests(
+    data: web::Data<AppState>,
+    req: web::Json<GetAllPoolRequestInput>,
+) -> error::Result<HttpResponse> {
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().pool().pool_requests_root().to_bytes();
+    let mut query_key = sugarfunge::storage().pool().pool_requests_root().to_bytes();
     // println!("query_key pool_root len: {}", query_key.len());
+
+    if let Some(value) = req.pool_id.clone() {
+        let key_value: u32 = value.into();
+        StorageMapKey::new(&key_value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        // println!("query_key pool_id len: {}", query_key.len());
+    }
 
     let keys = api
         .storage()
@@ -272,6 +317,7 @@ pub async fn get_all_pool_requests(data: web::Data<AppState>) -> error::Result<H
 
     // println!("Obtained keys:");
     for key in keys.iter() {
+        let mut meet_requirements = true;
         // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
         let pool_id_idx = 48;
@@ -304,15 +350,27 @@ pub async fn get_all_pool_requests(data: web::Data<AppState>) -> error::Result<H
                 voters_vec.push(current_account);
             }
 
-            result_array.push(PoolRequestData {
-                pool_id: pool_id.into(),
-                account: account_id,
-                voted: voters_vec,
-                positive_votes: poolrequest_value.positive_votes,
-                peer_id: String::from_utf8(poolrequest_value.peer_id.0)
-                    .unwrap_or_default()
-                    .into(),
-            });
+            if let Some(account_filter) = req.account.clone() {
+                if AccountId32::from(
+                    Public::from_str(&account_id.as_str()).map_err(map_account_err)?,
+                ) != AccountId32::from(
+                    Public::from_str(&account_filter.as_str()).map_err(map_account_err)?,
+                ) {
+                    meet_requirements = false;
+                }
+            }
+
+            if meet_requirements {
+                result_array.push(PoolRequestData {
+                    pool_id: pool_id.into(),
+                    account: account_id,
+                    voted: voters_vec,
+                    positive_votes: poolrequest_value.positive_votes,
+                    peer_id: String::from_utf8(poolrequest_value.peer_id.0)
+                        .unwrap_or_default()
+                        .into(),
+                });
+            }
         }
     }
     Ok(HttpResponse::Ok().json(GetAllPoolRequestsOutput {

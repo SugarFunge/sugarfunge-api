@@ -110,32 +110,60 @@ async fn main() -> std::io::Result<()> {
             )
             .route("fula/manifest", web::post().to(fula::get_all_manifests))
             .route(
+                "fula/manifest/alter",
+                web::post().to(fula::get_all_manifests_alter),
+            )
+            .route(
                 "fula/manifest/remove",
                 web::post().to(fula::remove_manifest),
             )
             .route(
-                "fula/manifest/remove_storer",
-                web::post().to(fula::remove_storer),
+                "fula/manifest/batch_remove",
+                web::post().to(fula::batch_remove_manifest),
             )
             .route(
                 "fula/manifest/remove_stored_manifest",
                 web::post().to(fula::remove_stored_manifest),
             )
             .route(
+                "fula/manifest/batch_remove_stored_manifest",
+                web::post().to(fula::batch_remove_stored_manifest),
+            )
+            .route(
                 "fula/manifest/upload",
                 web::post().to(fula::upload_manifest),
+            )
+            .route(
+                "fula/manifest/batch_upload",
+                web::post().to(fula::batch_upload_manifest),
             )
             .route(
                 "fula/manifest/available",
                 web::post().to(fula::get_available_manifests),
             )
             .route(
+                "fula/manifest/available/alter",
+                web::post().to(fula::get_all_available_manifests_alter),
+            )
+            .route(
                 "fula/manifest/storage",
                 web::post().to(fula::storage_manifest),
             )
             .route(
+                "fula/manifest/batch_storage",
+                web::post().to(fula::batch_storage_manifest),
+            )
+            .route(
                 "fula/manifest/storer_data",
                 web::post().to(fula::get_all_manifests_storer_data),
+            )
+            .route(
+                "fula/manifest/storer_data/alter",
+                web::post().to(fula::get_all_manifests_storer_data_alter),
+            )
+            .route(
+                "fula/manifest/verify",
+                web::post().to(fula::verify_manifest),
             )
             .route("fula/pool/create", web::post().to(pool::create_pool))
             .route("fula/pool/leave", web::post().to(pool::leave_pool))
@@ -145,10 +173,10 @@ async fn main() -> std::io::Result<()> {
                 web::post().to(pool::cancel_join_pool),
             )
             .route("fula/pool/vote", web::post().to(pool::vote))
-            .route("fula/pool/all", web::get().to(pool::get_all_pools))
+            .route("fula/pool", web::post().to(pool::get_all_pools))
             .route(
                 "fula/pool/poolrequests",
-                web::get().to(pool::get_all_pool_requests),
+                web::post().to(pool::get_all_pool_requests),
             )
             .route("fula/pool/users", web::post().to(pool::get_all_pool_users))
     })
