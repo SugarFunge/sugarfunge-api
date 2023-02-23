@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
+use sp_core::U256;
+use std::{ops::Div, str::FromStr};
 use subxt::ext::sp_runtime::AccountId32;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -380,4 +381,8 @@ pub fn transform_storage_output(storers: Vec<AccountId32>) -> Vec<String> {
         .into_iter()
         .map(|current_storer| current_storer.to_string())
         .collect()
+}
+
+pub fn remove_decimals_from_u256(value: U256, decimals: u32) -> u128 {
+    return value.div(10_u128.pow(decimals) as u128).as_u128();
 }

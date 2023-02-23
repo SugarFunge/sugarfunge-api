@@ -16,6 +16,7 @@ mod asset;
 mod bag;
 mod bundle;
 mod command;
+mod contract;
 mod fula;
 mod market;
 mod pool;
@@ -179,6 +180,34 @@ async fn main() -> std::io::Result<()> {
                 web::post().to(pool::get_all_pool_requests),
             )
             .route("fula/pool/users", web::post().to(pool::get_all_pool_users))
+            .route(
+                "fula/contract/mint",
+                web::post().to(contract::contract_mint_to),
+            )
+            .route(
+                "fula/contract/supply",
+                web::post().to(contract::contract_total_supply),
+            )
+            .route(
+                "fula/contract/allowance",
+                web::post().to(contract::contract_allowance),
+            )
+            .route(
+                "fula/contract/increase_allowance",
+                web::post().to(contract::contract_increase_allowance),
+            )
+            .route(
+                "fula/contract/decrease_allowance",
+                web::post().to(contract::contract_decrease_allowance),
+            )
+            .route(
+                "fula/contract/burn",
+                web::post().to(contract::contract_burn_from),
+            )
+            .route(
+                "fula/contract/transfer",
+                web::post().to(contract::contract_transfer),
+            )
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()

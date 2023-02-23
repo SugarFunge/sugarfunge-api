@@ -13,6 +13,7 @@ pub mod account;
 pub mod asset;
 pub mod bag;
 pub mod bundle;
+pub mod contract;
 pub mod fula;
 pub mod market;
 pub mod pool;
