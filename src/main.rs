@@ -6,10 +6,10 @@ use actix_web::{
 };
 use command::*;
 use state::*;
-use util::url_to_string;
 use std::sync::Arc;
 use structopt::StructOpt;
 use subxt::{client::OnlineClient, PolkadotConfig};
+use util::url_to_string;
 
 mod account;
 mod asset;
@@ -18,9 +18,9 @@ mod bundle;
 mod command;
 mod market;
 mod state;
+mod subscription;
 mod util;
 mod validator;
-mod subscription;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

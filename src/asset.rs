@@ -2,8 +2,8 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
-use std::str::FromStr;
 use sp_core;
+use std::str::FromStr;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::asset::*;
 use sugarfunge_api_types::primitives::*;
@@ -25,7 +25,7 @@ pub async fn create_class(
 
     let call = sugarfunge::tx()
         .asset()
-        .create_class(to, req.class_id.into(), metadata);
+        .create_class(to.into(), req.class_id.into(), metadata);
 
     let result = api
         .tx()
@@ -59,8 +59,10 @@ pub async fn class_info(
 
     let call = sugarfunge::storage().asset().classes(&req.class_id.into());
 
-    let result = api.storage().fetch(&call, None).await;
-    let info = result.map_err(map_subxt_err)?;
+    let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
+
+    let info = storage.fetch(&call).await.map_err(map_subxt_err)?;
+
     Ok(HttpResponse::Ok().json(ClassInfoOutput {
         info: match info {
             Some(info) => Some(ClassInfo {
@@ -124,8 +126,10 @@ pub async fn info(
         .asset()
         .assets(&req.class_id.into(), &req.asset_id.into());
 
-    let result = api.storage().fetch(&call, None).await;
-    let info = result.map_err(map_subxt_err)?;
+    let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
+
+    let info = storage.fetch(&call).await.map_err(map_subxt_err)?;
+
     Ok(HttpResponse::Ok().json(AssetInfoOutput {
         info: match info {
             Some(info) => Some(AssetInfo {
@@ -273,7 +277,7 @@ pub async fn balance(
 ) -> error::Result<HttpResponse> {
     let account =
         sp_core::sr25519::Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
-    let account = sp_core::crypto::AccountId32::from(account);
+    let account = subxt::utils::AccountId32::from(account);
     let api = &data.api;
 
     let call = sugarfunge::storage().asset().balances(
@@ -282,8 +286,10 @@ pub async fn balance(
         &req.asset_id.into(),
     );
 
-    let result = api.storage().fetch(&call, None).await;
-    let amount = result.map_err(map_subxt_err)?;
+    let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
+
+    let amount = storage.fetch(&call).await.map_err(map_subxt_err)?;
+
     match amount {
         Some(amount) => Ok(HttpResponse::Ok().json(AssetBalanceOutput {
             amount: amount.into(),
@@ -319,9 +325,10 @@ pub async fn balances(
         println!("query_key class_id len: {}", query_key.len());
     }
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -339,12 +346,9 @@ pub async fn balances(
         let asset_id = u64::decode(&mut &asset_key[..]);
         println!("asset_id: {:?}", asset_id);
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
+
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = u128::decode(&mut &storage_data[..]);
             println!(
                 "Class_Id: {:?} AssetId: {:?}  Value: {:?}",
@@ -371,8 +375,7 @@ pub async fn transfer_from(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account_from =
-    subxt::utils::AccountId32::try_from(&req.from).map_err(map_account_err)?;
+    let account_from = subxt::utils::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = subxt::utils::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = &data.api;
 

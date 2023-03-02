@@ -14,15 +14,15 @@ bevy_derive = "0.9"
 
 [dependencies.subxt]
 git = "https://github.com/SugarFunge/subxt.git"
-branch = "feature/polkadot-v0.9.35"
+branch = "feature/polkadot-v0.9.37"
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.35"
+branch = "polkadot-v0.9.37"
 package = "sp-core"
 features = ["full_crypto"]
 
 [dependencies.sp-runtime]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.35"
+branch = "polkadot-v0.9.37"
 package = "sp-runtime"

@@ -4,8 +4,8 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
-use sp_runtime::AccountId32;
 use subxt::tx::PairSigner;
+use subxt::utils::AccountId32;
 use sugarfunge_api_types::bag::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
@@ -51,11 +51,7 @@ pub async fn register(
 pub fn transform_owners_input(in_owners: Vec<String>) -> Vec<AccountId32> {
     in_owners
         .into_iter()
-        .map(|current_owner| {
-            sp_runtime::AccountId32::from(
-                sp_core::sr25519::Public::from_str(&current_owner).unwrap(),
-            )
-        })
+        .map(|current_owner| AccountId32::from_str(&current_owner).unwrap())
         .collect()
 }
 

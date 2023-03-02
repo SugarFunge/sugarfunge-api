@@ -160,9 +160,7 @@ impl Into<RateAction> for sugarfunge_market::RateAction<u64, u64> {
     }
 }
 
-impl Into<sugarfunge_market::AssetRate<subxt::utils::AccountId32, u64, u64>>
-    for AssetRate
-{
+impl Into<sugarfunge_market::AssetRate<subxt::utils::AccountId32, u64, u64>> for AssetRate {
     fn into(self) -> sugarfunge_market::AssetRate<subxt::utils::AccountId32, u64, u64> {
         sugarfunge_market::AssetRate::<subxt::utils::AccountId32, u64, u64> {
             class_id: self.class_id.into(),
@@ -175,9 +173,7 @@ impl Into<sugarfunge_market::AssetRate<subxt::utils::AccountId32, u64, u64>>
     }
 }
 
-impl Into<AssetRate>
-    for sugarfunge_market::AssetRate<subxt::utils::AccountId32, u64, u64>
-{
+impl Into<AssetRate> for sugarfunge_market::AssetRate<subxt::utils::AccountId32, u64, u64> {
     fn into(self) -> AssetRate {
         AssetRate {
             class_id: self.class_id.into(),
@@ -189,9 +185,7 @@ impl Into<AssetRate>
     }
 }
 
-impl Into<RateBalance>
-    for sugarfunge_market::RateBalance<subxt::utils::AccountId32, u64, u64>
-{
+impl Into<RateBalance> for sugarfunge_market::RateBalance<subxt::utils::AccountId32, u64, u64> {
     fn into(self) -> RateBalance {
         RateBalance {
             rate: self.rate.into(),

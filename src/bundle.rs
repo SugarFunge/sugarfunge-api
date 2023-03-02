@@ -4,8 +4,8 @@ use actix_web::{error, web, HttpResponse};
 use codec::Encode;
 use hex::ToHex;
 use serde_json::json;
-use std::str::FromStr;
 use sp_core;
+use std::str::FromStr;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::bundle::*;
 use sugarfunge_api_types::primitives::*;
@@ -83,8 +83,7 @@ pub async fn mint_bundle(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account_from =
-        subxt::utils::AccountId32::try_from(&req.from).map_err(map_account_err)?;
+    let account_from = subxt::utils::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = subxt::utils::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;
@@ -128,8 +127,7 @@ pub async fn burn_bundle(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account_from =
-    subxt::utils::AccountId32::try_from(&req.from).map_err(map_account_err)?;
+    let account_from = subxt::utils::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = subxt::utils::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;

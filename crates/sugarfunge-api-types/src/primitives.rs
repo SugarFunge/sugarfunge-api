@@ -70,7 +70,9 @@ impl TryFrom<&Account> for subxt::utils::AccountId32 {
     ) -> Result<subxt::utils::AccountId32, sp_core::crypto::PublicError> {
         let account = sp_core::sr25519::Public::from_str(account.as_str());
         match account {
-            Ok(account) => Ok(subxt::utils::AccountId32::from(account.as_array_ref().to_owned())),
+            Ok(account) => Ok(subxt::utils::AccountId32::from(
+                account.as_array_ref().to_owned(),
+            )),
             Err(err) => Err(err),
         }
     }
