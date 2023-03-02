@@ -53,7 +53,6 @@ impl SubcriptionServiceWS {
                         .as_event::<sugarfunge::balances::events::Deposit>()
                         .unwrap()
                         .is_some()
-                        == true
                     {
                         let event = serde_json::to_string_pretty(
                             &event
@@ -68,7 +67,6 @@ impl SubcriptionServiceWS {
                         .as_event::<sugarfunge::balances::events::Transfer>()
                         .unwrap()
                         .is_some()
-                        == true
                     {
                         let event = serde_json::to_string_pretty(
                             &event
@@ -102,7 +100,6 @@ impl SubcriptionServiceWS {
                         .as_event::<sugarfunge::asset::events::Transferred>()
                         .unwrap()
                         .is_some()
-                        == true
                     {
                         let event = serde_json::to_string_pretty(
                             &event
@@ -117,7 +114,6 @@ impl SubcriptionServiceWS {
                         .as_event::<sugarfunge::asset::events::Mint>()
                         .unwrap()
                         .is_some()
-                        == true
                     {
                         let event = serde_json::to_string_pretty(
                             &event.as_event::<sugarfunge::asset::events::Mint>().unwrap(),
@@ -134,8 +130,6 @@ impl SubcriptionServiceWS {
 
         let api = self.data.api.clone();
 
-        let tx = tx_origin.clone();
-
         let bag_task = async move {
             let mut block_sub = api.blocks().subscribe_finalized().await.unwrap();
             while let Some(block) = block_sub.next().await {
@@ -150,7 +144,6 @@ impl SubcriptionServiceWS {
                         .as_event::<sugarfunge::bag::events::Created>()
                         .unwrap()
                         .is_some()
-                        == true
                     {
                         let event = serde_json::to_string_pretty(
                             &event
@@ -159,13 +152,12 @@ impl SubcriptionServiceWS {
                         );
                         if let Ok(event) = event {
                             let event_msg = String::from("Bag Created: ") + &event;
-                            tx.send(event_msg).unwrap();
+                            tx_origin.send(event_msg).unwrap();
                         }
                     } else if event
                         .as_event::<sugarfunge::bag::events::Deposit>()
                         .unwrap()
                         .is_some()
-                        == true
                     {
                         let event = serde_json::to_string_pretty(
                             &event
@@ -174,7 +166,7 @@ impl SubcriptionServiceWS {
                         );
                         if let Ok(event) = event {
                             let event_msg = String::from("Bag Deposit: ") + &event;
-                            tx.send(event_msg).unwrap();
+                            tx_origin.send(event_msg).unwrap();
                         }
                     }
                 }

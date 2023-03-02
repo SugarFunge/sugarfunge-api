@@ -2,7 +2,6 @@ use actix_web::error;
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use sp_core;
 use sp_core::Pair;
 use sugarfunge_api_types::primitives::*;
 use url::Url;

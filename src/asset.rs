@@ -2,7 +2,6 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
-use sp_core;
 use std::str::FromStr;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::asset::*;
@@ -17,7 +16,7 @@ pub async fn create_class(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = sp_core::sr25519::Public::from_str(&req.owner.as_str()).map_err(map_account_err)?;
+    let to = sp_core::sr25519::Public::from_str(req.owner.as_str()).map_err(map_account_err)?;
     let to = sp_core::crypto::AccountId32::from(to);
     let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
@@ -45,7 +44,7 @@ pub async fn create_class(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -57,7 +56,9 @@ pub async fn class_info(
 ) -> error::Result<HttpResponse> {
     let api = &data.api;
 
-    let call = sugarfunge::storage().asset().classes(&req.class_id.into());
+    let call = sugarfunge::storage()
+        .asset()
+        .classes(u64::from(req.class_id));
 
     let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
 
@@ -66,7 +67,7 @@ pub async fn class_info(
     Ok(HttpResponse::Ok().json(ClassInfoOutput {
         info: match info {
             Some(info) => Some(ClassInfo {
-                class_id: req.class_id.clone(),
+                class_id: req.class_id,
                 owner: info.owner.into(),
                 metadata: serde_json::from_slice(info.metadata.0.as_slice()).unwrap_or_default(),
             }),
@@ -110,7 +111,7 @@ pub async fn create(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -124,7 +125,7 @@ pub async fn info(
 
     let call = sugarfunge::storage()
         .asset()
-        .assets(&req.class_id.into(), &req.asset_id.into());
+        .assets(u64::from(req.class_id), u64::from(req.asset_id));
 
     let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
 
@@ -133,8 +134,8 @@ pub async fn info(
     Ok(HttpResponse::Ok().json(AssetInfoOutput {
         info: match info {
             Some(info) => Some(AssetInfo {
-                class_id: req.class_id.clone(),
-                asset_id: req.asset_id.clone(),
+                class_id: req.class_id,
+                asset_id: req.asset_id,
                 metadata: serde_json::from_slice(info.metadata.0.as_slice()).unwrap_or_default(),
             }),
             None => None,
@@ -179,7 +180,7 @@ pub async fn update_metadata(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -222,7 +223,7 @@ pub async fn mint(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::AssetMint"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -265,7 +266,7 @@ pub async fn burn(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::Burn"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -276,14 +277,14 @@ pub async fn balance(
     req: web::Json<AssetBalanceInput>,
 ) -> error::Result<HttpResponse> {
     let account =
-        sp_core::sr25519::Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
+        sp_core::sr25519::Public::from_str(req.account.as_str()).map_err(map_account_err)?;
     let account = subxt::utils::AccountId32::from(account);
     let api = &data.api;
 
     let call = sugarfunge::storage().asset().balances(
         &account,
-        &req.class_id.into(),
-        &req.asset_id.into(),
+        u64::from(req.class_id),
+        u64::from(req.asset_id),
     );
 
     let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
@@ -296,7 +297,7 @@ pub async fn balance(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::balances::events::balance"),
-            description: format!("Error in asset::balance"),
+            description: "Error in asset::balance".to_string(),
         })),
     }
 }
@@ -310,7 +311,7 @@ pub async fn balances(
     req: web::Json<AssetBalancesInput>,
 ) -> error::Result<HttpResponse> {
     let account =
-        sp_core::sr25519::Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
+        sp_core::sr25519::Public::from_str(req.account.as_str()).map_err(map_account_err)?;
     let account = sp_core::crypto::AccountId32::from(account);
     let api = &data.api;
 
@@ -321,7 +322,7 @@ pub async fn balances(
     println!("query_key account len: {}", query_key.len());
     if let Some(class_id) = req.class_id {
         let class_id: u64 = class_id.into();
-        StorageMapKey::new(&class_id, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        StorageMapKey::new(class_id, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
         println!("query_key class_id len: {}", query_key.len());
     }
 
@@ -334,7 +335,7 @@ pub async fn balances(
 
     println!("Obtained keys:");
     for key in keys.iter() {
-        println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+        println!("Key: len: {} 0x{}", key.0.len(), hex::encode(key));
 
         let class_idx = 96;
         let class_key = key.0.as_slice()[class_idx..(class_idx + 8)].to_vec();
@@ -409,7 +410,7 @@ pub async fn transfer_from(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::Transferred"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }

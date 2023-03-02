@@ -4,7 +4,6 @@ use actix_web::{error, web, HttpResponse};
 use codec::Encode;
 use hex::ToHex;
 use serde_json::json;
-use sp_core;
 use std::str::FromStr;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::bundle::*;
@@ -72,7 +71,7 @@ pub async fn register_bundle(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Register"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -85,7 +84,7 @@ pub async fn mint_bundle(
     let signer = PairSigner::new(pair);
     let account_from = subxt::utils::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = subxt::utils::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
+    let bundle_id = sp_core::H256::from_str(req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;
 
     let call = sugarfunge::tx().bundle().mint_bundle(
@@ -116,7 +115,7 @@ pub async fn mint_bundle(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Mint"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -129,7 +128,7 @@ pub async fn burn_bundle(
     let signer = PairSigner::new(pair);
     let account_from = subxt::utils::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let account_to = subxt::utils::AccountId32::try_from(&req.to).map_err(map_account_err)?;
-    let bundle_id = sp_core::H256::from_str(&req.bundle_id.as_str()).unwrap_or_default();
+    let bundle_id = sp_core::H256::from_str(req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;
 
     let call = sugarfunge::tx().bundle().burn_bundle(
@@ -160,7 +159,7 @@ pub async fn burn_bundle(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bundle::events::Burn"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }

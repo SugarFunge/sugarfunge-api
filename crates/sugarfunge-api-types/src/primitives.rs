@@ -11,7 +11,7 @@ pub struct Seed(String);
 
 impl From<String> for Seed {
     fn from(seed: String) -> Seed {
-        Seed(seed.clone())
+        Seed(seed)
     }
 }
 
@@ -32,7 +32,7 @@ pub struct Account(String);
 
 impl From<String> for Account {
     fn from(account: String) -> Account {
-        Account(account.clone())
+        Account(account)
     }
 }
 
@@ -170,7 +170,7 @@ pub struct BundleId(String);
 
 impl From<String> for BundleId {
     fn from(bundleid: String) -> BundleId {
-        BundleId(bundleid.clone())
+        BundleId(bundleid)
     }
 }
 
@@ -199,7 +199,7 @@ pub struct ValidatorId(String);
 
 impl From<String> for ValidatorId {
     fn from(validatorid: String) -> ValidatorId {
-        ValidatorId(validatorid.clone())
+        ValidatorId(validatorid)
     }
 }
 
@@ -223,53 +223,31 @@ pub fn transform_vec_account_to_string(in_vec: Vec<Account>) -> Vec<String> {
 }
 
 pub fn transform_vec_string_to_account(in_vec: Vec<String>) -> Vec<Account> {
-    in_vec
-        .into_iter()
-        .map(|account| Account::from(account))
-        .collect()
+    in_vec.into_iter().map(Account::from).collect()
 }
 
-pub fn transform_vec_balance_to_u128(in_vec: &Vec<Balance>) -> Vec<u128> {
-    in_vec
-        .into_iter()
-        .map(|balance| u128::from(*balance))
-        .collect()
+pub fn transform_vec_balance_to_u128(in_vec: &[Balance]) -> Vec<u128> {
+    in_vec.iter().map(|balance| u128::from(*balance)).collect()
 }
 
 pub fn transform_vec_classid_to_u64(in_vec: Vec<ClassId>) -> Vec<u64> {
-    in_vec
-        .into_iter()
-        .map(|classid| u64::from(classid))
-        .collect()
+    in_vec.into_iter().map(u64::from).collect()
 }
 
 pub fn transform_vec_assetid_to_u64(in_vec: Vec<AssetId>) -> Vec<u64> {
-    in_vec
-        .into_iter()
-        .map(|assetid| u64::from(assetid))
-        .collect()
+    in_vec.into_iter().map(u64::from).collect()
 }
 
 pub fn transform_doublevec_assetid_to_u64(in_vec: Vec<Vec<AssetId>>) -> Vec<Vec<u64>> {
     in_vec
         .into_iter()
-        .map(|assetid| {
-            assetid
-                .into_iter()
-                .map(|assetid| u64::from(assetid))
-                .collect()
-        })
+        .map(|assetid| assetid.into_iter().map(u64::from).collect())
         .collect()
 }
 
 pub fn transform_doublevec_balance_to_u128(in_vec: Vec<Vec<Balance>>) -> Vec<Vec<u128>> {
     in_vec
         .into_iter()
-        .map(|balance| {
-            balance
-                .into_iter()
-                .map(|balance| u128::from(balance))
-                .collect()
-        })
+        .map(|balance| balance.into_iter().map(u128::from).collect())
         .collect()
 }

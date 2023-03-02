@@ -43,7 +43,7 @@ pub async fn register(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bag::events::Register"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -97,7 +97,7 @@ pub async fn create(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bag::events::AccountCreated"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -133,7 +133,7 @@ pub async fn sweep(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bag::events::Sweep"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -172,7 +172,7 @@ pub async fn deposit(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bag::events::Deposit"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }

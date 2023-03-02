@@ -3,7 +3,6 @@ use crate::util::*;
 use actix_web::{error, web, HttpRequest, HttpResponse};
 use rand::prelude::*;
 use serde_json::json;
-use sp_core;
 use sp_core::Pair;
 use sp_runtime::traits::IdentifyAccount;
 use subxt::tx::PairSigner;
@@ -18,7 +17,7 @@ pub async fn create(_req: HttpRequest) -> error::Result<HttpResponse> {
     let seed = format!("//{}", seed);
     let seed = Seed::from(seed);
     let pair = get_pair_from_seed(&seed)?;
-    let account: sp_core::sr25519::Public = pair.public().into();
+    let account: sp_core::sr25519::Public = pair.public();
     let account = account.into_account();
     Ok(HttpResponse::Ok().json(CreateAccountOutput {
         seed,
@@ -72,7 +71,7 @@ pub async fn fund(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::balances::events::Transfer"),
-            description: format!("Error in account::fund"),
+            description: "Error in account::fund".to_string(),
         })),
     }
 }
@@ -96,7 +95,7 @@ pub async fn balance(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::balances::events::balance"),
-            description: format!("Error in account::balance"),
+            description: "Error in account::balance".to_string(),
         })),
     }
 }
@@ -121,7 +120,7 @@ pub async fn exists(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::balances::events::balance"),
-            description: format!("Error in account::exist"),
+            description: "Error in account::exist".to_string(),
         })),
     }
 }
