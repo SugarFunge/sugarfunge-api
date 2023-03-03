@@ -1,15 +1,22 @@
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use contract_integration::admin_calls::*;
+use contract_integration::calls::mint_to;
 use serde_json::json;
 use sp_core::U256;
 use sugarfunge_api_types::contract::*;
 use sugarfunge_api_types::primitives::*;
 
 pub async fn contract_mint_to(
-    req: web::Json<ContractTransactionInput>,
+    req: web::Json<ContractTransactionInputNew>,
 ) -> error::Result<HttpResponse> {
-    let result = mint_to(req.account_address.as_str(), U256::from(req.amount)).await;
+    let result = mint_to(
+        &req.private_key.as_str(),
+        &req.contract_address.as_str(),
+        &req.account_address.as_str(),
+        U256::from(req.amount as u128),
+    )
+    .await;
 
     match result {
         Ok(event) => Ok(HttpResponse::Ok().json(event)),
