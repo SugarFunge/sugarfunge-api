@@ -1,4 +1,4 @@
-use crate::primitives::*;
+use crate::{challenge::ChallengeStateValue, primitives::*};
 use serde::{Deserialize, Serialize};
 
 // VERIFY MANIFEST STRUCTS
@@ -200,6 +200,7 @@ pub struct ManifestStorageData {
     pub active_days: i32,
     pub active_cycles: u16,
     pub missed_cycles: u16,
+    pub state: ChallengeStateValue,
 }
 
 // GET AVAILABLE MANIFEST STRUCTS

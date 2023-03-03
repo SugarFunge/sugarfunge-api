@@ -9,6 +9,7 @@ use subxt::ext::sp_core::sr25519::Public;
 use subxt::ext::sp_runtime::AccountId32;
 use subxt::storage::address::{StorageHasher, StorageMapKey};
 use subxt::tx::PairSigner;
+use sugarfunge_api_types::challenge::ChallengeStateValue;
 use sugarfunge_api_types::fula::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
@@ -654,6 +655,7 @@ pub async fn get_all_manifests_storer_data(
                     pool_id: pool_id.into(),
                     account: account_id,
                     cid: cid_id.into(),
+                    state: manifest_value.challenge_state.into(),
                 });
             }
         }
@@ -950,6 +952,8 @@ pub fn transform_get_manifests_storer_data(
             active_days: manifest.manifest_data.active_days,
             active_cycles: manifest.manifest_data.active_cycles,
             missed_cycles: manifest.manifest_data.missed_cycles,
+            // TO DO: fix the data passed from the fula-pallet to set the correct challenge state
+            state: ChallengeStateValue::Open,
         })
     }
     return result;

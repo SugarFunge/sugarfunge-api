@@ -15,6 +15,7 @@ mod account;
 mod asset;
 mod bag;
 mod bundle;
+mod challenge;
 mod command;
 mod contract;
 mod fula;
@@ -207,6 +208,18 @@ async fn main() -> std::io::Result<()> {
             .route(
                 "fula/contract/transfer",
                 web::post().to(contract::contract_transfer),
+            )
+            .route(
+                "fula/challenge/generate",
+                web::post().to(challenge::generate_challenge),
+            )
+            .route(
+                "fula/challenge/verify",
+                web::post().to(challenge::verify_challenge),
+            )
+            .route(
+                "fula/mint_labor_tokens",
+                web::post().to(challenge::mint_labor_tokens),
             )
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
