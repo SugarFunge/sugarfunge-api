@@ -221,6 +221,22 @@ async fn main() -> std::io::Result<()> {
                 "fula/mint_labor_tokens",
                 web::post().to(challenge::mint_labor_tokens),
             )
+            .route(
+                "fula/mint_challenge_tokens",
+                web::post().to(challenge::mint_challenge_tokens),
+            )
+            .route(
+                "fula/challenge/pending",
+                web::post().to(challenge::verify_pending_challenge),
+            )
+            .route(
+                "fula/file/verify",
+                web::post().to(challenge::verify_file_size),
+            )
+            .route(
+                "fula/file/provide",
+                web::post().to(challenge::provide_file_size),
+            )
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()
