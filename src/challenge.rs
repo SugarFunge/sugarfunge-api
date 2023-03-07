@@ -98,3 +98,71 @@ pub async fn mint_labor_tokens(
         amount: 0.into(),
     }))
 }
+
+pub async fn mint_challenge_tokens(
+    _data: web::Data<AppState>,
+    req: web::Json<MintChallengeTokensInput>,
+) -> error::Result<HttpResponse> {
+    // TO DO: The implementation of the calculation and mint from the fula-pallet
+
+    let pair = get_pair_from_seed(&req.seed)?;
+    let account: subxt::ext::sp_core::sr25519::Public = pair.public().into();
+    let account = account.into_account();
+
+    Ok(HttpResponse::Ok().json(MintChallengeTokensOutput {
+        account: Account::from(format!("{}", account)),
+        class_id: req.class_id,
+        asset_id: req.asset_id,
+        amount: 0.into(),
+    }))
+}
+
+pub async fn verify_pending_challenge(
+    _data: web::Data<AppState>,
+    req: web::Json<VerifyPendingChallengeInput>,
+) -> error::Result<HttpResponse> {
+    // TO DO: The implementation of the calculation and mint from the fula-pallet
+
+    let pair = get_pair_from_seed(&req.seed)?;
+    let account: subxt::ext::sp_core::sr25519::Public = pair.public().into();
+    let account = account.into_account();
+
+    Ok(HttpResponse::Ok().json(VerifyPendingChallengeOutput {
+        account: Account::from(format!("{}", account)),
+        pending: true,
+    }))
+}
+
+pub async fn verify_file_size(
+    _data: web::Data<AppState>,
+    req: web::Json<VerifyFileSizeInput>,
+) -> error::Result<HttpResponse> {
+    // TO DO: The implementation of the calculation and mint from the fula-pallet
+
+    let pair = get_pair_from_seed(&req.seed)?;
+    let account: subxt::ext::sp_core::sr25519::Public = pair.public().into();
+    let account = account.into_account();
+
+    Ok(HttpResponse::Ok().json(VerifyFileSizeOutput {
+        account: Account::from(format!("{}", account)),
+        cids: Vec::<Cid>::new(),
+    }))
+}
+
+pub async fn provide_file_size(
+    _data: web::Data<AppState>,
+    req: web::Json<ProvideFileSizeInput>,
+) -> error::Result<HttpResponse> {
+    // TO DO: The implementation of the calculation and mint from the fula-pallet
+
+    let pair = get_pair_from_seed(&req.seed)?;
+    let account: subxt::ext::sp_core::sr25519::Public = pair.public().into();
+    let account = account.into_account();
+
+    Ok(HttpResponse::Ok().json(ProvideFileSizeOutput {
+        account: Account::from(format!("{}", account)),
+        pool_id: req.pool_id,
+        cids: req.cids.to_vec(),
+        sizes: req.sizes.to_vec(),
+    }))
+}

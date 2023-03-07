@@ -41,8 +41,6 @@ pub struct VerifyChallengeInput {
     pub seed: Seed,
     pub pool_id: PoolId,
     pub cids: Vec<Cid>,
-    pub class_id: ClassId,
-    pub asset_id: AssetId,
 }
 
 // CALCULATE AND MINT LABOR TOKENS
@@ -61,4 +59,65 @@ pub struct MintLaborTokensOutput {
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub amount: Balance,
+}
+
+// CALCULATE AND MINT LABOR TOKENS
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MintChallengeTokensInput {
+    pub seed: Seed,
+    pub pool_id: PoolId,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MintChallengeTokensOutput {
+    pub account: Account,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
+    pub amount: Balance,
+}
+
+// Verify Pending Challenge Input
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct VerifyPendingChallengeInput {
+    pub seed: Seed,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct VerifyPendingChallengeOutput {
+    pub account: Account,
+    pub pending: bool,
+}
+
+// Verify if there is a File size available to update
+#[derive(Serialize, Deserialize, Debug)]
+pub struct VerifyFileSizeInput {
+    pub seed: Seed,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct VerifyFileSizeOutput {
+    pub account: Account,
+    pub cids: Vec<Cid>,
+}
+
+// Verify Pending Challenge Input
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ProvideFileSizeInput {
+    pub seed: Seed,
+    pub pool_id: PoolId,
+    pub cids: Vec<Cid>,
+    pub sizes: Vec<u64>
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ProvideFileSizeOutput {
+    pub account: Account,
+    pub pool_id: PoolId,
+    pub cids: Vec<Cid>,
+    pub sizes: Vec<u64>
 }
