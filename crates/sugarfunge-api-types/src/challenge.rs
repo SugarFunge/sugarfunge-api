@@ -41,6 +41,8 @@ pub struct VerifyChallengeInput {
     pub seed: Seed,
     pub pool_id: PoolId,
     pub cids: Vec<Cid>,
+    pub class_id: ClassId,
+    pub asset_id: AssetId,
 }
 
 // CALCULATE AND MINT LABOR TOKENS
@@ -55,24 +57,6 @@ pub struct MintLaborTokensInput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MintLaborTokensOutput {
-    pub account: Account,
-    pub class_id: ClassId,
-    pub asset_id: AssetId,
-    pub amount: Balance,
-}
-
-// CALCULATE AND MINT LABOR TOKENS
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct MintChallengeTokensInput {
-    pub seed: Seed,
-    pub pool_id: PoolId,
-    pub class_id: ClassId,
-    pub asset_id: AssetId,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct MintChallengeTokensOutput {
     pub account: Account,
     pub class_id: ClassId,
     pub asset_id: AssetId,
@@ -111,7 +95,7 @@ pub struct ProvideFileSizeInput {
     pub seed: Seed,
     pub pool_id: PoolId,
     pub cids: Vec<Cid>,
-    pub sizes: Vec<u64>
+    pub sizes: Vec<u64>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -119,5 +103,5 @@ pub struct ProvideFileSizeOutput {
     pub account: Account,
     pub pool_id: PoolId,
     pub cids: Vec<Cid>,
-    pub sizes: Vec<u64>
+    pub sizes: Vec<u64>,
 }

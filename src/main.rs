@@ -222,10 +222,6 @@ async fn main() -> std::io::Result<()> {
                 web::post().to(challenge::mint_labor_tokens),
             )
             .route(
-                "fula/mint_challenge_tokens",
-                web::post().to(challenge::mint_challenge_tokens),
-            )
-            .route(
                 "fula/challenge/pending",
                 web::post().to(challenge::verify_pending_challenge),
             )
