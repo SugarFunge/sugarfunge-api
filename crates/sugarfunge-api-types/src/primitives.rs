@@ -165,7 +165,7 @@ impl From<Amount> for i128 {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Deref, DerefMut)]
 pub struct BundleId(String);
 
 impl From<String> for BundleId {
@@ -194,7 +194,7 @@ impl FromIterator<char> for BundleId {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Deref, DerefMut)]
 pub struct ValidatorId(String);
 
 impl From<String> for ValidatorId {
