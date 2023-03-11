@@ -233,6 +233,7 @@ async fn main() -> std::io::Result<()> {
                 "fula/file/provide",
                 web::post().to(challenge::provide_file_size),
             )
+            .route("fula/challenge", web::post().to(challenge::get_challenges))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()

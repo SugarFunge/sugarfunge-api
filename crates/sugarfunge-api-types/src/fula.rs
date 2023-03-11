@@ -229,6 +229,7 @@ pub struct Manifest {
     pub pool_id: PoolId,
     pub uploaders: Vec<UploaderData>,
     pub manifest_metadata: serde_json::Value,
+    pub size: Option<u64>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

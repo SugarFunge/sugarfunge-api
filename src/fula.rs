@@ -515,6 +515,7 @@ pub async fn get_all_manifests(
                     uploaders: uploaders_data.to_owned(),
                     manifest_metadata: serde_json::from_slice(value.manifest_metadata.as_slice())
                         .unwrap_or_default(),
+                    size: value.size,
                 });
             }
         }
@@ -919,6 +920,7 @@ pub fn transform_get_manifests(
             ),
             manifest_metadata: serde_json::from_slice(manifest.manifest_metadata.0.as_slice())
                 .unwrap_or_default(),
+            size: manifest.size,
         })
     }
     return result;
