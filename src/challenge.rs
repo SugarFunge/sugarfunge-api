@@ -218,7 +218,9 @@ pub async fn verify_file_size(
                 verify_contains_storer(uploaders_data.to_owned(), req.account.clone())
             {
                 if contained_value {
-                    result_array.push(Cid::from(cid_id))
+                    if let None = value.size {
+                        result_array.push(Cid::from(cid_id))
+                    }
                 }
             }
         }
