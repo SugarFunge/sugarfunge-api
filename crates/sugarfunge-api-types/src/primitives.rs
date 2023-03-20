@@ -1,6 +1,7 @@
-use std::str::FromStr;
-
 use serde::{Deserialize, Serialize};
+use sp_core::U256;
+use std::{ops::Div, str::FromStr};
+use subxt::ext::sp_runtime::AccountId32;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Seed(String);
@@ -24,6 +25,69 @@ impl Seed {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PeerId(String);
+
+impl From<String> for PeerId {
+    fn from(peer_id: String) -> PeerId {
+        PeerId(peer_id.clone())
+    }
+}
+
+impl From<&PeerId> for String {
+    fn from(peer_id: &PeerId) -> String {
+        peer_id.0.clone()
+    }
+}
+
+impl PeerId {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Name(String);
+
+impl From<String> for Name {
+    fn from(name: String) -> Name {
+        Name(name.clone())
+    }
+}
+
+impl From<&Name> for String {
+    fn from(name: &Name) -> String {
+        name.0.clone()
+    }
+}
+
+impl Name {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Cid(String);
+
+impl From<String> for Cid {
+    fn from(cid: String) -> Cid {
+        Cid(cid.clone())
+    }
+}
+
+impl From<&Cid> for String {
+    fn from(cid: &Cid) -> String {
+        cid.0.clone()
+    }
+}
+
+impl Cid {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Account(String);
 
 impl From<String> for Account {
@@ -38,6 +102,12 @@ impl From<sp_core::crypto::AccountId32> for Account {
     }
 }
 
+impl From<subxt::ext::sp_runtime::AccountId32> for Account {
+    fn from(account: subxt::ext::sp_runtime::AccountId32) -> Account {
+        Account(account.to_string())
+    }
+}
+
 impl TryFrom<&Account> for sp_core::crypto::AccountId32 {
     type Error = sp_core::crypto::PublicError;
 
@@ -47,6 +117,20 @@ impl TryFrom<&Account> for sp_core::crypto::AccountId32 {
         let account = sp_core::sr25519::Public::from_str(account.as_str());
         match account {
             Ok(account) => Ok(sp_core::crypto::AccountId32::from(account)),
+            Err(err) => Err(err),
+        }
+    }
+}
+
+impl TryFrom<&Account> for subxt::ext::sp_runtime::AccountId32 {
+    type Error = subxt::ext::sp_core::crypto::PublicError;
+
+    fn try_from(
+        account: &Account,
+    ) -> Result<subxt::ext::sp_runtime::AccountId32, subxt::ext::sp_core::crypto::PublicError> {
+        let account = subxt::ext::sp_core::sr25519::Public::from_str(account.as_str());
+        match account {
+            Ok(account) => Ok(subxt::ext::sp_runtime::AccountId32::from(account)),
             Err(err) => Err(err),
         }
     }
@@ -75,6 +159,36 @@ impl From<u64> for MarketId {
 
 impl From<MarketId> for u64 {
     fn from(id: MarketId) -> u64 {
+        id.0
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct PoolId(u32);
+
+impl From<u32> for PoolId {
+    fn from(id: u32) -> PoolId {
+        PoolId(id)
+    }
+}
+
+impl From<PoolId> for u32 {
+    fn from(id: PoolId) -> u32 {
+        id.0
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct ReplicationFactor(u16);
+
+impl From<u16> for ReplicationFactor {
+    fn from(id: u16) -> ReplicationFactor {
+        ReplicationFactor(id)
+    }
+}
+
+impl From<ReplicationFactor> for u16 {
+    fn from(id: ReplicationFactor) -> u16 {
         id.0
     }
 }
@@ -246,4 +360,29 @@ pub fn transform_doublevec_balance_to_u128(in_vec: Vec<Vec<Balance>>) -> Vec<Vec
                 .collect()
         })
         .collect()
+}
+
+pub fn transform_option_account_value(value: Option<AccountId32>) -> Option<Account> {
+    if let Some(value) = value {
+        return Some(value.into());
+    }
+    return None::<Account>;
+}
+
+pub fn transform_option_pool_value(value: Option<u32>) -> Option<PoolId> {
+    if let Some(value) = value {
+        return Some(value.into());
+    }
+    return None::<PoolId>;
+}
+
+pub fn transform_storage_output(storers: Vec<AccountId32>) -> Vec<String> {
+    storers
+        .into_iter()
+        .map(|current_storer| current_storer.to_string())
+        .collect()
+}
+
+pub fn remove_decimals_from_u256(value: U256, decimals: u32) -> u128 {
+    return value.div(10_u128.pow(decimals) as u128).as_u128();
 }

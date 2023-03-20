@@ -6,21 +6,25 @@ use actix_web::{
 };
 use command::*;
 use state::*;
-use util::url_to_string;
 use std::sync::Arc;
 use structopt::StructOpt;
 use subxt::{client::OnlineClient, PolkadotConfig};
+use util::url_to_string;
 
 mod account;
 mod asset;
 mod bag;
 mod bundle;
+mod challenge;
 mod command;
+mod contract;
+mod fula;
 mod market;
+mod pool;
 mod state;
+mod subscription;
 mod util;
 mod validator;
-mod subscription;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -50,6 +54,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(cors)
             .app_data(Data::new(state.clone()))
+            .route("health", web::post().to(util::health_check))
             .service(web::resource("/ws").route(web::get().to(subscription::ws)))
             // .route("/ws", web::get().to(subscription::ws))
             .route("account/seeded", web::post().to(account::seeded))
@@ -101,6 +106,134 @@ async fn main() -> std::io::Result<()> {
                 "market/exchange_assets",
                 web::post().to(market::exchange_assets),
             )
+            .route(
+                "fula/manifest/update",
+                web::post().to(fula::update_manifest),
+            )
+            .route("fula/manifest", web::post().to(fula::get_all_manifests))
+            .route(
+                "fula/manifest/alter",
+                web::post().to(fula::get_all_manifests_alter),
+            )
+            .route(
+                "fula/manifest/remove",
+                web::post().to(fula::remove_manifest),
+            )
+            .route(
+                "fula/manifest/batch_remove",
+                web::post().to(fula::batch_remove_manifest),
+            )
+            .route(
+                "fula/manifest/remove_stored_manifest",
+                web::post().to(fula::remove_stored_manifest),
+            )
+            .route(
+                "fula/manifest/batch_remove_stored_manifest",
+                web::post().to(fula::batch_remove_stored_manifest),
+            )
+            .route(
+                "fula/manifest/upload",
+                web::post().to(fula::upload_manifest),
+            )
+            .route(
+                "fula/manifest/batch_upload",
+                web::post().to(fula::batch_upload_manifest),
+            )
+            .route(
+                "fula/manifest/available",
+                web::post().to(fula::get_available_manifests),
+            )
+            .route(
+                "fula/manifest/available/alter",
+                web::post().to(fula::get_all_available_manifests_alter),
+            )
+            .route(
+                "fula/manifest/storage",
+                web::post().to(fula::storage_manifest),
+            )
+            .route(
+                "fula/manifest/batch_storage",
+                web::post().to(fula::batch_storage_manifest),
+            )
+            .route(
+                "fula/manifest/storer_data",
+                web::post().to(fula::get_all_manifests_storer_data),
+            )
+            .route(
+                "fula/manifest/storer_data/alter",
+                web::post().to(fula::get_all_manifests_storer_data_alter),
+            )
+            .route(
+                "fula/manifest/verify",
+                web::post().to(fula::verify_manifest),
+            )
+            .route("fula/pool/create", web::post().to(pool::create_pool))
+            .route("fula/pool/leave", web::post().to(pool::leave_pool))
+            .route("fula/pool/join", web::post().to(pool::join_pool))
+            .route(
+                "fula/pool/cancel_join",
+                web::post().to(pool::cancel_join_pool),
+            )
+            .route("fula/pool/vote", web::post().to(pool::vote))
+            .route("fula/pool", web::post().to(pool::get_all_pools))
+            .route(
+                "fula/pool/poolrequests",
+                web::post().to(pool::get_all_pool_requests),
+            )
+            .route("fula/pool/users", web::post().to(pool::get_all_pool_users))
+            .route(
+                "fula/contract/mint",
+                web::post().to(contract::contract_mint_to),
+            )
+            .route(
+                "fula/contract/supply",
+                web::post().to(contract::contract_total_supply),
+            )
+            .route(
+                "fula/contract/allowance",
+                web::post().to(contract::contract_allowance),
+            )
+            .route(
+                "fula/contract/increase_allowance",
+                web::post().to(contract::contract_increase_allowance),
+            )
+            .route(
+                "fula/contract/decrease_allowance",
+                web::post().to(contract::contract_decrease_allowance),
+            )
+            .route(
+                "fula/contract/burn",
+                web::post().to(contract::contract_burn_from),
+            )
+            .route(
+                "fula/contract/transfer",
+                web::post().to(contract::contract_transfer),
+            )
+            .route(
+                "fula/challenge/generate",
+                web::post().to(challenge::generate_challenge),
+            )
+            .route(
+                "fula/challenge/verify",
+                web::post().to(challenge::verify_challenge),
+            )
+            .route(
+                "fula/mint_labor_tokens",
+                web::post().to(challenge::mint_labor_tokens),
+            )
+            .route(
+                "fula/challenge/pending",
+                web::post().to(challenge::verify_pending_challenge),
+            )
+            .route(
+                "fula/file/verify",
+                web::post().to(challenge::verify_file_size),
+            )
+            .route(
+                "fula/file/provide",
+                web::post().to(challenge::provide_file_size),
+            )
+            .route("fula/challenge", web::post().to(challenge::get_challenges))
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()

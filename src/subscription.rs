@@ -34,26 +34,34 @@ impl SubcriptionServiceWS {
 
     fn subscribe(&mut self, ctx: &mut <Self as Actor>::Context) {
         let (tx_origin, rx) = channel::unbounded();
+
         let api = self.data.api.clone();
         let tx = tx_origin.clone();
 
         let balances_task = async move {
+            // Subscribe to (in this case, finalized) blocks.
+            let mut block_sub = api.blocks().subscribe_finalized().await.unwrap();
+            while let Some(block) = block_sub.next().await {
+                let block = block.unwrap();        
+                // Ask for the events for this block.
+                let events = block.events().await.unwrap();
 
-            let mut balances_events = api.events().subscribe().await.unwrap().filter_events::<(
-                    sugarfunge::balances::events::Deposit,
-                    sugarfunge::balances::events::Transfer,
-            )>();
-
-            while let Some(event) = balances_events.next().await {
-                if let Ok(event) = event {
-                    let event = match event.event {
-                        (None, Some(event)) => serde_json::to_string_pretty(&event),
-                        (Some(event), None) => serde_json::to_string_pretty(&event),
-                        _ => panic!("Invalid event"),
-                    };
-                    if let Ok(event) = event {
-                        tx.send(event).unwrap();
-                    }
+                for event in events.iter() {
+                    let event = event.unwrap();
+                    
+                    if event.as_event::<sugarfunge::balances::events::Deposit>().unwrap().is_some() == true {
+                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::balances::events::Deposit>().unwrap());
+                        if let Ok(event) = event {
+                            let event_msg = String::from("Balance Deposit: ") + &event;
+                            tx.send(event_msg).unwrap();
+                        }
+                    } else if event.as_event::<sugarfunge::balances::events::Transfer>().unwrap().is_some() == true {
+                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::balances::events::Transfer>().unwrap());
+                        if let Ok(event) = event {
+                            let event_msg = String::from("Balance Transfer: ") + &event;
+                            tx.send(event_msg).unwrap();
+                        }
+                    }                 
                 }
             }
         }
@@ -61,25 +69,31 @@ impl SubcriptionServiceWS {
         .into_actor(self);
 
         let api = self.data.api.clone();
-
         let tx = tx_origin.clone();
         
         let asset_task = async move {
-            let mut asset_events = api.events().subscribe().await.unwrap().filter_events::<(
-                sugarfunge::asset::events::Transferred,
-                sugarfunge::asset::events::Mint,
-            )>();
+            let mut block_sub = api.blocks().subscribe_finalized().await.unwrap();
+            while let Some(block) = block_sub.next().await {
+                let block = block.unwrap();        
+                // Ask for the events for this block.
+                let events = block.events().await.unwrap();
 
-            while let Some(event) = asset_events.next().await {
-                if let Ok(event) = event {
-                    let event = match event.event {
-                        (None, Some(event)) => serde_json::to_string_pretty(&event),
-                        (Some(event), None) => serde_json::to_string_pretty(&event),
-                        _ => panic!("Invalid event"),
-                    };
-                    if let Ok(event) = event {
-                        tx.send(event).unwrap();
-                    }
+                for event in events.iter() {
+                    let event = event.unwrap();
+                    
+                    if event.as_event::<sugarfunge::asset::events::Transferred>().unwrap().is_some() == true {
+                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::asset::events::Transferred>().unwrap());
+                        if let Ok(event) = event {
+                            let event_msg = String::from("Asset Transferred: ") + &event;
+                            tx.send(event_msg).unwrap();
+                        }
+                    } else if event.as_event::<sugarfunge::asset::events::Mint>().unwrap().is_some() == true {
+                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::asset::events::Mint>().unwrap());
+                        if let Ok(event) = event {
+                            let event_msg = String::from("Asset Minted: ") + &event;
+                            tx.send(event_msg).unwrap();
+                        }
+                    }              
                 }
             }
         }
@@ -91,21 +105,28 @@ impl SubcriptionServiceWS {
         let tx = tx_origin.clone();
 
         let bag_task = async move {
-            let mut bag_events = api.events().subscribe().await.unwrap().filter_events::<(
-                sugarfunge::bag::events::Created,
-                sugarfunge::bag::events::Deposit,
-            )>();
+            let mut block_sub = api.blocks().subscribe_finalized().await.unwrap();
+            while let Some(block) = block_sub.next().await {
+                let block = block.unwrap();        
+                // Ask for the events for this block.
+                let events = block.events().await.unwrap();
 
-            while let Some(event) = bag_events.next().await {
-                if let Ok(event) = event {
-                    let event = match event.event {
-                        (None, Some(event)) => serde_json::to_string_pretty(&event),
-                        (Some(event), None) => serde_json::to_string_pretty(&event),
-                        _ => panic!("Invalid event"),
-                    };
-                    if let Ok(event) = event {
-                        tx.send(event).unwrap();
-                    }
+                for event in events.iter() {
+                    let event = event.unwrap();
+                    
+                    if event.as_event::<sugarfunge::bag::events::Created>().unwrap().is_some() == true {
+                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::bag::events::Created>().unwrap());
+                        if let Ok(event) = event {
+                            let event_msg = String::from("Bag Created: ") + &event;
+                            tx.send(event_msg).unwrap();
+                        }
+                    } else if event.as_event::<sugarfunge::bag::events::Deposit>().unwrap().is_some() == true {
+                        let event = serde_json::to_string_pretty(&event.as_event::<sugarfunge::bag::events::Deposit>().unwrap());
+                        if let Ok(event) = event {
+                            let event_msg = String::from("Bag Deposit: ") + &event;
+                            tx.send(event_msg).unwrap();
+                        }
+                    }                   
                 }
             }
         }

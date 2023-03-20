@@ -6,7 +6,7 @@ use subxt::tx::PairSigner;
 use sugarfunge_api_types::market::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
 use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_market;
 
 fn extrinsinc_rates(
@@ -44,11 +44,13 @@ pub async fn create_market(
     let signer = PairSigner::new(pair);
     let api = &data.api;
 
-    let call = sugarfunge::tx().market().create_market(req.market_id.into());
+    let call = sugarfunge::tx()
+        .market()
+        .create_market(req.market_id.into());
 
     let result = api
         .tx()
-        .sign_and_submit_then_watch(&call,&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -80,12 +82,15 @@ pub async fn create_market_rate(
     let rates = &req.rates.rates; //transform_input(&req.rates.rates);
     let rates = extrinsinc_rates(&rates);
 
-    let call = sugarfunge::tx().market()
-    .create_market_rate(req.market_id.into(), u64::from(req.market_rate_id), rates);
+    let call = sugarfunge::tx().market().create_market_rate(
+        req.market_id.into(),
+        u64::from(req.market_rate_id),
+        rates,
+    );
 
     let result = api
         .tx()
-        .sign_and_submit_then_watch(&call,&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -115,8 +120,7 @@ pub async fn deposit_assets(
     let signer = PairSigner::new(pair);
     let api = &data.api;
 
-    let call = sugarfunge::tx().market()
-    .deposit(
+    let call = sugarfunge::tx().market().deposit(
         req.market_id.into(),
         u64::from(req.market_rate_id),
         req.amount.into(),
@@ -124,7 +128,7 @@ pub async fn deposit_assets(
 
     let result = api
         .tx()
-        .sign_and_submit_then_watch(&call,&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -157,8 +161,7 @@ pub async fn exchange_assets(
     let signer = PairSigner::new(pair);
     let api = &data.api;
 
-    let call = sugarfunge::tx().market()
-    .exchange_assets(
+    let call = sugarfunge::tx().market().exchange_assets(
         req.market_id.into(),
         u64::from(req.market_rate_id),
         req.amount.into(),
@@ -166,7 +169,7 @@ pub async fn exchange_assets(
 
     let result = api
         .tx()
-        .sign_and_submit_then_watch(&call,&signer, Default::default())
+        .sign_and_submit_then_watch(&call, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()

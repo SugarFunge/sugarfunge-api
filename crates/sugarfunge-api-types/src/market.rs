@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::sugarfunge::runtime_types::sugarfunge_market;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum AmountOp {
     Equal,
     LessThan,
@@ -12,7 +12,7 @@ pub enum AmountOp {
     GreaterEqualThan,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum AMM {
     Constant,
 }
@@ -100,7 +100,7 @@ impl Into<sugarfunge_market::RateAccount<subxt::ext::sp_runtime::AccountId32>> f
             RateAccount::Buyer => sugarfunge_market::RateAccount::Buyer,
             RateAccount::Market => sugarfunge_market::RateAccount::Market,
             RateAccount::Account(account) => {
-                let account = sp_core::crypto::AccountId32::try_from(&account).unwrap();
+                let account = subxt::ext::sp_runtime::AccountId32::try_from(&account).unwrap();
                 sugarfunge_market::RateAccount::Account(account)
             }
         }
@@ -161,7 +161,9 @@ impl Into<RateAction> for sugarfunge_market::RateAction<u64, u64> {
     }
 }
 
-impl Into<sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64>> for AssetRate {
+impl Into<sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64>>
+    for AssetRate
+{
     fn into(self) -> sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64> {
         sugarfunge_market::AssetRate::<subxt::ext::sp_runtime::AccountId32, u64, u64> {
             class_id: self.class_id.into(),
@@ -174,7 +176,9 @@ impl Into<sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64,
     }
 }
 
-impl Into<AssetRate> for sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64> {
+impl Into<AssetRate>
+    for sugarfunge_market::AssetRate<subxt::ext::sp_runtime::AccountId32, u64, u64>
+{
     fn into(self) -> AssetRate {
         AssetRate {
             class_id: self.class_id.into(),
