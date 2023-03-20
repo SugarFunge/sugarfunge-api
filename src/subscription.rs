@@ -65,12 +65,11 @@ impl SubcriptionServiceWS {
                 }
             }
         }
-
         .into_actor(self);
 
         let api = self.data.api.clone();
         let tx = tx_origin.clone();
-        
+
         let asset_task = async move {
             let mut block_sub = api.blocks().subscribe_finalized().await.unwrap();
             while let Some(block) = block_sub.next().await {
@@ -97,7 +96,6 @@ impl SubcriptionServiceWS {
                 }
             }
         }
-
         .into_actor(self);
 
         let api = self.data.api.clone();
@@ -130,7 +128,6 @@ impl SubcriptionServiceWS {
                 }
             }
         }
-
         .into_actor(self);
 
         let sub: SpawnHandle = ctx.spawn(balances_task);
@@ -151,8 +148,6 @@ impl SubcriptionServiceWS {
             }
         });
     }
-
-
 
     fn heartbeat(&self, ctx: &mut <Self as Actor>::Context) {
         ctx.run_interval(HEARTBEAT_INTERVAL, |act, ctx| {

@@ -133,6 +133,7 @@ pub struct AssetBalanceOutput {
 pub struct AssetBalancesInput {
     pub account: Account,
     pub class_id: Option<ClassId>,
+    pub asset_id: Option<AssetId>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
