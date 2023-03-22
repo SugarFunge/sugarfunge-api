@@ -108,9 +108,11 @@ pub async fn mint_labor_tokens(
 
     let api = &data.api;
 
-    let call = sugarfunge::tx()
-        .fula()
-        .mint_labor_tokens(req.class_id.into(), req.asset_id.into());
+    let call = sugarfunge::tx().fula().mint_labor_tokens(
+        req.class_id.into(),
+        req.asset_id.into(),
+        req.amount.into(),
+    );
 
     let result = api
         .tx()
@@ -129,6 +131,7 @@ pub async fn mint_labor_tokens(
             class_id: event.class_id.into(),
             asset_id: event.asset_id.into(),
             amount: (event.amount as u128).into(),
+            calculated_amount: (event.calculated_amount as u128).into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::MintedLaborTokens"),

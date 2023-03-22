@@ -57,9 +57,9 @@ pub struct VerifyChallengeOutput {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MintLaborTokensInput {
     pub seed: Seed,
-    pub pool_id: PoolId,
     pub class_id: ClassId,
     pub asset_id: AssetId,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -68,6 +68,7 @@ pub struct MintLaborTokensOutput {
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub amount: Balance,
+    pub calculated_amount: Balance,
 }
 
 // Verify Pending Challenge Input
