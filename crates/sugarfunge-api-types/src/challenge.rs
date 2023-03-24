@@ -127,3 +127,18 @@ pub struct ChallengeData {
     pub challenged: Account,
     pub state: ChallengeStateValue,
 }
+
+// Get Claim Data
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetClaimDataOutput {
+    pub claims: Vec<ClaimData>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ClaimData {
+    pub account: Account,
+    pub minted_labor_tokens: Balance,
+    pub expected_labor_tokens: Balance,
+    pub minted_challenge_tokens: Balance,
+}
