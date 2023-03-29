@@ -57,9 +57,9 @@ pub struct VerifyChallengeOutput {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MintLaborTokensInput {
     pub seed: Seed,
-    pub pool_id: PoolId,
     pub class_id: ClassId,
     pub asset_id: AssetId,
+    pub amount: Balance,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -68,6 +68,7 @@ pub struct MintLaborTokensOutput {
     pub class_id: ClassId,
     pub asset_id: AssetId,
     pub amount: Balance,
+    pub calculated_amount: Balance,
 }
 
 // Verify Pending Challenge Input
@@ -125,4 +126,19 @@ pub struct ChallengeData {
     pub challenger: Account,
     pub challenged: Account,
     pub state: ChallengeStateValue,
+}
+
+// Get Claim Data
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetClaimDataOutput {
+    pub claims: Vec<ClaimData>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ClaimData {
+    pub account: Account,
+    pub minted_labor_tokens: Balance,
+    pub expected_labor_tokens: Balance,
+    pub minted_challenge_tokens: Balance,
 }

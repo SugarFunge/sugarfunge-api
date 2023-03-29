@@ -7,14 +7,6 @@ pub struct ContractTransactionInput {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ContractTransactionInputNew {
-    pub private_key: String,
-    pub contract_address: String,
-    pub account_address: String,
-    pub amount: u128,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 pub struct ContractTotalSupplyOutput {
     pub total_supply: u128,
 }

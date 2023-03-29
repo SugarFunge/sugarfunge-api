@@ -3,9 +3,10 @@ use crate::util::*;
 use actix_web::{error, web, HttpRequest, HttpResponse};
 use rand::prelude::*;
 use serde_json::json;
-use subxt::ext::sp_core;
+use subxt::ext::sp_core::sr25519::Public;
 use subxt::ext::sp_core::Pair;
 use subxt::ext::sp_runtime::traits::IdentifyAccount;
+use subxt::ext::sp_runtime::AccountId32;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::account::*;
 use sugarfunge_api_types::primitives::*;
@@ -18,7 +19,7 @@ pub async fn create(_req: HttpRequest) -> error::Result<HttpResponse> {
     let seed = format!("//{}", seed);
     let seed = Seed::from(seed);
     let pair = get_pair_from_seed(&seed)?;
-    let account: subxt::ext::sp_core::sr25519::Public = pair.public().into();
+    let account: Public = pair.public().into();
     let account = account.into_account();
     Ok(HttpResponse::Ok().json(CreateAccountOutput {
         seed,
@@ -43,8 +44,7 @@ pub async fn fund(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account =
-        subxt::ext::sp_runtime::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let account = AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let account = subxt::ext::sp_runtime::MultiAddress::Id(account);
     let amount_input = req.amount;
     let api = &data.api;
@@ -82,7 +82,7 @@ pub async fn balance(
     data: web::Data<AppState>,
     req: web::Json<AccountBalanceInput>,
 ) -> error::Result<HttpResponse> {
-    let account = sp_core::crypto::AccountId32::try_from(&req.account).map_err(map_account_err)?;
+    let account = AccountId32::try_from(&req.account).map_err(map_account_err)?;
     let api = &data.api;
 
     let call = sugarfunge::storage().system().account(&account);
@@ -105,7 +105,7 @@ pub async fn exists(
     data: web::Data<AppState>,
     req: web::Json<AccountExistsInput>,
 ) -> error::Result<HttpResponse> {
-    let account = sp_core::crypto::AccountId32::try_from(&req.account).map_err(map_account_err)?;
+    let account = AccountId32::try_from(&req.account).map_err(map_account_err)?;
     let account_out = account.clone();
     let api = &data.api;
 
@@ -118,9 +118,9 @@ pub async fn exists(
             account: account_out.into(),
             exists: data.providers > 0,
         })),
-        None => Ok(HttpResponse::BadRequest().json(RequestError {
-            message: json!("Failed to find sugarfunge::balances::events::balance"),
-            description: format!("Error in account::exist"),
+        None => Ok(HttpResponse::Ok().json(AccountExistsOutput {
+            account: account_out.into(),
+            exists: false,
         })),
     }
 }

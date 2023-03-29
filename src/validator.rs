@@ -3,7 +3,8 @@ use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
 use std::str::FromStr;
-use subxt::ext::sp_core;
+use subxt::ext::sp_core::sr25519::Public;
+use subxt::ext::sp_runtime::AccountId32;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
@@ -15,9 +16,8 @@ pub async fn add_validator(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let validator_id =
-        sp_core::sr25519::Public::from_str(&req.validator_id.as_str()).map_err(map_account_err)?;
-    let validator_id = sp_core::crypto::AccountId32::from(validator_id);
+    let validator_id = Public::from_str(&req.validator_id.as_str()).map_err(map_account_err)?;
+    let validator_id = AccountId32::from(validator_id);
     let call = sugarfunge::runtime_types::sugarfunge_validator_set::pallet::Call::add_validator {
         validator_id,
     };
@@ -56,9 +56,8 @@ pub async fn remove_validator(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let validator_id =
-        sp_core::sr25519::Public::from_str(&req.validator_id.as_str()).map_err(map_account_err)?;
-    let validator_id = sp_core::crypto::AccountId32::from(validator_id);
+    let validator_id = Public::from_str(&req.validator_id.as_str()).map_err(map_account_err)?;
+    let validator_id = AccountId32::from(validator_id);
     let call =
         sugarfunge::runtime_types::sugarfunge_validator_set::pallet::Call::remove_validator {
             validator_id,

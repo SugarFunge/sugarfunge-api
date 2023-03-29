@@ -16,7 +16,7 @@ use sugarfunge_api_types::challenge::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::functionland_fula::{
-    Challenge as ChallengeRuntime, Manifest as ManifestRuntime,
+    Challenge as ChallengeRuntime, ClaimData as ClaimRuntime, Manifest as ManifestRuntime,
 };
 
 pub async fn generate_challenge(
@@ -108,9 +108,11 @@ pub async fn mint_labor_tokens(
 
     let api = &data.api;
 
-    let call = sugarfunge::tx()
-        .fula()
-        .mint_labor_tokens(req.class_id.into(), req.asset_id.into());
+    let call = sugarfunge::tx().fula().mint_labor_tokens(
+        req.class_id.into(),
+        req.asset_id.into(),
+        req.amount.into(),
+    );
 
     let result = api
         .tx()
@@ -129,6 +131,7 @@ pub async fn mint_labor_tokens(
             class_id: event.class_id.into(),
             asset_id: event.asset_id.into(),
             amount: (event.amount as u128).into(),
+            calculated_amount: (event.calculated_amount as u128).into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::fula::events::MintedLaborTokens"),
@@ -315,5 +318,49 @@ pub async fn get_challenges(data: web::Data<AppState>) -> error::Result<HttpResp
     }
     Ok(HttpResponse::Ok().json(GetChallengesOutput {
         challenges: result_array,
+    }))
+}
+
+pub async fn get_claims(data: web::Data<AppState>) -> error::Result<HttpResponse> {
+    let api = &data.api;
+    let mut result_array = Vec::new();
+
+    let query_key = sugarfunge::storage().fula().claims_root().to_bytes();
+
+    // println!("query_key account_to len: {}", query_key.len());
+
+    let keys = api
+        .storage()
+        .fetch_keys(&query_key, 1000, None, None)
+        .await
+        .map_err(map_subxt_err)?;
+
+    // println!("Obtained keys:");
+    for key in keys.iter() {
+        let account_idx = 48;
+        let account_key = key.0.as_slice()[account_idx..(account_idx + 32)].to_vec();
+        let account_id = AccountId32::decode(&mut &account_key[..]);
+        let account_id = Account::from(account_id.unwrap());
+        // println!("account_id: {:?}", account_id);
+
+        if let Some(storage_data) = api
+            .storage()
+            .fetch_raw(&key.0, None)
+            .await
+            .map_err(map_subxt_err)?
+        {
+            let value = ClaimRuntime::decode(&mut &storage_data[..]);
+            let value = value.unwrap();
+
+            result_array.push(ClaimData {
+                account: account_id,
+                minted_labor_tokens: value.minted_labor_tokens.into(),
+                expected_labor_tokens: value.expected_labor_tokens.into(),
+                minted_challenge_tokens: value.challenge_tokens.into(),
+            })
+        }
+    }
+    Ok(HttpResponse::Ok().json(GetClaimDataOutput {
+        claims: result_array,
     }))
 }
