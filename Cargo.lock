@@ -881,7 +881,7 @@ checksum = "520fbf3c07483f94e3e3ca9d0cfd913d7718ef2483d2cfd91c0d9e91474ab913"
 [[package]]
 name = "contract-integration"
 version = "0.1.0"
-source = "git+https://github.com/SugarFunge/contract-integration?branch=feature/lib#43cc0705e665003d3494531ec79286d5d072819f"
+source = "git+https://github.com/SugarFunge/contract-integration?branch=master#4cc2e11936a626cd0fa352193f28223128d8c3df"
 dependencies = [
  "dotenv",
  "ethers",

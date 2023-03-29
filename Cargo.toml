@@ -26,7 +26,7 @@ url = { version = "2", features = ["serde"] }
 derive_more = { version = "0.99.0", default-features = false }
 codec = { package = "parity-scale-codec", version = "3.2.1", default-features = false, features = ["derive", "full", "bit-vec"] }
 scale-info = { version = "2.0.0", features = ["bit-vec"] }
-contract-integration = { git = "https://github.com/SugarFunge/contract-integration", branch = "feature/lib", default-features = false }
+contract-integration = { git = "https://github.com/SugarFunge/contract-integration", branch = "master", default-features = false }
 unicode-xid = "0.2.3"
 
 [dependencies.subxt]
