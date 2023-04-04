@@ -1,6 +1,7 @@
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
+use codec::Decode;
 use codec::Encode;
 use hex::ToHex;
 use serde_json::json;
@@ -12,6 +13,7 @@ use sugarfunge_api_types::bundle::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_bundle::Bundle as BundleRuntime;
 // use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 
 fn hash(s: &[u8]) -> sp_core::H256 {
@@ -165,4 +167,139 @@ pub async fn burn_bundle(
             description: format!(""),
         })),
     }
+}
+
+/// Get balances for owner and maybe class
+pub async fn get_bundles_id(data: web::Data<AppState>) -> error::Result<HttpResponse> {
+    let api = &data.api;
+
+    let mut result_array = Vec::new();
+    let query_key = sugarfunge::storage()
+        .bundle()
+        .asset_bundles_root()
+        .to_bytes();
+
+    let keys = api
+        .storage()
+        .fetch_keys(&query_key, 1000, None, None)
+        .await
+        .map_err(map_subxt_err)?;
+
+    for key in keys.iter() {
+        println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+
+        let class_idx = 48;
+        let class_key = key.0.as_slice()[class_idx..(class_idx + 8)].to_vec();
+        let class_id = u64::decode(&mut &class_key[..]).unwrap();
+        println!("class_id: {}", class_id);
+
+        let asset_idx = 72;
+        let asset_key = key.0.as_slice()[asset_idx..(asset_idx + 8)].to_vec();
+        let asset_id = u64::decode(&mut &asset_key[..]).unwrap();
+        println!("asset_id: {}", asset_id);
+
+        if let Some(storage_data) = api
+            .storage()
+            .fetch_raw(&key.0, None)
+            .await
+            .map_err(map_subxt_err)?
+        {
+            let value = sp_core::H256::decode(&mut &storage_data[..]).unwrap();
+            let bundle_id = value.encode_hex();
+
+            let item = BundleItem {
+                class_id: class_id.into(),
+                asset_id: asset_id.into(),
+                bundle_id,
+            };
+            result_array.push(item);
+        }
+    }
+
+    Ok(HttpResponse::Ok().json(GetBundles {
+        bundles: result_array,
+    }))
+}
+
+/// Get balances for owner and maybe class
+pub async fn get_bundles_data(data: web::Data<AppState>) -> error::Result<HttpResponse> {
+    let api = &data.api;
+
+    let mut result_array = Vec::new();
+    let query_key = sugarfunge::storage().bundle().bundles_root().to_bytes();
+
+    let keys = api
+        .storage()
+        .fetch_keys(&query_key, 1000, None, None)
+        .await
+        .map_err(map_subxt_err)?;
+
+    for key in keys.iter() {
+        println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+
+        let bundle_idx = 48;
+        let bundle_key = key.0.as_slice()[bundle_idx..].to_vec();
+        let bundle_id = sp_core::H256::decode(&mut &bundle_key[..]).unwrap();
+        let bundle_id_value: BundleId = bundle_id.encode_hex();
+
+        if let Some(storage_data) = api
+            .storage()
+            .fetch_raw(&key.0, None)
+            .await
+            .map_err(map_subxt_err)?
+        {
+            let value = BundleRuntime::<
+                u64,
+                u64,
+                (Vec<u64>, Vec<Vec<u64>>, Vec<Vec<u128>>),
+                AccountId32,
+                Vec<u8>,
+            >::decode(&mut &storage_data[..])
+            .unwrap();
+
+            let item = BundleDataItem {
+                bundle_id: bundle_id_value,
+                creator: value.creator.into(),
+                class_id: value.class_id.into(),
+                asset_id: value.asset_id.into(),
+                metadata: serde_json::from_slice(value.metadata.as_slice()).unwrap_or_default(),
+                schema: BundleSchema {
+                    class_ids: get_schema_class_ids(value.schema.0),
+                    asset_ids: get_schema_vec_asset_ids(value.schema.1),
+                    amounts: get_schema_vec_amounts(value.schema.2),
+                },
+            };
+            result_array.push(item);
+        }
+    }
+
+    Ok(HttpResponse::Ok().json(GetBundlesData {
+        bundles: result_array,
+    }))
+}
+
+pub fn get_schema_class_ids(class_ids: Vec<u64>) -> Vec<ClassId> {
+    return class_ids.iter().map(|value| (*value).into()).collect();
+}
+
+pub fn get_schema_asset_ids(asset_ids: Vec<u64>) -> Vec<AssetId> {
+    return asset_ids.iter().map(|value| (*value).into()).collect();
+}
+
+pub fn get_schema_amounts(amounts: Vec<u128>) -> Vec<Balance> {
+    return amounts.iter().map(|value| (*value).into()).collect();
+}
+
+pub fn get_schema_vec_asset_ids(asset_ids: Vec<Vec<u64>>) -> Vec<Vec<AssetId>> {
+    return asset_ids
+        .iter()
+        .map(|value| get_schema_asset_ids(value.to_vec()))
+        .collect();
+}
+
+pub fn get_schema_vec_amounts(amounts: Vec<Vec<u128>>) -> Vec<Vec<Balance>> {
+    return amounts
+        .iter()
+        .map(|value| get_schema_amounts(value.to_vec()))
+        .collect();
 }

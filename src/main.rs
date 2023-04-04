@@ -82,6 +82,8 @@ async fn main() -> std::io::Result<()> {
             .route("bundle/register", web::post().to(bundle::register_bundle))
             .route("bundle/mint", web::post().to(bundle::mint_bundle))
             .route("bundle/burn", web::post().to(bundle::burn_bundle))
+            .route("bundle", web::post().to(bundle::get_bundles_id))
+            .route("bundle/data", web::post().to(bundle::get_bundles_data))
             .route(
                 "validator/add_validator",
                 web::post().to(validator::add_validator),
