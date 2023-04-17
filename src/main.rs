@@ -237,6 +237,10 @@ async fn main() -> std::io::Result<()> {
             )
             .route("fula/challenge", web::post().to(challenge::get_challenges))
             .route("fula/claims", web::post().to(challenge::get_claims))
+            .route(
+                "fula/convert_tokens",
+                web::post().to(contract::convert_to_fula),
+            )
     })
     .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
     .run()

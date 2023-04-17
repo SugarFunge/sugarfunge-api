@@ -1,5 +1,6 @@
 use crate::state::*;
 use crate::util::*;
+use actix_web::Error;
 use actix_web::{error, web, HttpResponse};
 use codec::Decode;
 use codec::Encode;
@@ -169,7 +170,6 @@ pub async fn burn_bundle(
     }
 }
 
-/// Get balances for owner and maybe class
 pub async fn get_bundles_id(data: web::Data<AppState>) -> error::Result<HttpResponse> {
     let api = &data.api;
 
@@ -186,17 +186,17 @@ pub async fn get_bundles_id(data: web::Data<AppState>) -> error::Result<HttpResp
         .map_err(map_subxt_err)?;
 
     for key in keys.iter() {
-        println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+        // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
         let class_idx = 48;
         let class_key = key.0.as_slice()[class_idx..(class_idx + 8)].to_vec();
         let class_id = u64::decode(&mut &class_key[..]).unwrap();
-        println!("class_id: {}", class_id);
+        // println!("class_id: {}", class_id);
 
         let asset_idx = 72;
         let asset_key = key.0.as_slice()[asset_idx..(asset_idx + 8)].to_vec();
         let asset_id = u64::decode(&mut &asset_key[..]).unwrap();
-        println!("asset_id: {}", asset_id);
+        // println!("asset_id: {}", asset_id);
 
         if let Some(storage_data) = api
             .storage()
@@ -221,7 +221,41 @@ pub async fn get_bundles_id(data: web::Data<AppState>) -> error::Result<HttpResp
     }))
 }
 
-/// Get balances for owner and maybe class
+pub async fn verify_bundle_exist(
+    data: &web::Data<AppState>,
+    bundle_id_value: BundleId,
+) -> Result<bool, Error> {
+    let api = &data.api;
+
+    let query_key = sugarfunge::storage()
+        .bundle()
+        .asset_bundles_root()
+        .to_bytes();
+
+    let keys = api
+        .storage()
+        .fetch_keys(&query_key, 1000, None, None)
+        .await
+        .map_err(map_subxt_err)?;
+
+    for key in keys.iter() {
+        if let Some(storage_data) = api
+            .storage()
+            .fetch_raw(&key.0, None)
+            .await
+            .map_err(map_subxt_err)?
+        {
+            let value = sp_core::H256::decode(&mut &storage_data[..]).unwrap();
+            let bundle_id: BundleId = value.encode_hex();
+
+            if bundle_id.as_str() == bundle_id_value.as_str() {
+                return Ok(true);
+            }
+        }
+    }
+    return Ok(false);
+}
+
 pub async fn get_bundles_data(data: web::Data<AppState>) -> error::Result<HttpResponse> {
     let api = &data.api;
 
@@ -235,7 +269,7 @@ pub async fn get_bundles_data(data: web::Data<AppState>) -> error::Result<HttpRe
         .map_err(map_subxt_err)?;
 
     for key in keys.iter() {
-        println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+        // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
         let bundle_idx = 48;
         let bundle_key = key.0.as_slice()[bundle_idx..].to_vec();
@@ -272,7 +306,6 @@ pub async fn get_bundles_data(data: web::Data<AppState>) -> error::Result<HttpRe
             result_array.push(item);
         }
     }
-
     Ok(HttpResponse::Ok().json(GetBundlesData {
         bundles: result_array,
     }))
