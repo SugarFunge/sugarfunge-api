@@ -85,7 +85,7 @@ pub async fn balance(
     let call = sugarfunge::storage().system().account(&account);
 
     //let result = api.storage().fetch(&call, None).await;
-    let block = api.blocks().at(None).await.unwrap();
+    let block = api.blocks().at_latest().await.unwrap();
     let data = block.storage().fetch(&call).await.unwrap();
     match data {
         Some(data) => Ok(HttpResponse::Ok().json(AccountBalanceOutput {
@@ -109,7 +109,7 @@ pub async fn exists(
 
     let call = sugarfunge::storage().system().account(&account);
 
-    let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
     let data = storage.fetch(&call).await.map_err(map_subxt_err)?;
     match data {
         Some(data) => Ok(HttpResponse::Ok().json(AccountExistsOutput {

@@ -1,13 +1,14 @@
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
+use codec::Encode;
 use serde_json::json;
 use sugarfunge_api_types::primitives::*;
 use std::str::FromStr;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::asset::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 
 /// Create an asset class for an account
 pub async fn create_class(
@@ -60,7 +61,7 @@ pub async fn class_info(
         .asset()
         .classes(u64::from(req.class_id));
 
-    let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
     let info = storage.fetch(&call).await.map_err(map_subxt_err)?;
 
@@ -127,7 +128,7 @@ pub async fn info(
         .asset()
         .assets(u64::from(req.class_id), u64::from(req.asset_id));
 
-    let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
     let info = storage.fetch(&call).await.map_err(map_subxt_err)?;
 
@@ -287,7 +288,7 @@ pub async fn balance(
         u64::from(req.asset_id),
     );
 
-    let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
     let amount = storage.fetch(&call).await.map_err(map_subxt_err)?;
 
@@ -303,7 +304,6 @@ pub async fn balance(
 }
 
 use codec::Decode;
-use subxt::storage::address::{StorageHasher, StorageMapKey};
 
 /// Get balances for owner and maybe class
 pub async fn balances(
@@ -316,17 +316,18 @@ pub async fn balances(
     let api = &data.api;
 
     let mut result_array = Vec::new();
-    let mut query_key = sugarfunge::storage().asset().balances_root().to_bytes();
+    let mut query_key = sugarfunge::storage().asset().balances_root().to_root_bytes();
     println!("query_key balances_root len: {}", query_key.len());
-    StorageMapKey::new(&account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+    query_key.extend(subxt::ext::sp_core::blake2_128(&account.encode()));
+    // StaticStorageMapKey::new(&account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
     println!("query_key account len: {}", query_key.len());
     if let Some(class_id) = req.class_id {
         let class_id: u64 = class_id.into();
-        StorageMapKey::new(class_id, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        query_key.extend(subxt::ext::sp_core::blake2_128(&class_id.encode()));
         println!("query_key class_id len: {}", query_key.len());
     }
 
-    let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
     let keys = storage
         .fetch_keys(&query_key, 1000, None)
@@ -347,7 +348,7 @@ pub async fn balances(
         let asset_id = u64::decode(&mut &asset_key[..]);
         println!("asset_id: {:?}", asset_id);
 
-        let storage = api.storage().at(None).await.map_err(map_subxt_err)?;
+        let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
         if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = u128::decode(&mut &storage_data[..]);
