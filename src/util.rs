@@ -24,7 +24,9 @@ pub fn map_subxt_err(e: subxt::Error) -> actix_web::Error {
     error::ErrorBadRequest(req_error)
 }
 
-pub fn map_sf_err(e: subxt::Error) -> actix_web::Error {
+pub fn map_sf_err(
+    e: subxt::Error,
+) -> actix_web::Error {
     // TODO: json_err should be a json Value to improve UX
     let json_err = json!(e.to_string());
     let req_error = RequestError {

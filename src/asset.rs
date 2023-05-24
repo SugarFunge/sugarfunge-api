@@ -2,10 +2,10 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
+use sugarfunge_api_types::primitives::*;
 use std::str::FromStr;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::asset::*;
-use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
 
@@ -355,7 +355,7 @@ pub async fn balances(
                 "Class_Id: {:?} AssetId: {:?}  Value: {:?}",
                 class_id, asset_id, value
             );
-            let item = AssetBalanceItemOutput {
+            let item = AssetBalanceItemOutput{
                 class_id: ClassId::from(class_id.unwrap()),
                 asset_id: AssetId::from(asset_id.unwrap()),
                 amount: Balance::from(value.unwrap()),

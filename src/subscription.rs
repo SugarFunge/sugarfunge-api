@@ -34,7 +34,6 @@ impl SubcriptionServiceWS {
 
     fn subscribe(&mut self, ctx: &mut <Self as Actor>::Context) {
         let (tx_origin, rx) = channel::unbounded();
-
         let api = self.data.api.clone();
         let tx = tx_origin.clone();
 
@@ -84,6 +83,7 @@ impl SubcriptionServiceWS {
         .into_actor(self);
 
         let api = self.data.api.clone();
+
         let tx = tx_origin.clone();
 
         let asset_task = async move {

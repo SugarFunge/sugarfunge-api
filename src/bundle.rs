@@ -43,7 +43,8 @@ pub async fn register_bundle(
     let metadata = BoundedVec(metadata);
     let api = &data.api;
 
-    let call = sugarfunge::tx().bundle().register_bundle(
+    let call = sugarfunge::tx().bundle()
+    .register_bundle(
         req.class_id.into(),
         req.asset_id.into(),
         bundle_id,
@@ -53,7 +54,7 @@ pub async fn register_bundle(
 
     let result = api
         .tx()
-        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .sign_and_submit_then_watch(&call,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -87,16 +88,11 @@ pub async fn mint_bundle(
     let bundle_id = sp_core::H256::from_str(req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;
 
-    let call = sugarfunge::tx().bundle().mint_bundle(
-        account_from,
-        account_to,
-        bundle_id,
-        req.amount.into(),
-    );
+    let call = sugarfunge::tx().bundle().mint_bundle(account_from, account_to, bundle_id, req.amount.into());
 
     let result = api
         .tx()
-        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .sign_and_submit_then_watch(&call,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -131,16 +127,12 @@ pub async fn burn_bundle(
     let bundle_id = sp_core::H256::from_str(req.bundle_id.as_str()).unwrap_or_default();
     let api = &data.api;
 
-    let call = sugarfunge::tx().bundle().burn_bundle(
-        account_from,
-        account_to,
-        bundle_id,
-        req.amount.into(),
-    );
+    let call = sugarfunge::tx().bundle()
+    .burn_bundle(account_from, account_to, bundle_id, req.amount.into());
 
     let result = api
         .tx()
-        .sign_and_submit_then_watch(&call, &signer, Default::default())
+        .sign_and_submit_then_watch(&call,&signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()

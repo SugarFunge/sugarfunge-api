@@ -48,9 +48,7 @@ pub async fn fund(
     let amount_input = req.amount;
     let api = &data.api;
 
-    let call = sugarfunge::tx()
-        .balances()
-        .transfer(account, amount_input.into());
+    let call = sugarfunge::tx().balances().transfer(account, amount_input.into());
 
     let result = api
         .tx()
@@ -97,7 +95,7 @@ pub async fn balance(
             message: json!("Failed to find sugarfunge::balances::events::balance"),
             description: "Error in account::balance".to_string(),
         })),
-    }
+    }    
 }
 
 /// Check if account exists and is active
