@@ -1,9 +1,6 @@
 use crate::primitives::*;
 use serde::{Deserialize, Serialize};
 
-pub const REFUND_SEED: &str = "//Alice";
-pub const REFUND_FEE_VALUE: u128 = 20000000000000000;
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateAccountOutput {
     pub seed: Seed,
