@@ -4,12 +4,12 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use serde_json::json;
-use sp_core::crypto::AccountId32;
 use subxt::tx::PairSigner;
+use subxt::utils::AccountId32;
 use sugarfunge_api_types::bag::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 
 pub async fn register(
     data: web::Data<AppState>,
@@ -41,7 +41,7 @@ pub async fn register(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bag::events::Register"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -49,11 +49,7 @@ pub async fn register(
 pub fn transform_owners_input(in_owners: Vec<String>) -> Vec<AccountId32> {
     in_owners
         .into_iter()
-        .map(|current_owner| {
-            sp_core::crypto::AccountId32::from(
-                sp_core::sr25519::Public::from_str(&current_owner).unwrap(),
-            )
-        })
+        .map(|current_owner| AccountId32::from_str(&current_owner).unwrap())
         .collect()
 }
 
@@ -95,7 +91,7 @@ pub async fn create(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bag::events::AccountCreated"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -110,7 +106,7 @@ pub async fn sweep(
     let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = &data.api;
 
-    let call = sugarfunge::tx().bag().sweep(to, bag);
+    let call = sugarfunge::tx().bag().sweep(to.into(), bag.into());
 
     let result = api
         .tx()
@@ -131,7 +127,7 @@ pub async fn sweep(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bag::events::Sweep"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -142,7 +138,7 @@ pub async fn deposit(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let bag = sp_core::crypto::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
+    let bag = subxt::utils::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
     let api = &data.api;
 
     let call = sugarfunge::tx().bag().deposit(bag,transform_vec_classid_to_u64(req.class_ids.clone()),transform_doublevec_assetid_to_u64(req.asset_ids.clone()),transform_doublevec_balance_to_u128(req.amounts.clone()),);
@@ -165,7 +161,7 @@ pub async fn deposit(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::bag::events::Deposit"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
