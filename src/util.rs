@@ -1,14 +1,10 @@
-use actix_web::{error, web, HttpResponse};
+use actix_web::error;
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use subxt::ext::sp_core;
-use subxt::ext::sp_core::Pair;
-use subxt::rpc::Health;
+use sp_core::Pair;
 use sugarfunge_api_types::primitives::*;
 use url::Url;
-
-use crate::state::AppState;
 
 #[derive(Serialize, Deserialize, Debug, Display)]
 #[display(fmt = "{:?} {:?}", message, description)]
@@ -39,26 +35,6 @@ pub fn map_sf_err(e: subxt::Error) -> actix_web::Error {
     error::ErrorBadRequest(req_error)
 }
 
-pub fn map_fula_err(e: subxt::Error) -> actix_web::Error {
-    let json_err = json!(e.to_string().replace("\"", ""));
-    let req_error = RequestError {
-        message: json_err,
-        description: "Fula Pallet error".into(),
-    };
-    let req_error = serde_json::to_string_pretty(&req_error).unwrap();
-    error::ErrorBadRequest(req_error)
-}
-
-pub fn map_fula_pool_err(e: subxt::Error) -> actix_web::Error {
-    let json_err = json!(e.to_string().replace("\"", ""));
-    let req_error = RequestError {
-        message: json_err,
-        description: "Fula-Pool Pallet error".into(),
-    };
-    let req_error = serde_json::to_string_pretty(&req_error).unwrap();
-    error::ErrorBadRequest(req_error)
-}
-
 pub fn map_account_err(e: sp_core::crypto::PublicError) -> actix_web::Error {
     let json_err: serde_json::Value = json!("Invalid account");
     let req_error = RequestError {
@@ -69,8 +45,8 @@ pub fn map_account_err(e: sp_core::crypto::PublicError) -> actix_web::Error {
     error::ErrorBadRequest(req_error)
 }
 
-pub fn get_pair_from_seed(seed: &Seed) -> error::Result<subxt::ext::sp_core::sr25519::Pair> {
-    subxt::ext::sp_core::sr25519::Pair::from_string(seed.as_str(), None).map_err(|e| {
+pub fn get_pair_from_seed(seed: &Seed) -> error::Result<sp_core::sr25519::Pair> {
+    sp_core::sr25519::Pair::from_string(seed.as_str(), None).map_err(|e| {
         let req_error = RequestError {
             message: json!(&format!("{:?}", e)),
             description: "API error".into(),

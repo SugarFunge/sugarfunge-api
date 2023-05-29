@@ -4,23 +4,19 @@ use actix_web::{
     web::{self, Data},
     App, HttpServer,
 };
-use command::*;
+use args::*;
+use clap::Parser;
 use state::*;
 use std::sync::Arc;
-use structopt::StructOpt;
 use subxt::{client::OnlineClient, PolkadotConfig};
 use util::url_to_string;
 
 mod account;
+mod args;
 mod asset;
 mod bag;
 mod bundle;
-mod challenge;
-mod command;
-mod contract;
-mod fula;
 mod market;
-mod pool;
 mod state;
 mod subscription;
 mod util;
@@ -30,9 +26,9 @@ mod validator;
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    let opt = Opt::from_args();
+    let args = Args::parse();
 
-    let api = OnlineClient::<PolkadotConfig>::from_url(url_to_string(opt.node_server))
+    let api = OnlineClient::<PolkadotConfig>::from_url(url_to_string(args.node_server))
         .await
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
 
@@ -54,7 +50,6 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(cors)
             .app_data(Data::new(state.clone()))
-            .route("health", web::post().to(util::health_check))
             .service(web::resource("/ws").route(web::get().to(subscription::ws)))
             // .route("/ws", web::get().to(subscription::ws))
             .route("account/seeded", web::post().to(account::seeded))
@@ -242,7 +237,7 @@ async fn main() -> std::io::Result<()> {
                 web::post().to(contract::convert_to_fula),
             )
     })
-    .bind((opt.listen.host_str().unwrap(), opt.listen.port().unwrap()))?
+    .bind((args.listen.host_str().unwrap(), args.listen.port().unwrap()))?
     .run()
     .await
 }

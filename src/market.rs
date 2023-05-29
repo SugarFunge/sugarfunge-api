@@ -7,27 +7,26 @@ use subxt::tx::PairSigner;
 use sugarfunge_api_types::market::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
-// use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_market;
 
 fn extrinsinc_rates(
-    in_rates: &Vec<AssetRate>,
-) -> BoundedVec<sugarfunge_market::AssetRate<AccountId32, u64, u64>> {
+    in_rates: &[AssetRate],
+) -> BoundedVec<sugarfunge_market::AssetRate<subxt::utils::AccountId32, u64, u64>> {
     BoundedVec(
         in_rates
             .iter()
             .map(|rate| {
-                <AssetRate as Into<sugarfunge_market::AssetRate<AccountId32, u64, u64>>>::into(
-                    rate.clone(),
-                )
+                <AssetRate as Into<
+                    sugarfunge_market::AssetRate<subxt::utils::AccountId32, u64, u64>,
+                >>::into(rate.clone())
             })
             .collect(),
     )
 }
 
 fn transform_balances(
-    in_balances: Vec<sugarfunge_market::RateBalance<AccountId32, u64, u64>>,
+    in_balances: Vec<sugarfunge_market::RateBalance<subxt::utils::AccountId32, u64, u64>>,
 ) -> Vec<RateBalance> {
     in_balances
         .into_iter()
@@ -68,7 +67,7 @@ pub async fn create_market(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::Created"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -82,7 +81,7 @@ pub async fn create_market_rate(
     let api = &data.api;
 
     let rates = &req.rates.rates; //transform_input(&req.rates.rates);
-    let rates = extrinsinc_rates(&rates);
+    let rates = extrinsinc_rates(rates);
 
     let call = sugarfunge::tx().market().create_market_rate(
         req.market_id.into(),
@@ -109,7 +108,7 @@ pub async fn create_market_rate(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::RateCreated"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -150,7 +149,7 @@ pub async fn deposit_assets(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::Deposit"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -191,7 +190,7 @@ pub async fn exchange_assets(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::market::events::Exchange"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
