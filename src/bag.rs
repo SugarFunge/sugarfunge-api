@@ -9,7 +9,7 @@ use subxt::utils::AccountId32;
 use sugarfunge_api_types::bag::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
 
 pub async fn register(
     data: web::Data<AppState>,

@@ -2,14 +2,14 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use codec::Decode;
-use codec::Encode;
 use serde_json::json;
 use std::str::FromStr;
+use subxt::ext::frame_metadata::StorageHasher;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::asset::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
 
 /// Create an asset class for an account
 pub async fn create_class(
@@ -19,7 +19,7 @@ pub async fn create_class(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let to = sp_core::sr25519::Public::from_str(req.owner.as_str()).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::from(to);
+    let to = subxt::utils::AccountId32::from(to);
     let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
     let api = &data.api;
@@ -311,11 +311,14 @@ pub async fn balances(
 ) -> error::Result<HttpResponse> {
     let account =
         sp_core::sr25519::Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
-    let account = AccountId32::from(account);
+    let account = subxt::utils::AccountId32::from(account);
     let api = &data.api;
 
     let mut result_array = Vec::new();
-    let mut query_key = sugarfunge::storage().asset().balances_root().to_bytes();
+    let mut query_key = sugarfunge::storage()
+        .asset()
+        .balances_root()
+        .to_root_bytes();
     // println!("query_key balances_root len: {}", query_key.len());
     StorageMapKey::new(&account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
     // println!("query_key account len: {}", query_key.len());

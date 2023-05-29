@@ -10,8 +10,8 @@ use actix_web::{error, web, HttpResponse};
 use codec::Decode;
 use serde_json::json;
 use subxt::ext::sp_core::sr25519::Public;
-use subxt::ext::sp_runtime::AccountId32;
 use subxt::tx::PairSigner;
+use subxt::utils::AccountId32;
 use sugarfunge_api_types::challenge::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
@@ -150,7 +150,7 @@ pub async fn verify_pending_challenge(
     let query_key = sugarfunge::storage()
         .fula()
         .challenge_requests_root()
-        .to_bytes();
+        .to_root_bytes();
 
     // println!("query_key account_to len: {}", query_key.len());
 
@@ -187,7 +187,10 @@ pub async fn verify_file_size(
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().fula().manifests_root().to_bytes();
+    let query_key = sugarfunge::storage()
+        .fula()
+        .manifests_root()
+        .to_root_bytes();
 
     // println!("query_key account_to len: {}", query_key.len());
 
@@ -282,7 +285,7 @@ pub async fn get_challenges(data: web::Data<AppState>) -> error::Result<HttpResp
     let query_key = sugarfunge::storage()
         .fula()
         .challenge_requests_root()
-        .to_bytes();
+        .to_root_bytes();
 
     // println!("query_key account_to len: {}", query_key.len());
 
@@ -325,7 +328,7 @@ pub async fn get_claims(data: web::Data<AppState>) -> error::Result<HttpResponse
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().fula().claims_root().to_bytes();
+    let query_key = sugarfunge::storage().fula().claims_root().to_root_bytes();
 
     // println!("query_key account_to len: {}", query_key.len());
 

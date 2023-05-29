@@ -8,10 +8,12 @@ use hex::ToHex;
 use serde_json::json;
 use std::str::FromStr;
 use subxt::tx::PairSigner;
+use subxt::utils::AccountId32;
 use sugarfunge_api_types::bundle::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::sugarfunge_bundle::Bundle as BundleRuntime;
 
 fn hash(s: &[u8]) -> sp_core::H256 {
     sp_io::hashing::blake2_256(s).into()
@@ -173,7 +175,7 @@ pub async fn get_bundles_id(data: web::Data<AppState>) -> error::Result<HttpResp
     let query_key = sugarfunge::storage()
         .bundle()
         .asset_bundles_root()
-        .to_bytes();
+        .to_root_bytes();
 
     let keys = api
         .storage()
@@ -226,7 +228,7 @@ pub async fn verify_bundle_exist(
     let query_key = sugarfunge::storage()
         .bundle()
         .asset_bundles_root()
-        .to_bytes();
+        .to_root_bytes();
 
     let keys = api
         .storage()
@@ -256,7 +258,10 @@ pub async fn get_bundles_data(data: web::Data<AppState>) -> error::Result<HttpRe
     let api = &data.api;
 
     let mut result_array = Vec::new();
-    let query_key = sugarfunge::storage().bundle().bundles_root().to_bytes();
+    let query_key = sugarfunge::storage()
+        .bundle()
+        .bundles_root()
+        .to_root_bytes();
 
     let keys = api
         .storage()

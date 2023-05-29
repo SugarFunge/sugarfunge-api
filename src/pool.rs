@@ -6,10 +6,10 @@ use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use codec::Decode;
 use serde_json::json;
+use subxt::ext::frame_metadata::StorageHasher;
 use subxt::ext::sp_core::sr25519::Public;
-use subxt::ext::sp_runtime::AccountId32;
-use subxt::storage::address::{StorageHasher, StorageMapKey};
 use subxt::tx::PairSigner;
+use subxt::utils::AccountId32;
 use sugarfunge_api_types::pool::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
@@ -228,7 +228,7 @@ pub async fn get_all_pools(
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().pool().pools_root().to_bytes();
+    let query_key = sugarfunge::storage().pool().pools_root().to_root_bytes();
     // println!("query_key pool_root len: {}", query_key.len());
 
     let keys = api
@@ -300,7 +300,10 @@ pub async fn get_all_pool_requests(
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let mut query_key = sugarfunge::storage().pool().pool_requests_root().to_bytes();
+    let mut query_key = sugarfunge::storage()
+        .pool()
+        .pool_requests_root()
+        .to_root_bytes();
     // println!("query_key pool_root len: {}", query_key.len());
 
     if let Some(value) = req.pool_id.clone() {
@@ -385,7 +388,7 @@ pub async fn get_all_pool_users(
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().pool().users_root().to_bytes();
+    let query_key = sugarfunge::storage().pool().users_root().to_root_bytes();
     // println!("query_key pool_root len: {}", query_key.len());
 
     // if let Some(account_value) = req.account.clone() {

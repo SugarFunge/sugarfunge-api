@@ -1,10 +1,13 @@
-use actix_web::error;
+use actix_web::{error, web, HttpResponse};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sp_core::Pair;
+use subxt::rpc::types::Health;
 use sugarfunge_api_types::primitives::*;
 use url::Url;
+
+use crate::state::AppState;
 
 #[derive(Serialize, Deserialize, Debug, Display)]
 #[display(fmt = "{:?} {:?}", message, description)]
@@ -65,6 +68,25 @@ pub fn url_to_string(url: Url) -> String {
         }
         _ => res,
     }
+}
+
+pub fn map_fula_err(e: subxt::Error) -> actix_web::Error {
+    let json_err = json!(e.to_string().replace("\"", ""));
+    let req_error = RequestError {
+        message: json_err,
+        description: "Fula Pallet error".into(),
+    };
+    let req_error = serde_json::to_string_pretty(&req_error).unwrap();
+    error::ErrorBadRequest(req_error)
+}
+pub fn map_fula_pool_err(e: subxt::Error) -> actix_web::Error {
+    let json_err = json!(e.to_string().replace("\"", ""));
+    let req_error = RequestError {
+        message: json_err,
+        description: "Fula-Pool Pallet error".into(),
+    };
+    let req_error = serde_json::to_string_pretty(&req_error).unwrap();
+    error::ErrorBadRequest(req_error)
 }
 
 pub async fn health_check(data: web::Data<AppState>) -> error::Result<HttpResponse> {
