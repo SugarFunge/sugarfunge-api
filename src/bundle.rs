@@ -177,9 +177,10 @@ pub async fn get_bundles_id(data: web::Data<AppState>) -> error::Result<HttpResp
         .asset_bundles_root()
         .to_root_bytes();
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -196,12 +197,7 @@ pub async fn get_bundles_id(data: web::Data<AppState>) -> error::Result<HttpResp
         let asset_id = u64::decode(&mut &asset_key[..]).unwrap();
         // println!("asset_id: {}", asset_id);
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = sp_core::H256::decode(&mut &storage_data[..]).unwrap();
             let bundle_id = value.encode_hex();
 
@@ -230,19 +226,15 @@ pub async fn verify_bundle_exist(
         .asset_bundles_root()
         .to_root_bytes();
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
     for key in keys.iter() {
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = sp_core::H256::decode(&mut &storage_data[..]).unwrap();
             let bundle_id: BundleId = value.encode_hex();
 
@@ -263,9 +255,10 @@ pub async fn get_bundles_data(data: web::Data<AppState>) -> error::Result<HttpRe
         .bundles_root()
         .to_root_bytes();
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -277,12 +270,7 @@ pub async fn get_bundles_data(data: web::Data<AppState>) -> error::Result<HttpRe
         let bundle_id = sp_core::H256::decode(&mut &bundle_key[..]).unwrap();
         let bundle_id_value: BundleId = bundle_id.encode_hex();
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = BundleRuntime::<
                 u64,
                 u64,

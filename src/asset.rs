@@ -2,9 +2,9 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use codec::Decode;
+use codec::Encode;
 use serde_json::json;
 use std::str::FromStr;
-use subxt::ext::frame_metadata::StorageHasher;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::asset::*;
 use sugarfunge_api_types::primitives::*;
@@ -320,11 +320,11 @@ pub async fn balances(
         .balances_root()
         .to_root_bytes();
     // println!("query_key balances_root len: {}", query_key.len());
-    StorageMapKey::new(&account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+    query_key.extend(subxt::ext::sp_core::blake2_128(&account.encode()));
     // println!("query_key account len: {}", query_key.len());
     if let Some(class_id) = req.class_id {
         let class_id: u64 = class_id.into();
-        StorageMapKey::new(&class_id, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        query_key.extend(subxt::ext::sp_core::blake2_128(&class_id.encode()));
         // println!("query_key class_id len: {}", query_key.len());
     }
     // if let Some(asset_id) = req.asset_id {

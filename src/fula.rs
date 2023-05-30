@@ -3,9 +3,9 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use codec::Decode;
+use codec::Encode;
 use serde_json::json;
 use std::str::FromStr;
-use subxt::ext::frame_metadata::StorageHasher;
 use subxt::ext::sp_core::sr25519::Public;
 use subxt::tx::PairSigner;
 use subxt::utils::AccountId32;
@@ -460,13 +460,14 @@ pub async fn get_all_manifests(
 
     if let Some(value) = req.pool_id.clone() {
         let key_value: u32 = value.into();
-        StorageMapKey::new(&key_value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        query_key.extend(subxt::ext::sp_core::blake2_128(&key_value.encode()));
     }
     // println!("query_key account_to len: {}", query_key.len());
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -480,12 +481,7 @@ pub async fn get_all_manifests(
         let pool_id_id = u32::decode(&mut &pool_id_key[..]);
         let pool_id = pool_id_id.unwrap();
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = ManifestRuntime::<AccountId32, Vec<u8>>::decode(&mut &storage_data[..]);
             let value = value.unwrap();
 
@@ -543,12 +539,13 @@ pub async fn get_available_manifests(
 
     if let Some(value) = req.pool_id.clone() {
         let key_value: u32 = value.into();
-        StorageMapKey::new(&key_value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        query_key.extend(subxt::ext::sp_core::blake2_128(&key_value.encode()));
     }
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -560,12 +557,7 @@ pub async fn get_available_manifests(
         let pool_id_id = u32::decode(&mut &pool_id_key[..]);
         let pool_id = pool_id_id.unwrap();
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = ManifestRuntime::<AccountId32, Vec<u8>>::decode(&mut &storage_data[..]);
             let value = value.unwrap();
 
@@ -601,13 +593,14 @@ pub async fn get_all_manifests_storer_data(
 
     if let Some(value) = req.pool_id.clone() {
         let key_value: u32 = value.into();
-        StorageMapKey::new(&key_value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        query_key.extend(subxt::ext::sp_core::blake2_128(&key_value.encode()));
         // println!("query_key pool_id len: {}", query_key.len());
     }
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -634,12 +627,7 @@ pub async fn get_all_manifests_storer_data(
         let cid_id = cid_id.unwrap();
         // println!("cid_id: {:?}", cid_id);
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = ManifestStorageDataRuntime::decode(&mut &storage_data[..]);
             let manifest_value = value.unwrap();
 

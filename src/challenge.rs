@@ -154,9 +154,10 @@ pub async fn verify_pending_challenge(
 
     // println!("query_key account_to len: {}", query_key.len());
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -194,9 +195,10 @@ pub async fn verify_file_size(
 
     // println!("query_key account_to len: {}", query_key.len());
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -208,12 +210,7 @@ pub async fn verify_file_size(
         let cid_id = cid_id.unwrap();
         // println!("cid_id: {:?}", cid_id);
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = ManifestRuntime::<AccountId32, Vec<u8>>::decode(&mut &storage_data[..]);
             let value = value.unwrap();
 
@@ -289,9 +286,10 @@ pub async fn get_challenges(data: web::Data<AppState>) -> error::Result<HttpResp
 
     // println!("query_key account_to len: {}", query_key.len());
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -303,12 +301,7 @@ pub async fn get_challenges(data: web::Data<AppState>) -> error::Result<HttpResp
         let account_id = Account::from(account_id.unwrap());
         // println!("account_id: {:?}", account_id);
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = ChallengeRuntime::<AccountId32>::decode(&mut &storage_data[..]);
             let value = value.unwrap();
 
@@ -332,9 +325,10 @@ pub async fn get_claims(data: web::Data<AppState>) -> error::Result<HttpResponse
 
     // println!("query_key account_to len: {}", query_key.len());
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -346,12 +340,7 @@ pub async fn get_claims(data: web::Data<AppState>) -> error::Result<HttpResponse
         let account_id = Account::from(account_id.unwrap());
         // println!("account_id: {:?}", account_id);
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = ClaimRuntime::decode(&mut &storage_data[..]);
             let value = value.unwrap();
 

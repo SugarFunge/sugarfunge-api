@@ -18,9 +18,9 @@ mod bag;
 mod bundle;
 mod challenge;
 mod contract;
-mod pool;
-mod market;
 mod fula;
+mod market;
+mod pool;
 mod state;
 mod subscription;
 mod util;
@@ -55,7 +55,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .app_data(Data::new(state.clone()))
             .service(web::resource("/ws").route(web::get().to(subscription::ws)))
-            // .route("/ws", web::get().to(subscription::ws))
+            .route("health", web::post().to(util::health_check))
             .route("account/seeded", web::post().to(account::seeded))
             .route("account/exists", web::post().to(account::exists))
             .route("account/create", web::post().to(account::create))
