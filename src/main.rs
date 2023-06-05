@@ -17,6 +17,7 @@ mod asset;
 mod bag;
 mod bundle;
 mod challenge;
+mod config;
 mod contract;
 mod fula;
 mod market;

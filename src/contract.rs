@@ -1,9 +1,11 @@
 use crate::bundle::*;
+use crate::config;
 use crate::state::AppState;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use codec::Encode;
 use contract_integration::admin_calls::*;
+use dotenv::dotenv;
 use hex::ToHex;
 use serde_json::json;
 use sp_core::U256;
@@ -16,17 +18,6 @@ use sugarfunge_api_types::contract::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
-
-const LABOR_TOKEN_CLASS_ID: u64 = 100;
-const LABOR_TOKEN_ASSET_ID: u64 = 100;
-const LABOR_TOKEN_VALUE: u128 = 1;
-
-const CHALLENGE_TOKEN_CLASS_ID: u64 = 110;
-const CHALLENGE_TOKEN_ASSET_ID: u64 = 100;
-const CHALLENGE_TOKEN_VALUE: u128 = 1;
-
-const CLAIMED_TOKEN_CLASS_ID: u64 = 120;
-const CLAIMED_TOKEN_ASSET_ID: u64 = 100;
 
 pub async fn contract_mint_to(
     req: web::Json<ContractTransactionInput>,
@@ -135,6 +126,9 @@ pub async fn convert_to_fula(
     data: web::Data<AppState>,
     req: web::Json<ConvertFulaInput>,
 ) -> error::Result<HttpResponse> {
+    dotenv().ok();
+    let env = config::init();
+
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
 
@@ -150,14 +144,14 @@ pub async fn convert_to_fula(
     // println!("1. CREATING SCHEMA");
 
     let schema = (
-        BoundedVec(vec![LABOR_TOKEN_CLASS_ID, CHALLENGE_TOKEN_CLASS_ID]),
+        BoundedVec(vec![env.labor_token_class_id, env.challenge_token_class_id]),
         BoundedVec(vec![
-            BoundedVec(vec![LABOR_TOKEN_ASSET_ID]),
-            BoundedVec(vec![CHALLENGE_TOKEN_ASSET_ID]),
+            BoundedVec(vec![env.labor_token_asset_id]),
+            BoundedVec(vec![env.challenge_token_asset_id]),
         ]),
         BoundedVec(vec![
-            BoundedVec(vec![LABOR_TOKEN_VALUE]),
-            BoundedVec(vec![CHALLENGE_TOKEN_VALUE]),
+            BoundedVec(vec![env.labor_token_value]),
+            BoundedVec(vec![env.challenge_token_value]),
         ]),
     );
     let bundle_id = hash(&schema.encode());
@@ -171,8 +165,8 @@ pub async fn convert_to_fula(
         if !verification {
             // println!("3. THE BUNDLE ID DOESN'T EXISTS");
             let call = sugarfunge::tx().bundle().register_bundle(
-                CLAIMED_TOKEN_CLASS_ID.into(),
-                CLAIMED_TOKEN_ASSET_ID.into(),
+                env.claimed_token_class_id.into(),
+                env.claimed_token_asset_id.into(),
                 bundle_id,
                 schema,
                 BoundedVec(vec![]),

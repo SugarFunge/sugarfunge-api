@@ -4537,6 +4537,7 @@ dependencies = [
  "contract-integration",
  "crossbeam",
  "derive_more",
+ "dotenv",
  "env_logger",
  "futures",
  "hex",
