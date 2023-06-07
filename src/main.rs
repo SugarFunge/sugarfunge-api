@@ -238,8 +238,12 @@ async fn main() -> std::io::Result<()> {
             .route("fula/challenge", web::post().to(challenge::get_challenges))
             .route("fula/claims", web::post().to(challenge::get_claims))
             .route(
-                "fula/convert_tokens",
-                web::post().to(contract::convert_to_fula),
+                "fula/goerli/convert_tokens",
+                web::post().to(contract::goerli_convert_to_fula),
+            )
+            .route(
+                "fula/mumbai/convert_tokens",
+                web::post().to(contract::mumbai_convert_to_fula),
             )
     })
     .bind((args.listen.host_str().unwrap(), args.listen.port().unwrap()))?
