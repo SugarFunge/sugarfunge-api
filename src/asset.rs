@@ -2,18 +2,14 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use codec::Decode;
+use codec::Encode;
 use serde_json::json;
 use std::str::FromStr;
-use subxt::ext::sp_core;
-use subxt::ext::sp_core::sr25519::Public;
-use subxt::ext::sp_runtime::AccountId32;
-use subxt::storage::address::{StorageHasher, StorageMapKey};
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::asset::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
-// use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 
 /// Create an asset class for an account
 pub async fn create_class(
@@ -22,15 +18,15 @@ pub async fn create_class(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = Public::from_str(&req.owner.as_str()).map_err(map_account_err)?;
-    let to = AccountId32::from(to);
+    let to = sp_core::sr25519::Public::from_str(req.owner.as_str()).map_err(map_account_err)?;
+    let to = subxt::utils::AccountId32::from(to);
     let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
     let api = &data.api;
 
     let call = sugarfunge::tx()
         .asset()
-        .create_class(to, req.class_id.into(), metadata);
+        .create_class(to.into(), req.class_id.into(), metadata);
 
     let result = api
         .tx()
@@ -50,7 +46,7 @@ pub async fn create_class(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -62,14 +58,18 @@ pub async fn class_info(
 ) -> error::Result<HttpResponse> {
     let api = &data.api;
 
-    let call = sugarfunge::storage().asset().classes(&req.class_id.into());
+    let call = sugarfunge::storage()
+        .asset()
+        .classes(u64::from(req.class_id));
 
-    let result = api.storage().fetch(&call, None).await;
-    let info = result.map_err(map_subxt_err)?;
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let info = storage.fetch(&call).await.map_err(map_subxt_err)?;
+
     Ok(HttpResponse::Ok().json(ClassInfoOutput {
         info: match info {
             Some(info) => Some(ClassInfo {
-                class_id: req.class_id.clone(),
+                class_id: req.class_id,
                 owner: info.owner.into(),
                 metadata: serde_json::from_slice(info.metadata.0.as_slice()).unwrap_or_default(),
             }),
@@ -113,7 +113,7 @@ pub async fn create(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -127,15 +127,17 @@ pub async fn info(
 
     let call = sugarfunge::storage()
         .asset()
-        .assets(&req.class_id.into(), &req.asset_id.into());
+        .assets(u64::from(req.class_id), u64::from(req.asset_id));
 
-    let result = api.storage().fetch(&call, None).await;
-    let info = result.map_err(map_subxt_err)?;
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let info = storage.fetch(&call).await.map_err(map_subxt_err)?;
+
     Ok(HttpResponse::Ok().json(AssetInfoOutput {
         info: match info {
             Some(info) => Some(AssetInfo {
-                class_id: req.class_id.clone(),
-                asset_id: req.asset_id.clone(),
+                class_id: req.class_id,
+                asset_id: req.asset_id,
                 metadata: serde_json::from_slice(info.metadata.0.as_slice()).unwrap_or_default(),
             }),
             None => None,
@@ -180,7 +182,7 @@ pub async fn update_metadata(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::ClassCreated"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -192,7 +194,7 @@ pub async fn mint(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let to = AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let to = subxt::utils::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = &data.api;
 
     let call = sugarfunge::tx().asset().mint(
@@ -223,7 +225,7 @@ pub async fn mint(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::AssetMint"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -235,7 +237,7 @@ pub async fn burn(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let from = AccountId32::try_from(&req.from).map_err(map_account_err)?;
+    let from = subxt::utils::AccountId32::try_from(&req.from).map_err(map_account_err)?;
     let api = &data.api;
 
     let call = sugarfunge::tx().asset().burn(
@@ -266,7 +268,7 @@ pub async fn burn(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::currency::events::Burn"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }
@@ -276,25 +278,28 @@ pub async fn balance(
     data: web::Data<AppState>,
     req: web::Json<AssetBalanceInput>,
 ) -> error::Result<HttpResponse> {
-    let account = Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
-    let account = AccountId32::from(account);
+    let account =
+        sp_core::sr25519::Public::from_str(req.account.as_str()).map_err(map_account_err)?;
+    let account = subxt::utils::AccountId32::from(account);
     let api = &data.api;
 
     let call = sugarfunge::storage().asset().balances(
         &account,
-        &req.class_id.into(),
-        &req.asset_id.into(),
+        u64::from(req.class_id),
+        u64::from(req.asset_id),
     );
 
-    let result = api.storage().fetch(&call, None).await;
-    let amount = result.map_err(map_subxt_err)?;
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let amount = storage.fetch(&call).await.map_err(map_subxt_err)?;
+
     match amount {
         Some(amount) => Ok(HttpResponse::Ok().json(AssetBalanceOutput {
             amount: amount.into(),
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::balances::events::balance"),
-            description: format!("Error in asset::balance"),
+            description: "Error in asset::balance".to_string(),
         })),
     }
 }
@@ -304,18 +309,22 @@ pub async fn balances(
     data: web::Data<AppState>,
     req: web::Json<AssetBalancesInput>,
 ) -> error::Result<HttpResponse> {
-    let account = Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
-    let account = AccountId32::from(account);
+    let account =
+        sp_core::sr25519::Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
+    let account = subxt::utils::AccountId32::from(account);
     let api = &data.api;
 
     let mut result_array = Vec::new();
-    let mut query_key = sugarfunge::storage().asset().balances_root().to_bytes();
+    let mut query_key = sugarfunge::storage()
+        .asset()
+        .balances_root()
+        .to_root_bytes();
     // println!("query_key balances_root len: {}", query_key.len());
-    StorageMapKey::new(&account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+    query_key.extend(subxt::ext::sp_core::blake2_128(&account.encode()));
     // println!("query_key account len: {}", query_key.len());
     if let Some(class_id) = req.class_id {
         let class_id: u64 = class_id.into();
-        StorageMapKey::new(&class_id, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        query_key.extend(subxt::ext::sp_core::blake2_128(&class_id.encode()));
         // println!("query_key class_id len: {}", query_key.len());
     }
     // if let Some(asset_id) = req.asset_id {
@@ -324,9 +333,10 @@ pub async fn balances(
     //     println!("query_key asset_id len: {}", query_key.len());
     // }
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -351,12 +361,9 @@ pub async fn balances(
         let asset_id = u64::decode(&mut &asset_key[..]);
         // println!("asset_id: {:?}", asset_id);
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = u128::decode(&mut &storage_data[..]);
             // println!(
             //     "Class_Id: {:?} AssetId: {:?}  Value: {:?}",
@@ -383,9 +390,8 @@ pub async fn transfer_from(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let account_from =
-        sp_core::crypto::AccountId32::try_from(&req.from).map_err(map_account_err)?;
-    let account_to = AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let account_from = subxt::utils::AccountId32::try_from(&req.from).map_err(map_account_err)?;
+    let account_to = subxt::utils::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let api = &data.api;
 
     let call = sugarfunge::tx().asset().transfer_from(
@@ -418,7 +424,7 @@ pub async fn transfer_from(
         })),
         None => Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to find sugarfunge::asset::events::Transferred"),
-            description: format!(""),
+            description: String::new(),
         })),
     }
 }

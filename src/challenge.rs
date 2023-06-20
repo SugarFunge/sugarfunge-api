@@ -10,8 +10,8 @@ use actix_web::{error, web, HttpResponse};
 use codec::Decode;
 use serde_json::json;
 use subxt::ext::sp_core::sr25519::Public;
-use subxt::ext::sp_runtime::AccountId32;
 use subxt::tx::PairSigner;
+use subxt::utils::AccountId32;
 use sugarfunge_api_types::challenge::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
@@ -150,13 +150,14 @@ pub async fn verify_pending_challenge(
     let query_key = sugarfunge::storage()
         .fula()
         .challenge_requests_root()
-        .to_bytes();
+        .to_root_bytes();
 
     // println!("query_key account_to len: {}", query_key.len());
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -187,13 +188,17 @@ pub async fn verify_file_size(
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().fula().manifests_root().to_bytes();
+    let query_key = sugarfunge::storage()
+        .fula()
+        .manifests_root()
+        .to_root_bytes();
 
     // println!("query_key account_to len: {}", query_key.len());
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -205,12 +210,7 @@ pub async fn verify_file_size(
         let cid_id = cid_id.unwrap();
         // println!("cid_id: {:?}", cid_id);
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = ManifestRuntime::<AccountId32, Vec<u8>>::decode(&mut &storage_data[..]);
             let value = value.unwrap();
 
@@ -282,13 +282,14 @@ pub async fn get_challenges(data: web::Data<AppState>) -> error::Result<HttpResp
     let query_key = sugarfunge::storage()
         .fula()
         .challenge_requests_root()
-        .to_bytes();
+        .to_root_bytes();
 
     // println!("query_key account_to len: {}", query_key.len());
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -300,12 +301,7 @@ pub async fn get_challenges(data: web::Data<AppState>) -> error::Result<HttpResp
         let account_id = Account::from(account_id.unwrap());
         // println!("account_id: {:?}", account_id);
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = ChallengeRuntime::<AccountId32>::decode(&mut &storage_data[..]);
             let value = value.unwrap();
 
@@ -325,13 +321,14 @@ pub async fn get_claims(data: web::Data<AppState>) -> error::Result<HttpResponse
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().fula().claims_root().to_bytes();
+    let query_key = sugarfunge::storage().fula().claims_root().to_root_bytes();
 
     // println!("query_key account_to len: {}", query_key.len());
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -343,12 +340,7 @@ pub async fn get_claims(data: web::Data<AppState>) -> error::Result<HttpResponse
         let account_id = Account::from(account_id.unwrap());
         // println!("account_id: {:?}", account_id);
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = ClaimRuntime::decode(&mut &storage_data[..]);
             let value = value.unwrap();
 

@@ -5,11 +5,11 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use codec::Decode;
+use codec::Encode;
 use serde_json::json;
 use subxt::ext::sp_core::sr25519::Public;
-use subxt::ext::sp_runtime::AccountId32;
-use subxt::storage::address::{StorageHasher, StorageMapKey};
 use subxt::tx::PairSigner;
+use subxt::utils::AccountId32;
 use sugarfunge_api_types::pool::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
@@ -228,12 +228,13 @@ pub async fn get_all_pools(
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().pool().pools_root().to_bytes();
+    let query_key = sugarfunge::storage().pool().pools_root().to_root_bytes();
     // println!("query_key pool_root len: {}", query_key.len());
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -248,12 +249,7 @@ pub async fn get_all_pools(
         let pool_id = pool_id_id.unwrap();
         // println!("pool_id: {:?}", pool_id);
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = PoolRuntime::decode(&mut &storage_data[..]);
             let pool_value = value.unwrap();
 
@@ -300,18 +296,22 @@ pub async fn get_all_pool_requests(
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let mut query_key = sugarfunge::storage().pool().pool_requests_root().to_bytes();
+    let mut query_key = sugarfunge::storage()
+        .pool()
+        .pool_requests_root()
+        .to_root_bytes();
     // println!("query_key pool_root len: {}", query_key.len());
 
     if let Some(value) = req.pool_id.clone() {
         let key_value: u32 = value.into();
-        StorageMapKey::new(&key_value, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
+        query_key.extend(subxt::ext::sp_core::blake2_128(&key_value.encode()));
         // println!("query_key pool_id len: {}", query_key.len());
     }
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -332,12 +332,7 @@ pub async fn get_all_pool_requests(
         let account_id = Account::from(account_id.unwrap());
         // println!("account_id: {:?}", account_id);
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = PoolRequestRuntime::decode(&mut &storage_data[..]);
             let poolrequest_value = value.unwrap();
 
@@ -385,7 +380,7 @@ pub async fn get_all_pool_users(
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().pool().users_root().to_bytes();
+    let query_key = sugarfunge::storage().pool().users_root().to_root_bytes();
     // println!("query_key pool_root len: {}", query_key.len());
 
     // if let Some(account_value) = req.account.clone() {
@@ -394,9 +389,10 @@ pub async fn get_all_pool_users(
     //     // println!("query_key class_id len: {}", query_key.len());
     // }
 
-    let keys = api
-        .storage()
-        .fetch_keys(&query_key, 1000, None, None)
+    let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
+
+    let keys = storage
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -411,12 +407,7 @@ pub async fn get_all_pool_users(
         let account_id = Account::from(account_id.unwrap());
         // println!("account_id: {:?}", account_id);
 
-        if let Some(storage_data) = api
-            .storage()
-            .fetch_raw(&key.0, None)
-            .await
-            .map_err(map_subxt_err)?
-        {
+        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = UserRuntime::<BoundedVec<u8>>::decode(&mut &storage_data[..]);
             let user_value = value.unwrap();
 
