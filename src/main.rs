@@ -184,34 +184,6 @@ async fn main() -> std::io::Result<()> {
             )
             .route("fula/pool/users", web::post().to(pool::get_all_pool_users))
             .route(
-                "fula/contract/mint",
-                web::post().to(contract::contract_mint_to),
-            )
-            .route(
-                "fula/contract/supply",
-                web::post().to(contract::contract_total_supply),
-            )
-            .route(
-                "fula/contract/allowance",
-                web::post().to(contract::contract_allowance),
-            )
-            .route(
-                "fula/contract/increase_allowance",
-                web::post().to(contract::contract_increase_allowance),
-            )
-            .route(
-                "fula/contract/decrease_allowance",
-                web::post().to(contract::contract_decrease_allowance),
-            )
-            .route(
-                "fula/contract/burn",
-                web::post().to(contract::contract_burn_from),
-            )
-            .route(
-                "fula/contract/transfer",
-                web::post().to(contract::contract_transfer),
-            )
-            .route(
                 "fula/challenge/generate",
                 web::post().to(challenge::generate_challenge),
             )
@@ -239,11 +211,11 @@ async fn main() -> std::io::Result<()> {
             .route("fula/claims", web::post().to(challenge::get_claims))
             .route(
                 "fula/goerli/convert_tokens",
-                web::post().to(contract::goerli_convert_to_fula),
+                web::post().to(contract::goerli_convert_to_fula_endpoint),
             )
             .route(
                 "fula/mumbai/convert_tokens",
-                web::post().to(contract::mumbai_convert_to_fula),
+                web::post().to(contract::mumbai_convert_to_fula_endpoint),
             )
     })
     .bind((args.listen.host_str().unwrap(), args.listen.port().unwrap()))?
