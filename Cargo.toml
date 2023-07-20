@@ -33,6 +33,12 @@ scale-info = { version = "2.5.0", features = ["bit-vec"] }
 dotenv = "0.15.0"
 contract-integration = { git = "https://github.com/SugarFunge/contract-integration", branch = "master", default-features = false }
 reqwest = "0.11.18"
+tokio = { default-features = false, features = [
+    "io-std",
+    "io-util",
+    "time",
+    "rt-multi-thread",
+], version = "1" }
 
 [dependencies.subxt]
 git = "https://github.com/SugarFunge/subxt.git"

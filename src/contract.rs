@@ -12,6 +12,7 @@ use serde_json::json;
 use subxt::ext::sp_core::sr25519::Public;
 use subxt::ext::sp_core::Pair;
 use subxt::ext::sp_runtime::traits::IdentifyAccount;
+use subxt::rpc::types::Health;
 use subxt::tx::PairSigner;
 use subxt::utils::AccountId32;
 use sugarfunge_api_types::contract::*;
@@ -147,6 +148,23 @@ pub async fn convert_to_fula_call(
                 .map_err(map_sf_err)?;
             // println!("4. BUNDLE CREATED");
         };
+
+        // Health loop to ensure that the fula-contract-api is running
+
+        loop {
+            let health_request: Result<Health, RequestError> = request("health", ()).await;
+
+            match health_request {
+                Ok(health) => {
+                    println!("VERIFICATION: health: {:#?}", health);
+                    break;
+                }
+                Err(err) => {
+                    println!("ERROR: health: {:#?}", err);
+                    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                }
+            };
+        }
 
         // If exist, continue
         // println!("5. THE BUNDLE ID EXISTS");

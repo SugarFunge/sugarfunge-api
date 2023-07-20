@@ -4644,6 +4644,7 @@ dependencies = [
  "sp-std",
  "subxt",
  "sugarfunge-api-types",
+ "tokio",
  "unicode-xid",
  "url",
 ]
