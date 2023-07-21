@@ -7,7 +7,6 @@ use codec::Encode;
 use contract_integration::types::ReceiptOutput;
 use dotenv::dotenv;
 use hex::ToHex;
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use subxt::ext::sp_core::sr25519::Public;
 use subxt::ext::sp_core::Pair;
@@ -19,57 +18,6 @@ use sugarfunge_api_types::contract::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
-
-// Function to get the hash using the blake2_256 of a [u8] value
-fn hash(s: &[u8]) -> sp_core::H256 {
-    sp_io::hashing::blake2_256(s).into()
-}
-
-// Function to build the endpoints routes when executed the req function
-fn endpoint(cmd: &'static str) -> String {
-    dotenv().ok();
-    let env = config::init();
-    format!("{}/{}", env.fula_contract_api_host_and_port.as_str(), cmd)
-}
-
-// Function to create a request to the fula-contract-api, given the endpoint route and the inputs
-async fn request<'a, I, O>(cmd: &'static str, args: I) -> Result<O, RequestError>
-where
-    I: Serialize,
-    O: for<'de> Deserialize<'de>,
-{
-    let sf_res = reqwest::Client::new()
-        .post(endpoint(cmd))
-        .json(&args)
-        .send()
-        .await;
-
-    match sf_res {
-        Ok(res) => {
-            if let Err(err) = res.error_for_status_ref() {
-                match res.json::<RequestError>().await {
-                    Ok(err) => Err(err),
-                    Err(_) => Err(RequestError {
-                        message: json!(format!("{:#?}", err)),
-                        description: "Reqwest json error.".into(),
-                    }),
-                }
-            } else {
-                match res.json().await {
-                    Ok(res) => Ok(res),
-                    Err(err) => Err(RequestError {
-                        message: json!(format!("{:#?}", err)),
-                        description: "Reqwest json error.".into(),
-                    }),
-                }
-            }
-        }
-        Err(err) => Err(RequestError {
-            message: json!(format!("{:#?}", err)),
-            description: "Reqwest error.".into(),
-        }),
-    }
-}
 
 // Functions to call the {goerli/convert} endpoint of the fula-contract-api
 pub async fn goerli_convert_to_fula_endpoint(
