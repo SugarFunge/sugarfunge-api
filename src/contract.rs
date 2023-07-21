@@ -99,69 +99,64 @@ pub async fn convert_to_fula_call(
 
         // Health loop to ensure that the fula-contract-api is running
 
-        loop {
-            let health_request: Result<Health, RequestError> = request("health", ()).await;
+        let health_request: Result<Health, RequestError> = request("health", ()).await;
 
-            match health_request {
-                Ok(health) => {
-                    println!("VERIFICATION: health: {:#?}", health);
-                    break;
+        match health_request {
+            Ok(_) => {
+                let call = sugarfunge::tx().bundle().mint_bundle(
+                    account_from,
+                    account_to,
+                    bundle_id,
+                    req.amount.into(),
+                );
+
+                let result = api
+                    .tx()
+                    .sign_and_submit_then_watch(&call, &signer, Default::default())
+                    .await
+                    .map_err(map_subxt_err)?
+                    .wait_for_finalized_success()
+                    .await
+                    .map_err(map_sf_err)?;
+                let result = result
+                    .find_first::<sugarfunge::bundle::events::Mint>()
+                    .map_err(map_subxt_err)?;
+                match result {
+                    Some(_) => {
+                        // If the bundle mint is successful, execute the contract mint
+                        // println!("6. BUNDLE MINTED SUCCESSFULLY");
+                        let result: Result<ReceiptOutput, _> = request(
+                            route,
+                            ContractTransactionInput {
+                                account_address: String::from(req.wallet_account.as_str()),
+                                amount: u128::from(req.amount),
+                            },
+                        )
+                        .await;
+                        match result {
+                            Ok(event) => Ok(HttpResponse::Ok().json(event)),
+                            Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+                                message: json!("Failed to execute the contract_event::MintTo"),
+                                description: format!(""),
+                            })),
+                        }
+                    }
+                    // If the bundle mint failed, show an error to try again
+                    None => Ok(HttpResponse::BadRequest().json(RequestError {
+                        message: json!("Failed to execute the Bundle Mint"),
+                        description: format!(""),
+                    })),
                 }
-                Err(err) => {
-                    println!("ERROR: health: {:#?}", err);
-                    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-                }
-            };
+            }
+            Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+                message: json!("Failed to execute the contract_event::Health"),
+                description: format!(""),
+            })),
         }
 
         // If exist, continue
         // println!("5. THE BUNDLE ID EXISTS");
         // Mint the Bundle with the bundle_id
-
-        let call = sugarfunge::tx().bundle().mint_bundle(
-            account_from,
-            account_to,
-            bundle_id,
-            req.amount.into(),
-        );
-
-        let result = api
-            .tx()
-            .sign_and_submit_then_watch(&call, &signer, Default::default())
-            .await
-            .map_err(map_subxt_err)?
-            .wait_for_finalized_success()
-            .await
-            .map_err(map_sf_err)?;
-        let result = result
-            .find_first::<sugarfunge::bundle::events::Mint>()
-            .map_err(map_subxt_err)?;
-        match result {
-            Some(_) => {
-                // If the bundle mint is successful, execute the contract mint
-                // println!("6. BUNDLE MINTED SUCCESSFULLY");
-                let result: Result<ReceiptOutput, _> = request(
-                    route,
-                    ContractTransactionInput {
-                        account_address: String::from(req.wallet_account.as_str()),
-                        amount: u128::from(req.amount),
-                    },
-                )
-                .await;
-                match result {
-                    Ok(event) => Ok(HttpResponse::Ok().json(event)),
-                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-                        message: json!("Failed to execute the contract_event::MintTo"),
-                        description: format!(""),
-                    })),
-                }
-            }
-            // If the bundle mint failed, show an error to try again
-            None => Ok(HttpResponse::BadRequest().json(RequestError {
-                message: json!("Failed to execute the Bundle Mint"),
-                description: format!(""),
-            })),
-        }
     } else {
         Ok(HttpResponse::BadRequest().json(RequestError {
             message: json!("Failed to verify if the Bundle ID exist"),
