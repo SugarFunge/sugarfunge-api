@@ -3,7 +3,9 @@ use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sp_core::Pair;
+use subxt::error::DispatchError;
 use sugarfunge_api_types::primitives::*;
+use sugarfunge_api_types::sugarfunge::{self};
 use url::Url;
 
 #[derive(Serialize, Deserialize, Debug, Display)]
@@ -24,12 +26,22 @@ pub fn map_subxt_err(e: subxt::Error) -> actix_web::Error {
     error::ErrorBadRequest(req_error)
 }
 
-pub fn map_sf_err(
-    e: subxt::Error,
-) -> actix_web::Error {
-    // TODO: json_err should be a json Value to improve UX
-    let json_err = json!(e.to_string());
-    let req_error = RequestError {
+pub fn map_sf_err(e: subxt::Error) -> actix_web::Error {
+    let subxt::Error::Runtime(DispatchError::Module(module_err)) = e else {
+        return error::ErrorBadRequest("Not a Module Error")
+    };
+    let value = module_err.as_root_error::<sugarfunge::Error>().unwrap();
+    let mut json_err = json!(&format!("{:?}", value));
+
+    if let Ok(value) = module_err.details() {
+        json_err = json!(&format!(
+            "Pallet: {}, Variant: {}",
+            value.pallet.name(),
+            value.variant.name
+        ));
+    }
+
+    let req_error: RequestError = RequestError {
         message: json_err,
         description: "Sugarfunge error".into(),
     };

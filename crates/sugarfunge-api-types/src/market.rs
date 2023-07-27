@@ -101,7 +101,6 @@ impl From<sugarfunge_market::RateAction<u64, u64>> for RateAction {
             sugarfunge_market::RateAction::MarketTransfer(amm, class_id, asset_id) => {
                 RateAction::MarketTransfer(amm.into(), class_id.into(), asset_id.into())
             }
-            sugarfunge_market::RateAction::__Ignore(_) => RateAction::Transfer(Amount::from(0)),
         }
     }
 }
@@ -156,7 +155,6 @@ impl From<AssetRate> for sugarfunge_market::AssetRate<subxt::utils::AccountId32,
             action: asset_rate.action.into(),
             from: asset_rate.from.into(),
             to: asset_rate.to.into(),
-            __subxt_unused_type_params: Default::default(),
         }
     }
 }
