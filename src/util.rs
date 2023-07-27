@@ -30,7 +30,7 @@ pub fn map_sf_err(e: subxt::Error) -> actix_web::Error {
     let subxt::Error::Runtime(DispatchError::Module(module_err)) = e else {
         return error::ErrorBadRequest("Not a Module Error")
     };
-
+    let value = module_err.as_root_error::<sugarfunge::Error>().unwrap();
     let mut json_err = json!(&format!("{:?}", value));
 
     if let Ok(value) = module_err.details() {
