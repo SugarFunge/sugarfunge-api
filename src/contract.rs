@@ -17,7 +17,7 @@ use subxt::utils::AccountId32;
 use sugarfunge_api_types::contract::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 
 // Functions to call the {goerli/convert} endpoint of the fula-contract-api
 pub async fn goerli_convert_to_fula_endpoint(

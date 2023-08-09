@@ -11,11 +11,10 @@ use subxt::utils::AccountId32;
 use sugarfunge_api_types::pool::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
+use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use sugarfunge_api_types::sugarfunge::runtime_types::fula_pool::Pool as PoolRuntime;
 use sugarfunge_api_types::sugarfunge::runtime_types::fula_pool::PoolRequest as PoolRequestRuntime;
 use sugarfunge_api_types::sugarfunge::runtime_types::fula_pool::User as UserRuntime;
-use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
-// use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 
 pub async fn create_pool(
     data: web::Data<AppState>,

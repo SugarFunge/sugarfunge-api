@@ -11,14 +11,13 @@ use subxt::utils::AccountId32;
 use sugarfunge_api_types::fula::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
+use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 use sugarfunge_api_types::sugarfunge::runtime_types::functionland_fula::{
     Manifest as ManifestRuntime, ManifestAvailable as ManifestAvailableRuntime,
     ManifestStorageData as ManifestStorageDataRuntime,
     ManifestWithPoolId as ManifestWithPoolIdRuntime, StorerData as StorerDataRuntime,
     UploaderData as UploaderDataRuntime,
 };
-use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
-// use sugarfunge_api_types::sugarfunge::runtime_types::sp_runtime::bounded::bounded_vec::BoundedVec;
 
 pub async fn upload_manifest(
     data: web::Data<AppState>,

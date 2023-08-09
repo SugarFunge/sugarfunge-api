@@ -9,7 +9,7 @@ use subxt::tx::PairSigner;
 use sugarfunge_api_types::asset::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 
 /// Create an asset class for an account
 pub async fn create_class(
