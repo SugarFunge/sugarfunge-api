@@ -17,9 +17,9 @@ pub fn init() -> Config {
     let panic_message: String = "enviroment variable is not set".to_string();
 
     Config {
-        fula_contract_api_host_and_port: match env::var("FULA_CONTRACT_API_HOST_AND_PORT") {
+        fula_contract_api_host_and_port: match env::var("FULA_CONTRACT_API_HOST") {
             Ok(var) => var,
-            Err(_) => panic!("FULA_CONTRACT_API_HOST_AND_PORT {}", panic_message),
+            Err(_) => panic!("FULA_CONTRACT_API_HOST {}", panic_message),
         },
         labor_token_class_id: match env::var("LABOR_TOKEN_CLASS_ID") {
             Ok(var) => var.parse::<u64>().unwrap(),

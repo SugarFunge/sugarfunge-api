@@ -42,31 +42,31 @@ tokio = { default-features = false, features = [
 
 [dependencies.subxt]
 git = "https://github.com/SugarFunge/subxt.git"
-branch = "feature/polkadot-v0.9.42"
+branch = "feature/polkadot-v0.9.43"
 
 [dependencies.sp-keyring]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.42"
+branch = "polkadot-v0.9.43"
 package = "sp-keyring"
 
 [dependencies.sp-std]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.42"
+branch = "polkadot-v0.9.43"
 package = "sp-std"
 
 [dependencies.sp-io]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.42"
+branch = "polkadot-v0.9.43"
 package = "sp-io"
 features = []
 
 [dependencies.sp-core]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.42"
+branch = "polkadot-v0.9.43"
 package = "sp-core"
 features = ["full_crypto"]
 
 [dependencies.sp-runtime]
 git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v0.9.42"
+branch = "polkadot-v0.9.43"
 package = "sp-runtime"

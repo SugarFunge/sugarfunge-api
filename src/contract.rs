@@ -11,13 +11,12 @@ use serde_json::json;
 use subxt::ext::sp_core::sr25519::Public;
 use subxt::ext::sp_core::Pair;
 use subxt::ext::sp_runtime::traits::IdentifyAccount;
-use subxt::rpc::types::Health;
 use subxt::tx::PairSigner;
 use subxt::utils::AccountId32;
 use sugarfunge_api_types::contract::*;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
-use sugarfunge_api_types::sugarfunge::runtime_types::sp_core::bounded::bounded_vec::BoundedVec;
+use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 
 // Functions to call the {goerli/convert} endpoint of the fula-contract-api
 pub async fn goerli_convert_to_fula_endpoint(
@@ -99,57 +98,47 @@ pub async fn convert_to_fula_call(
 
         // Health loop to ensure that the fula-contract-api is running
 
-        let health_request: Result<Health, RequestError> = request("health", ()).await;
+        let call = sugarfunge::tx().bundle().mint_bundle(
+            account_from,
+            account_to,
+            bundle_id,
+            req.amount.into(),
+        );
 
-        match health_request {
-            Ok(_) => {
-                let call = sugarfunge::tx().bundle().mint_bundle(
-                    account_from,
-                    account_to,
-                    bundle_id,
-                    req.amount.into(),
-                );
-
-                let result = api
-                    .tx()
-                    .sign_and_submit_then_watch(&call, &signer, Default::default())
-                    .await
-                    .map_err(map_subxt_err)?
-                    .wait_for_finalized_success()
-                    .await
-                    .map_err(map_sf_err)?;
-                let result = result
-                    .find_first::<sugarfunge::bundle::events::Mint>()
-                    .map_err(map_subxt_err)?;
+        let result = api
+            .tx()
+            .sign_and_submit_then_watch(&call, &signer, Default::default())
+            .await
+            .map_err(map_subxt_err)?
+            .wait_for_finalized_success()
+            .await
+            .map_err(map_sf_err)?;
+        let result = result
+            .find_first::<sugarfunge::bundle::events::Mint>()
+            .map_err(map_subxt_err)?;
+        match result {
+            Some(_) => {
+                // If the bundle mint is successful, execute the contract mint
+                // println!("6. BUNDLE MINTED SUCCESSFULLY");
+                let result: Result<ReceiptOutput, _> = request(
+                    route,
+                    ContractTransactionInput {
+                        account_address: String::from(req.wallet_account.as_str()),
+                        amount: u128::from(req.amount),
+                    },
+                )
+                .await;
                 match result {
-                    Some(_) => {
-                        // If the bundle mint is successful, execute the contract mint
-                        // println!("6. BUNDLE MINTED SUCCESSFULLY");
-                        let result: Result<ReceiptOutput, _> = request(
-                            route,
-                            ContractTransactionInput {
-                                account_address: String::from(req.wallet_account.as_str()),
-                                amount: u128::from(req.amount),
-                            },
-                        )
-                        .await;
-                        match result {
-                            Ok(event) => Ok(HttpResponse::Ok().json(event)),
-                            Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-                                message: json!("Failed to execute the contract_event::MintTo"),
-                                description: format!(""),
-                            })),
-                        }
-                    }
-                    // If the bundle mint failed, show an error to try again
-                    None => Ok(HttpResponse::BadRequest().json(RequestError {
-                        message: json!("Failed to execute the Bundle Mint"),
+                    Ok(event) => Ok(HttpResponse::Ok().json(event)),
+                    Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+                        message: json!("Failed to execute the contract_event::MintTo"),
                         description: format!(""),
                     })),
                 }
             }
-            Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
-                message: json!("Failed to execute the contract_event::Health"),
+            // If the bundle mint failed, show an error to try again
+            None => Ok(HttpResponse::BadRequest().json(RequestError {
+                message: json!("Failed to execute the Bundle Mint"),
                 description: format!(""),
             })),
         }
