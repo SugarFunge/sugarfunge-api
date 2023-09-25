@@ -5,8 +5,8 @@ use dotenv::dotenv;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sp_core::Pair;
-use subxt::rpc::types::Health;
 use subxt::error::DispatchError;
+use subxt::rpc::types::Health;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge::{self};
 use url::Url;
@@ -31,7 +31,7 @@ pub fn map_subxt_err(e: subxt::Error) -> actix_web::Error {
 
 pub fn map_sf_err(e: subxt::Error) -> actix_web::Error {
     let subxt::Error::Runtime(DispatchError::Module(module_err)) = e else {
-        return error::ErrorBadRequest("Not a Module Error")
+        return error::ErrorBadRequest("Not a Module Error");
     };
     let value = module_err.as_root_error::<sugarfunge::Error>().unwrap();
     let mut json_err = json!(&format!("{:?}", value));
@@ -85,8 +85,21 @@ pub fn url_to_string(url: Url) -> String {
 }
 
 pub fn map_fula_err(e: subxt::Error) -> actix_web::Error {
-    let json_err = json!(e.to_string().replace("\"", ""));
-    let req_error = RequestError {
+    let subxt::Error::Runtime(DispatchError::Module(module_err)) = e else {
+        return error::ErrorBadRequest("Not a Module Error");
+    };
+    let value = module_err.as_root_error::<sugarfunge::Error>().unwrap();
+    let mut json_err = json!(&format!("{:?}", value));
+
+    if let Ok(value) = module_err.details() {
+        json_err = json!(&format!(
+            "Pallet: {}, Variant: {}",
+            value.pallet.name(),
+            value.variant.name
+        ));
+    }
+
+    let req_error: RequestError = RequestError {
         message: json_err,
         description: "Fula Pallet error".into(),
     };
@@ -94,10 +107,23 @@ pub fn map_fula_err(e: subxt::Error) -> actix_web::Error {
     error::ErrorBadRequest(req_error)
 }
 pub fn map_fula_pool_err(e: subxt::Error) -> actix_web::Error {
-    let json_err = json!(e.to_string().replace("\"", ""));
-    let req_error = RequestError {
+    let subxt::Error::Runtime(DispatchError::Module(module_err)) = e else {
+        return error::ErrorBadRequest("Not a Module Error");
+    };
+    let value = module_err.as_root_error::<sugarfunge::Error>().unwrap();
+    let mut json_err = json!(&format!("{:?}", value));
+
+    if let Ok(value) = module_err.details() {
+        json_err = json!(&format!(
+            "Pallet: {}, Variant: {}",
+            value.pallet.name(),
+            value.variant.name
+        ));
+    }
+
+    let req_error: RequestError = RequestError {
         message: json_err,
-        description: "Fula-Pool Pallet error".into(),
+        description: "Fula Pool error".into(),
     };
     let req_error = serde_json::to_string_pretty(&req_error).unwrap();
     error::ErrorBadRequest(req_error)
