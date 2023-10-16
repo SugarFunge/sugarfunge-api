@@ -125,7 +125,7 @@ pub async fn exists(
     }
 }
 
-pub async fn refund_fees(data: web::Data<AppState>) -> error::Result<HttpResponse> {
+pub async fn refund_fees(data: web::Data<AppState>, seed: &Seed) -> error::Result<HttpResponse> {
     let result: Result<Refund, _> = request("refund", ()).await;
     match result {
         Ok(event) => {
@@ -135,9 +135,7 @@ pub async fn refund_fees(data: web::Data<AppState>) -> error::Result<HttpRespons
                     seed: Seed::from(event.seed.clone()),
                     to: Account::from(format!(
                         "{}",
-                        get_pair_from_seed(&(Seed::from(event.seed)))?
-                            .public()
-                            .into_account()
+                        get_pair_from_seed(seed)?.public().into_account()
                     )),
                     amount: Balance::from(event.amount),
                 }),

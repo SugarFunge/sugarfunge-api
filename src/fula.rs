@@ -52,7 +52,7 @@ pub async fn upload_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::ManifestOutput>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
@@ -103,7 +103,7 @@ pub async fn batch_upload_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::BatchManifestOutput>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
@@ -145,7 +145,7 @@ pub async fn storage_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::StorageManifestOutput>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
@@ -187,7 +187,7 @@ pub async fn batch_storage_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::BatchStorageManifestOutput>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
@@ -228,7 +228,7 @@ pub async fn remove_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::ManifestRemoved>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
@@ -271,7 +271,7 @@ pub async fn batch_remove_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::BatchManifestRemoved>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
@@ -314,7 +314,7 @@ pub async fn remove_stored_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::RemoveStorerOutput>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
@@ -356,7 +356,7 @@ pub async fn batch_remove_stored_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::BatchRemoveStorerOutput>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
@@ -394,7 +394,7 @@ pub async fn verify_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::VerifiedStorerManifests>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
@@ -440,7 +440,7 @@ pub async fn update_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::ManifestStorageUpdated>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {

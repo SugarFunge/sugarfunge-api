@@ -117,7 +117,7 @@ pub async fn convert_to_fula_call(
         let result = result
             .find_first::<sugarfunge::bundle::events::Mint>()
             .map_err(map_subxt_err)?;
-        if let Err(value_error) = account::refund_fees(data).await {
+        if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
             return Err(value_error);
         }
         match result {

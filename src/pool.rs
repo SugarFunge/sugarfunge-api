@@ -48,7 +48,7 @@ pub async fn create_pool(
     let result = result
         .find_first::<sugarfunge::pool::events::PoolCreated>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
@@ -85,7 +85,7 @@ pub async fn leave_pool(
     let result = result
         .find_first::<sugarfunge::pool::events::ParticipantLeft>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
@@ -125,7 +125,7 @@ pub async fn join_pool(
     let result = result
         .find_first::<sugarfunge::pool::events::JoinRequested>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
@@ -162,7 +162,7 @@ pub async fn cancel_join_pool(
     let result = result
         .find_first::<sugarfunge::pool::events::RequestWithdrawn>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
@@ -206,7 +206,7 @@ pub async fn vote(
     let result = result
         .find_first::<sugarfunge::pool::events::VotingResult>()
         .map_err(map_subxt_err)?;
-    if let Err(value_error) = account::refund_fees(data).await {
+    if let Err(value_error) = account::refund_fees(data, &req.seed.clone()).await {
         return Err(value_error);
     }
     match result {
