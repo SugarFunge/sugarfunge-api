@@ -1,3 +1,4 @@
+use crate::account;
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
@@ -51,6 +52,9 @@ pub async fn upload_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::ManifestOutput>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(UploadManifestOutput {
             uploader: event.uploader.into(),
@@ -99,6 +103,9 @@ pub async fn batch_upload_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::BatchManifestOutput>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BatchUploadManifestOutput {
             uploader: event.uploader.into(),
@@ -138,6 +145,9 @@ pub async fn storage_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::StorageManifestOutput>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(StorageManifestOutput {
             storer: event.storer.into(),
@@ -177,6 +187,9 @@ pub async fn batch_storage_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::BatchStorageManifestOutput>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BatchStorageManifestOutput {
             storer: event.storer.into(),
@@ -215,6 +228,9 @@ pub async fn remove_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::ManifestRemoved>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveManifestOutput {
             uploader: event.uploader.into(),
@@ -255,6 +271,9 @@ pub async fn batch_remove_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::BatchManifestRemoved>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BatchRemoveManifestOutput {
             uploader: event.uploader.into(),
@@ -295,6 +314,9 @@ pub async fn remove_stored_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::RemoveStorerOutput>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(RemoveStoringManifestOutput {
             storer: transform_option_account_value(event.storer),
@@ -334,6 +356,9 @@ pub async fn batch_remove_stored_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::BatchRemoveStorerOutput>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(BatchRemoveStoringManifestOutput {
             storer: event.storer.into(),
@@ -369,6 +394,9 @@ pub async fn verify_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::VerifiedStorerManifests>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(VerifyManifestsOutput {
             storer: event.storer.into(),
@@ -412,6 +440,9 @@ pub async fn update_manifest(
     let result = result
         .find_first::<sugarfunge::fula::events::ManifestStorageUpdated>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(UpdatedManifestOutput {
             storer: event.storer.into(),

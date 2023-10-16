@@ -124,3 +124,30 @@ pub async fn exists(
         })),
     }
 }
+
+pub async fn refund_fees(data: web::Data<AppState>) -> error::Result<HttpResponse> {
+    let result: Result<Refund, _> = request("refund", ()).await;
+    match result {
+        Ok(event) => {
+            let result_fund = fund(
+                data,
+                web::Json(FundAccountInput {
+                    seed: Seed::from(event.seed.clone()),
+                    to: Account::from(format!(
+                        "{}",
+                        get_pair_from_seed(&(Seed::from(event.seed)))?
+                            .public()
+                            .into_account()
+                    )),
+                    amount: Balance::from(event.amount),
+                }),
+            )
+            .await;
+            result_fund
+        }
+        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to execute the refund fees"),
+            description: format!(""),
+        })),
+    }
+}

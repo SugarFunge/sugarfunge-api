@@ -1,3 +1,4 @@
+use crate::account;
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
@@ -47,6 +48,9 @@ pub async fn create_pool(
     let result = result
         .find_first::<sugarfunge::pool::events::PoolCreated>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CreatePoolOutput {
             owner: transform_option_account_value(event.owner).into(),
@@ -81,6 +85,9 @@ pub async fn leave_pool(
     let result = result
         .find_first::<sugarfunge::pool::events::ParticipantLeft>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(LeavePoolOutput {
             account: event.account.into(),
@@ -118,6 +125,9 @@ pub async fn join_pool(
     let result = result
         .find_first::<sugarfunge::pool::events::JoinRequested>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(JoinPoolOutput {
             account: event.account.into(),
@@ -152,6 +162,9 @@ pub async fn cancel_join_pool(
     let result = result
         .find_first::<sugarfunge::pool::events::RequestWithdrawn>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(CancelJoinPoolOutput {
             account: event.account.into(),
@@ -193,6 +206,9 @@ pub async fn vote(
     let result = result
         .find_first::<sugarfunge::pool::events::VotingResult>()
         .map_err(map_subxt_err)?;
+    if let Err(value_error) = account::refund_fees(data).await {
+        return Err(value_error);
+    }
     match result {
         Some(event) => Ok(HttpResponse::Ok().json(VoteOutput {
             account: event.account.into(),

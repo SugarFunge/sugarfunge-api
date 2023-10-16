@@ -1,3 +1,4 @@
+use crate::account;
 use crate::bundle::*;
 use crate::config;
 use crate::state::AppState;
@@ -116,6 +117,9 @@ pub async fn convert_to_fula_call(
         let result = result
             .find_first::<sugarfunge::bundle::events::Mint>()
             .map_err(map_subxt_err)?;
+        if let Err(value_error) = account::refund_fees(data).await {
+            return Err(value_error);
+        }
         match result {
             Some(_) => {
                 // If the bundle mint is successful, execute the contract mint
