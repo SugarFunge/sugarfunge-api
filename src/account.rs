@@ -48,7 +48,9 @@ pub async fn fund(
     let amount_input = req.amount;
     let api = &data.api;
 
-    let call = sugarfunge::tx().balances().transfer(account, amount_input.into());
+    let call = sugarfunge::tx()
+        .balances()
+        .transfer(account, amount_input.into());
 
     let result = api
         .tx()
@@ -95,7 +97,7 @@ pub async fn balance(
             message: json!("Failed to find sugarfunge::balances::events::balance"),
             description: "Error in account::balance".to_string(),
         })),
-    }    
+    }
 }
 
 /// Check if account exists and is active
@@ -119,6 +121,31 @@ pub async fn exists(
         None => Ok(HttpResponse::Ok().json(AccountExistsOutput {
             account: account_out.into(),
             exists: false,
+        })),
+    }
+}
+
+pub async fn refund_fees(data: web::Data<AppState>, seed: &Seed) -> error::Result<HttpResponse> {
+    let result: Result<Refund, _> = request("refund", ()).await;
+    match result {
+        Ok(event) => {
+            let result_fund = fund(
+                data,
+                web::Json(FundAccountInput {
+                    seed: Seed::from(event.seed.clone()),
+                    to: Account::from(format!(
+                        "{}",
+                        get_pair_from_seed(seed)?.public().into_account()
+                    )),
+                    amount: Balance::from(event.amount),
+                }),
+            )
+            .await;
+            result_fund
+        }
+        Err(_) => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to execute the refund fees"),
+            description: format!(""),
         })),
     }
 }

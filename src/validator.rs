@@ -28,7 +28,7 @@ pub async fn add_validator(
 
     let result = api
         .tx()
-        .sign_and_submit_then_watch(&call_value,&signer, Default::default())
+        .sign_and_submit_then_watch(&call_value, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()
@@ -70,7 +70,7 @@ pub async fn remove_validator(
 
     let result = api
         .tx()
-        .sign_and_submit_then_watch(&call_value,&signer, Default::default())
+        .sign_and_submit_then_watch(&call_value, &signer, Default::default())
         .await
         .map_err(map_subxt_err)?
         .wait_for_finalized_success()

@@ -21,7 +21,9 @@ pub async fn register(
     let metadata = BoundedVec(metadata);
     let api = &data.api;
 
-    let call = sugarfunge::tx().bag().register(req.class_id.into(), metadata);
+    let call = sugarfunge::tx()
+        .bag()
+        .register(req.class_id.into(), metadata);
 
     let result = api
         .tx()
@@ -69,7 +71,11 @@ pub async fn create(
     let owners = transform_owners_input(transform_vec_account_to_string(req.owners.clone()));
     let api = &data.api;
 
-    let call = sugarfunge::tx().bag().create(req.class_id.into(),owners,transform_vec_balance_to_u128(&req.shares),);
+    let call = sugarfunge::tx().bag().create(
+        req.class_id.into(),
+        owners,
+        transform_vec_balance_to_u128(&req.shares),
+    );
 
     let result = api
         .tx()
@@ -141,7 +147,12 @@ pub async fn deposit(
     let bag = subxt::utils::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
     let api = &data.api;
 
-    let call = sugarfunge::tx().bag().deposit(bag,transform_vec_classid_to_u64(req.class_ids.clone()),transform_doublevec_assetid_to_u64(req.asset_ids.clone()),transform_doublevec_balance_to_u128(req.amounts.clone()),);
+    let call = sugarfunge::tx().bag().deposit(
+        bag,
+        transform_vec_classid_to_u64(req.class_ids.clone()),
+        transform_doublevec_assetid_to_u64(req.asset_ids.clone()),
+        transform_doublevec_balance_to_u128(req.amounts.clone()),
+    );
 
     let result = api
         .tx()

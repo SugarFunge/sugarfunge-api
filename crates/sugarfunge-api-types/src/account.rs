@@ -52,3 +52,9 @@ pub struct SeededAccountOutput {
     pub seed: Seed,
     pub account: Account,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Refund {
+    pub seed: String,
+    pub amount: u128,
+}
