@@ -381,7 +381,7 @@ pub async fn get_all_pool_users(
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().pool().users_root().to_root_bytes();
+    let mut query_key = sugarfunge::storage().pool().users_root().to_root_bytes();
     // println!("query_key pool_root len: {}", query_key.len());
 
     // if let Some(account_value) = req.account.clone() {
@@ -389,6 +389,12 @@ pub async fn get_all_pool_users(
     //     StorageMapKey::new(account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
     //     // println!("query_key class_id len: {}", query_key.len());
     // }
+
+    if let Some(value) = req.pool_id.clone() {
+        let key_value: u32 = value.into();
+        query_key.extend(subxt::ext::sp_core::blake2_128(&key_value.encode()));
+        // println!("query_key pool_id len: {}", query_key.len());
+    }
 
     let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
