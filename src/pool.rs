@@ -402,11 +402,6 @@ pub async fn get_all_pool_users(
         let mut meet_requirements = true;
         // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
-        let pool_id_idx = 48;
-        let pool_id_key = key.0.as_slice()[pool_id_idx..(pool_id_idx + 4)].to_vec();
-        let pool_id_id = u32::decode(&mut &pool_id_key[..]);
-        let pool_id = pool_id_id.unwrap();
-
         let account_idx = 48;
         let account_key = key.0.as_slice()[account_idx..(account_idx + 32)].to_vec();
         let account_id = AccountId32::decode(&mut &account_key[..]);
@@ -419,8 +414,8 @@ pub async fn get_all_pool_users(
 
             if let Some(input_pool_id) = req.pool_id.clone() {
                 let input_pool_id_u32: u32 = (*input_pool_id).into();
-                if pool_id != input_pool_id_u32 {
-                    meet_requirements = false;
+                if user_value.pool_id != Some(input_pool_id_u32) {
+                    continue;
                 }
             }
             if let Some(account_value) = req.account.clone() {
