@@ -393,7 +393,7 @@ pub async fn get_all_pool_users(
     let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
     let keys = storage
-        .fetch_keys(&query_key, 1000, None)
+        .fetch_keys(&query_key, 200, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -411,6 +411,13 @@ pub async fn get_all_pool_users(
         if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = UserRuntime::<BoundedVec<u8>>::decode(&mut &storage_data[..]);
             let user_value = value.unwrap();
+
+            // Check if the pool_id parameter matches the user's pool_id
+            if let Some(input_pool_id) = &req.pool_id {
+                if user_value.pool_id != *input_pool_id {
+                    continue;
+                }
+            }
 
             if let Some(account_value) = req.account.clone() {
                 if AccountId32::from(

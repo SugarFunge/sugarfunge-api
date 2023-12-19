@@ -105,6 +105,7 @@ pub struct PoolData {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetAllPoolUsersInput {
     pub account: Option<Account>,
+    pub pool_id: Option<PoolId>, // Add this line
 }
 
 #[derive(Serialize, Deserialize, Debug)]
