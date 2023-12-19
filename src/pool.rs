@@ -381,7 +381,7 @@ pub async fn get_all_pool_users(
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let mut query_key = sugarfunge::storage().pool().users_root().to_root_bytes();
+    let query_key = sugarfunge::storage().pool().users_root().to_root_bytes();
     // println!("query_key pool_root len: {}", query_key.len());
 
     // if let Some(account_value) = req.account.clone() {
@@ -389,12 +389,6 @@ pub async fn get_all_pool_users(
     //     StorageMapKey::new(account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
     //     // println!("query_key class_id len: {}", query_key.len());
     // }
-
-    if let Some(value) = req.pool_id.clone() {
-        let key_value: u32 = value.into();
-        query_key.extend(subxt::ext::sp_core::blake2_128(&key_value.encode()));
-        // println!("query_key pool_id len: {}", query_key.len());
-    }
 
     let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
@@ -408,6 +402,11 @@ pub async fn get_all_pool_users(
         let mut meet_requirements = true;
         // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
+        let pool_id_idx = 48;
+        let pool_id_key = key.0.as_slice()[pool_id_idx..(pool_id_idx + 4)].to_vec();
+        let pool_id_id = u32::decode(&mut &pool_id_key[..]);
+        let pool_id = pool_id_id.unwrap();
+
         let account_idx = 48;
         let account_key = key.0.as_slice()[account_idx..(account_idx + 32)].to_vec();
         let account_id = AccountId32::decode(&mut &account_key[..]);
@@ -418,6 +417,12 @@ pub async fn get_all_pool_users(
             let value = UserRuntime::<BoundedVec<u8>>::decode(&mut &storage_data[..]);
             let user_value = value.unwrap();
 
+            if let Some(input_pool_id) = req.pool_id.clone() {
+                let input_pool_id_u32: u32 = (*input_pool_id).into();
+                if pool_id != input_pool_id_u32 {
+                    meet_requirements = false;
+                }
+            }
             if let Some(account_value) = req.account.clone() {
                 if AccountId32::from(
                     Public::from_str(&account_value.as_str()).map_err(map_account_err)?,
