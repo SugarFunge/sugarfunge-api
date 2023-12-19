@@ -418,14 +418,6 @@ pub async fn get_all_pool_users(
             let value = UserRuntime::<BoundedVec<u8>>::decode(&mut &storage_data[..]);
             let user_value = value.unwrap();
 
-            // Check if the pool_id parameter matches the user's pool_id
-            if let Some(input_pool_id) = &req.pool_id {
-                let input_pool_id_u32: u32 = (*input_pool_id).into();
-                if user_value.pool_id != Some(input_pool_id_u32) {
-                    continue;
-                }
-            }
-
             if let Some(account_value) = req.account.clone() {
                 if AccountId32::from(
                     Public::from_str(&account_value.as_str()).map_err(map_account_err)?,
