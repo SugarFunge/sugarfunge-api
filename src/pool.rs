@@ -393,7 +393,7 @@ pub async fn get_all_pool_users(
     let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
     let keys = storage
-        .fetch_keys(&query_key, 3000, None)
+        .fetch_keys(&query_key, 1000, None)
         .await
         .map_err(map_subxt_err)?;
 
