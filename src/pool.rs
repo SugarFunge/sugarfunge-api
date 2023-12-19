@@ -393,7 +393,7 @@ pub async fn get_all_pool_users(
     let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
     let keys = storage
-        .fetch_keys(&query_key, 200, None)
+        .fetch_keys(&query_key, 3000, None)
         .await
         .map_err(map_subxt_err)?;
 
@@ -414,7 +414,8 @@ pub async fn get_all_pool_users(
 
             // Check if the pool_id parameter matches the user's pool_id
             if let Some(input_pool_id) = &req.pool_id {
-                if user_value.pool_id != *input_pool_id {
+                let input_pool_id_u32: u32 = (*input_pool_id).into();
+                if user_value.pool_id != Some(input_pool_id_u32) {
                     continue;
                 }
             }
