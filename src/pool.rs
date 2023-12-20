@@ -382,13 +382,6 @@ pub async fn get_all_pool_users(
     let mut result_array = Vec::new();
 
     let query_key = sugarfunge::storage().pool().users_root().to_root_bytes();
-    // println!("query_key pool_root len: {}", query_key.len());
-
-    // if let Some(account_value) = req.account.clone() {
-    //     let account = AccountId32::try_from(&account_value).map_err(map_account_err)?;
-    //     StorageMapKey::new(account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
-    //     // println!("query_key class_id len: {}", query_key.len());
-    // }
 
     let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
@@ -397,36 +390,45 @@ pub async fn get_all_pool_users(
         .await
         .map_err(map_subxt_err)?;
 
-    // println!("Obtained keys:");
     for key in keys.iter() {
-        let mut meet_requirements = true;
-        // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
-
         let account_idx = 48;
         let account_key = key.0.as_slice()[account_idx..(account_idx + 32)].to_vec();
         let account_id = AccountId32::decode(&mut &account_key[..]);
         let account_id = Account::from(account_id.unwrap());
-        // println!("account_id: {:?}", account_id);
 
         if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
             let value = UserRuntime::<BoundedVec<u8>>::decode(&mut &storage_data[..]);
             let user_value = value.unwrap();
+            let input_pool_id = req.pool_id.map(|id| id);
+            let input_request_pool_id = req.request_pool_id.map(|id| id);
 
-            if let Some(input_pool_id) = req.pool_id.clone() {
-                let input_pool_id_u32: u32 = (*input_pool_id).into();
-                if user_value.pool_id != Some(input_pool_id_u32) {
-                    continue;
-                }
+            let mut meet_requirements = true;
+
+            // Apply the filtering logic based on pool_id and request_pool_id
+            if input_pool_id.is_some() {
+                let input_pool_id_u32: u32 = input_pool_id.unwrap().into();
+                meet_requirements &= user_value.pool_id == Some(input_pool_id_u32);
             }
+            if input_request_pool_id.is_some() {
+                let input_request_pool_id_u32: u32 = input_request_pool_id.unwrap().into();
+                meet_requirements &= user_value.request_pool_id == Some(input_request_pool_id_u32);
+            }
+
+            if input_request_pool_id.is_some() && input_pool_id.is_some() {
+                let input_pool_id_u32: u32 = input_pool_id.unwrap().into();
+                let input_request_pool_id_u32: u32 = input_request_pool_id.unwrap().into();
+                meet_requirements = (user_value.request_pool_id == Some(input_request_pool_id_u32)) || (user_value.pool_id == Some(input_pool_id_u32));
+            }
+
+            // Additional check for account value
             if let Some(account_value) = req.account.clone() {
-                if AccountId32::from(
+                meet_requirements &= AccountId32::from(
                     Public::from_str(&account_value.as_str()).map_err(map_account_err)?,
-                ) != AccountId32::from(
+                ) == AccountId32::from(
                     Public::from_str(&account_id.as_str()).map_err(map_account_err)?,
-                ) {
-                    meet_requirements = false;
-                }
+                );
             }
+
             if meet_requirements {
                 result_array.push(PoolUserData {
                     account: account_id,
@@ -443,3 +445,4 @@ pub async fn get_all_pool_users(
         users: result_array,
     }))
 }
+

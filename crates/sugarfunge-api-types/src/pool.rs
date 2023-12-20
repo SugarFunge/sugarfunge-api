@@ -106,6 +106,7 @@ pub struct PoolData {
 pub struct GetAllPoolUsersInput {
     pub account: Option<Account>,
     pub pool_id: Option<PoolId>,
+    pub request_pool_id: Option<PoolId>, // New field added for additional filter
 }
 
 #[derive(Serialize, Deserialize, Debug)]
