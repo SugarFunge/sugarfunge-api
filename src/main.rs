@@ -8,8 +8,7 @@ use args::*;
 use clap::Parser;
 use state::*;
 use std::sync::Arc;
-use subxt::{client::OnlineClient, PolkadotConfig};
-use util::url_to_string;
+use subxt::{client::OnlineClient, PolkadotConfig, backend::{legacy::LegacyRpcMethods, rpc::RpcClient}};
 
 mod account;
 mod args;
@@ -33,11 +32,21 @@ async fn main() -> std::io::Result<()> {
 
     let args = Args::parse();
 
-    let api = OnlineClient::<PolkadotConfig>::from_url(url_to_string(args.node_server))
+    let rpc_client = RpcClient::from_url(args.node_server.to_string())
         .await
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
 
-    let state = AppState { api: Arc::new(api) };
+    let api = OnlineClient::<PolkadotConfig>::from_rpc_client(rpc_client.clone())
+        .await
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+
+    let rpc = LegacyRpcMethods::<PolkadotConfig>::new(rpc_client.clone());
+
+    let state = AppState { 
+        api: Arc::new(api),
+        node_url: args.node_server.to_string(),
+        rpc: Arc::new(rpc),
+    };
 
     HttpServer::new(move || {
         let cors = Cors::default()

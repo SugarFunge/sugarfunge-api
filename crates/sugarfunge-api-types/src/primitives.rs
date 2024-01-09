@@ -186,6 +186,9 @@ impl BundleId {
     pub fn as_str(&self) -> &str {
         self.0.as_str()
     }
+    pub fn to_u64(&self) -> Result<u64, std::num::ParseIntError> {
+        self.0.parse::<u64>()
+    }
 }
 
 impl FromIterator<char> for BundleId {

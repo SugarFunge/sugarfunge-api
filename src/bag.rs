@@ -51,7 +51,11 @@ pub async fn register(
 pub fn transform_owners_input(in_owners: Vec<String>) -> Vec<AccountId32> {
     in_owners
         .into_iter()
-        .map(|current_owner| AccountId32::from_str(&current_owner).unwrap())
+        .map(|current_owner| {
+            let public = sp_core::sr25519::Public::from_str(&current_owner).unwrap();  // Error handling should be improved
+            let array: [u8; 32] = public.0;
+            AccountId32::from(array)
+        })
         .collect()
 }
 
@@ -108,8 +112,13 @@ pub async fn sweep(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let bag = sp_core::crypto::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let bag_public = sp_core::sr25519::Public::from_str(&req.bag).map_err(map_account_err)?;
+    let bag_array: [u8; 32] = bag_public.0;
+    let bag = AccountId32::from(bag_array);
+
+    let to_public = sp_core::sr25519::Public::from_str(&req.to).map_err(map_account_err)?;
+    let to_array: [u8; 32] = to_public.0;
+    let to = AccountId32::from(to_array);
     let api = &data.api;
 
     let call = sugarfunge::tx().bag().sweep(to.into(), bag.into());
@@ -144,7 +153,9 @@ pub async fn deposit(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let bag = subxt::utils::AccountId32::try_from(&req.bag).map_err(map_account_err)?;
+    let bag_public = sp_core::sr25519::Public::from_str(&req.bag).map_err(map_account_err)?;
+    let bag_array: [u8; 32] = bag_public.0;
+    let bag = AccountId32::from(bag_array);
     let api = &data.api;
 
     let call = sugarfunge::tx().bag().deposit(

@@ -15,9 +15,9 @@ pub async fn add_validator(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let validator_id =
-        sp_core::sr25519::Public::from_str(req.validator_id.as_str()).map_err(map_account_err)?;
-    let validator_id = subxt::utils::AccountId32::from(validator_id);
+    let validator_public = sp_core::sr25519::Public::from_str(req.validator_id.as_str()).map_err(map_account_err)?;
+    let validator_bytes: [u8; 32] = validator_public.0; // Convert Public key to a byte array
+    let validator_id = subxt::utils::AccountId32::from(validator_bytes); // Create AccountId32 from the byte array
     let call = sugarfunge::runtime_types::sugarfunge_validator_set::pallet::Call::add_validator {
         validator_id,
     };
@@ -56,17 +56,21 @@ pub async fn remove_validator(
 ) -> error::Result<HttpResponse> {
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
-    let validator_id =
-        sp_core::sr25519::Public::from_str(req.validator_id.as_str()).map_err(map_account_err)?;
-    let validator_id = sp_core::crypto::AccountId32::from(validator_id);
+    let validator_public = sp_core::sr25519::Public::from_str(req.validator_id.as_str()).map_err(map_account_err)?;
+    let validator_bytes: [u8; 32] = validator_public.0; // Convert Public key to a byte array
+
+    // You'll need to replace this with the correct method from your specific Substrate framework
+    // This is just a placeholder and might not be correct for your setup
+    let validator_id = subxt::utils::AccountId32::from(validator_bytes); // Attempt to create AccountId32 from the byte array
+
+
     let call =
         sugarfunge::runtime_types::sugarfunge_validator_set::pallet::Call::remove_validator {
-            validator_id: validator_id.into(),
+            validator_id: validator_id,
         };
     let call = sugarfunge::runtime_types::sugarfunge_runtime::RuntimeCall::ValidatorSet(call);
-    let api = &data.api;
-
     let call_value = sugarfunge::tx().sudo().sudo(call);
+    let api = &data.api;
 
     let result = api
         .tx()

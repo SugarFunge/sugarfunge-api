@@ -3,8 +3,9 @@ use crate::util::*;
 use actix_web::{error, web, HttpRequest, HttpResponse};
 use rand::prelude::*;
 use serde_json::json;
-use sp_core::Pair;
-use sp_runtime::traits::IdentifyAccount;
+use subxt::ext::sp_core::Pair;
+use subxt::ext::sp_runtime::traits::IdentifyAccount;
+use subxt::ext::sp_core::sr25519::Public as SubxtPublic;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::account::*;
 use sugarfunge_api_types::primitives::*;
@@ -17,7 +18,7 @@ pub async fn create(_req: HttpRequest) -> error::Result<HttpResponse> {
     let seed = format!("//{}", seed);
     let seed = Seed::from(seed);
     let pair = get_pair_from_seed(&seed)?;
-    let account: sp_core::sr25519::Public = pair.public();
+    let account: SubxtPublic = pair.public();
     let account = account.into_account();
     Ok(HttpResponse::Ok().json(CreateAccountOutput {
         seed,
@@ -40,8 +41,7 @@ pub async fn fund(
     data: web::Data<AppState>,
     req: web::Json<FundAccountInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.seed)?;
-    //let signer = sp_core::sr25519::Pair::try_from(pair).unwrap();
+    let pair = get_pair_from_seed(&req.seed).unwrap();  // Assuming get_pair_from_seed now returns the correct type
     let signer = PairSigner::new(pair);
     let account = subxt::utils::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let account = subxt::utils::MultiAddress::Id(account);

@@ -4,9 +4,9 @@ use derive_more::Display;
 use dotenv::dotenv;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use sp_core::Pair;
+use subxt::ext::sp_core::sr25519::Pair as Sr25519Pair;
+use subxt::ext::sp_core::Pair;
 use subxt::error::DispatchError;
-use subxt::rpc::types::Health;
 use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge::{self};
 use url::Url;
@@ -16,6 +16,15 @@ use url::Url;
 pub struct RequestError {
     pub message: serde_json::Value,
     pub description: String,
+}
+
+// Define a struct that represents the health information you want to send.
+// Ensure it derives `Serialize`.
+#[derive(Serialize)]
+struct HealthResponse {
+    is_syncing: bool,
+    peers: u64,
+    should_have_peers: bool,
 }
 
 pub fn map_subxt_err(e: subxt::Error) -> actix_web::Error {
@@ -61,9 +70,18 @@ pub fn map_account_err(e: sp_core::crypto::PublicError) -> actix_web::Error {
     let req_error = serde_json::to_string_pretty(&req_error).unwrap();
     error::ErrorBadRequest(req_error)
 }
+pub fn map_try_from_slice_err(e: std::array::TryFromSliceError) -> actix_web::Error {
+    let json_err: serde_json::Value = json!("Invalid slice conversion");
+    let req_error = RequestError {
+        message: json_err,
+        description: format!("{:?}", e),
+    };
+    let req_error = serde_json::to_string_pretty(&req_error).unwrap();
+    error::ErrorBadRequest(req_error)
+}
 
-pub fn get_pair_from_seed(seed: &Seed) -> error::Result<sp_core::sr25519::Pair> {
-    sp_core::sr25519::Pair::from_string(seed.as_str(), None).map_err(|e| {
+pub fn get_pair_from_seed(seed: &Seed) -> error::Result<Sr25519Pair> {
+    Sr25519Pair::from_string(seed.as_str(), None).map_err(|e| {
         let req_error = RequestError {
             message: json!(&format!("{:?}", e)),
             description: "API error".into(),
@@ -130,9 +148,18 @@ pub fn map_fula_pool_err(e: subxt::Error) -> actix_web::Error {
 }
 
 pub async fn health_check(data: web::Data<AppState>) -> error::Result<HttpResponse> {
-    let api = &data.api;
-    let health: Health = api.rpc().system_health().await.map_err(map_subxt_err)?;
-    Ok(HttpResponse::Ok().json(health))
+    let rpc = &data.rpc;
+    let health = rpc.system_health().await.map_err(map_subxt_err)?;
+
+    // Map the fields from SystemHealth to HealthResponse
+    let health_response = HealthResponse {
+        is_syncing: health.is_syncing,
+        peers: health.peers as u64,
+        should_have_peers: health.should_have_peers,
+    };
+
+    // Respond with the serialized HealthResponse
+    Ok(HttpResponse::Ok().json(health_response))
 }
 
 // Function to get the hash using the blake2_256 of a [u8] value

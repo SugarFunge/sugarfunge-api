@@ -9,13 +9,11 @@ use contract_integration::types::ReceiptOutput;
 use dotenv::dotenv;
 use hex::ToHex;
 use serde_json::json;
-use subxt::ext::sp_core::sr25519::Public;
 use subxt::ext::sp_core::Pair;
-use subxt::ext::sp_runtime::traits::IdentifyAccount;
+use sp_runtime::traits::IdentifyAccount;
 use subxt::tx::PairSigner;
 use subxt::utils::AccountId32;
 use sugarfunge_api_types::contract::*;
-use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 
@@ -47,11 +45,27 @@ pub async fn convert_to_fula_call(
     let signer = PairSigner::new(pair);
 
     let paired = get_pair_from_seed(&req.seed)?;
-    let account: Public = paired.public().into();
-    let account = account.into_account();
-    let account = Account::from(format!("{}", account));
-    let account_from = AccountId32::try_from(&account).map_err(map_account_err)?;
-    let account_to = AccountId32::try_from(&account).map_err(map_account_err)?;
+    let subxt_public = paired.public(); // subxt::ext::sp_core::sr25519::Public
+
+    // Convert subxt public key to sp_core public key by extracting the raw bytes
+    let sp_public_bytes: [u8; 32] = subxt_public.0; // Extract the raw bytes from subxt public key
+
+    // Create sp_core::sr25519::Public from the raw bytes
+    let sp_public = sp_core::sr25519::Public::from_raw(sp_public_bytes);
+
+    // Convert sp_core public key to an account ID (This typically returns a H256 type)
+    let account_id = sp_public.into_account(); // Convert public key to an account ID
+
+    // Convert the H256 account ID into a byte array (H256 should implement AsRef<[u8]>)
+    let account_id_bytes: [u8; 32] = *account_id.as_ref(); // Dereference to get the array
+
+    // Convert the 32-byte array account ID to AccountId32
+    let account_from = AccountId32::from(account_id_bytes); // AccountId32 can be directly created from a 32-byte array
+    let account_to = account_from.clone(); // Cloning account_from for account_to
+
+    
+
+
 
     // Create the bundle schema
 

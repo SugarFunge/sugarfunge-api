@@ -3,10 +3,9 @@ use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
 use codec::Decode;
-use codec::Encode;
 use serde_json::json;
 use std::str::FromStr;
-use subxt::ext::sp_core::sr25519::Public;
+use sp_core::sr25519::Public;
 use subxt::tx::PairSigner;
 use subxt::utils::AccountId32;
 use sugarfunge_api_types::pool::*;
@@ -16,6 +15,7 @@ use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounde
 use sugarfunge_api_types::sugarfunge::runtime_types::fula_pool::Pool as PoolRuntime;
 use sugarfunge_api_types::sugarfunge::runtime_types::fula_pool::PoolRequest as PoolRequestRuntime;
 use sugarfunge_api_types::sugarfunge::runtime_types::fula_pool::User as UserRuntime;
+use futures::stream::StreamExt;
 
 pub async fn create_pool(
     data: web::Data<AppState>,
@@ -229,28 +229,47 @@ pub async fn get_all_pools(
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().pool().pools_root().to_root_bytes();
+    let query_key:Vec<u8>; 
+    // println!("query_key manifests_root len: {}", query_key.len());
+
+    if let Some(value) = req.region.clone() {
+        let key_value: u32 = value.parse().expect("Invalid number");
+        query_key = sugarfunge::storage()
+        .pool()
+        .pools(key_value)
+        .to_root_bytes();
+    } else {
+        query_key = sugarfunge::storage()
+        .pool()
+        .pools_iter()
+        .to_root_bytes();
+    }
     // println!("query_key pool_root len: {}", query_key.len());
 
     let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
-    let keys = storage
-        .fetch_keys(&query_key, 1000, None)
+    let keys_stream = storage
+        .fetch_raw_keys(query_key)
         .await
         .map_err(map_subxt_err)?;
-
+    let keys: Vec<Vec<u8>> = keys_stream
+        .collect::<Vec<_>>()  // Collect into a Vec<Result<Vec<u8>, Error>>
+        .await                // Await the collection process
+        .into_iter()          // Convert into an iterator
+        .filter_map(Result::ok) // Filter out Ok values, ignore errors
+        .collect();           // Collect into a Vec<Vec<u8>>
     // println!("Obtained keys:");
     for key in keys.iter() {
         let mut meet_requirements = true;
         // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
         let pool_id_idx = 48;
-        let pool_id_key = key.0.as_slice()[pool_id_idx..(pool_id_idx + 4)].to_vec();
+        let pool_id_key = key.as_slice()[pool_id_idx..(pool_id_idx + 4)].to_vec();
         let pool_id_id = u32::decode(&mut &pool_id_key[..]);
         let pool_id = pool_id_id.unwrap();
         // println!("pool_id: {:?}", pool_id);
 
-        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
+        if let Some(storage_data) = storage.fetch_raw(key.clone()).await.map_err(map_subxt_err)? {
             let value = PoolRuntime::decode(&mut &storage_data[..]);
             let pool_value = value.unwrap();
 
@@ -297,24 +316,35 @@ pub async fn get_all_pool_requests(
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let mut query_key = sugarfunge::storage()
-        .pool()
-        .pool_requests_root()
-        .to_root_bytes();
     // println!("query_key pool_root len: {}", query_key.len());
 
+    let query_key:Vec<u8>; 
     if let Some(value) = req.pool_id.clone() {
         let key_value: u32 = value.into();
-        query_key.extend(subxt::ext::sp_core::blake2_128(&key_value.encode()));
-        // println!("query_key pool_id len: {}", query_key.len());
+        query_key = sugarfunge::storage()
+        .pool()
+        .pool_requests_iter1(key_value)
+        .to_root_bytes();
+    } else {
+        query_key = sugarfunge::storage()
+        .pool()
+        .pool_requests_iter()
+        .to_root_bytes();
     }
 
     let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
-    let keys = storage
-        .fetch_keys(&query_key, 1000, None)
+    let keys_stream  = storage
+        .fetch_raw_keys(query_key)
         .await
         .map_err(map_subxt_err)?;
+
+    let keys: Vec<Vec<u8>> = keys_stream
+        .collect::<Vec<_>>()  // Collect into a Vec<Result<Vec<u8>, Error>>
+        .await                // Await the collection process
+        .into_iter()          // Convert into an iterator
+        .filter_map(Result::ok) // Filter out Ok values, ignore errors
+        .collect();  
 
     // println!("Obtained keys:");
     for key in keys.iter() {
@@ -322,18 +352,18 @@ pub async fn get_all_pool_requests(
         // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
 
         let pool_id_idx = 48;
-        let pool_id_key = key.0.as_slice()[pool_id_idx..(pool_id_idx + 4)].to_vec();
+        let pool_id_key = key.as_slice()[pool_id_idx..(pool_id_idx + 4)].to_vec();
         let pool_id_id = u32::decode(&mut &pool_id_key[..]);
         let pool_id = pool_id_id.unwrap();
         // println!("pool_id: {:?}", pool_id);
 
         let account_idx = 68;
-        let account_key = key.0.as_slice()[account_idx..(account_idx + 32)].to_vec();
+        let account_key = key.as_slice()[account_idx..(account_idx + 32)].to_vec();
         let account_id = AccountId32::decode(&mut &account_key[..]);
         let account_id = Account::from(account_id.unwrap());
         // println!("account_id: {:?}", account_id);
 
-        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
+        if let Some(storage_data) = storage.fetch_raw(key.clone()).await.map_err(map_subxt_err)? {
             let value = PoolRequestRuntime::decode(&mut &storage_data[..]);
             let poolrequest_value = value.unwrap();
 
@@ -347,11 +377,18 @@ pub async fn get_all_pool_requests(
             }
 
             if let Some(account_filter) = req.account.clone() {
-                if AccountId32::from(
-                    Public::from_str(&account_id.as_str()).map_err(map_account_err)?,
-                ) != AccountId32::from(
-                    Public::from_str(&account_filter.as_str()).map_err(map_account_err)?,
-                ) {
+                // Convert the account_id string to a Public key and then to a byte array
+                let account_public = Public::from_str(&account_id.as_str()).map_err(map_account_err)?;
+                let account_public_bytes: [u8; 32] = account_public.0;
+                let account_id_bytes = AccountId32::from(account_public_bytes);
+
+                // Convert the account_filter string to a Public key and then to a byte array
+                let filter_public = Public::from_str(&account_filter.as_str()).map_err(map_account_err)?;
+                let filter_public_bytes: [u8; 32] = filter_public.0;
+                let account_filter_bytes = AccountId32::from(filter_public_bytes);
+
+                // Compare the account IDs
+                if account_id_bytes != account_filter_bytes {
                     meet_requirements = false;
                 }
             }
@@ -381,22 +418,45 @@ pub async fn get_all_pool_users(
     let api = &data.api;
     let mut result_array = Vec::new();
 
-    let query_key = sugarfunge::storage().pool().users_root().to_root_bytes();
+    let query_key:Vec<u8>; 
+    // println!("query_key manifests_root len: {}", query_key.len());
+
+    if let Some(value) = req.account.clone() {
+        let account_value_public = Public::from_str(&value.as_str()).map_err(map_account_err)?;
+        let account_value_public_bytes: [u8; 32] = account_value_public.0;
+        let account_value_id_bytes = AccountId32::from(account_value_public_bytes);
+        query_key = sugarfunge::storage()
+        .pool()
+        .users(account_value_id_bytes)
+        .to_root_bytes();
+    } else {
+        query_key = sugarfunge::storage()
+        .pool()
+        .users_iter()
+        .to_root_bytes();
+    }
 
     let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
-    let keys = storage
-        .fetch_keys(&query_key, 1000, None)
+    let keys_stream  = storage
+        .fetch_raw_keys(query_key)
         .await
         .map_err(map_subxt_err)?;
 
+    let keys: Vec<Vec<u8>> = keys_stream
+        .collect::<Vec<_>>()  // Collect into a Vec<Result<Vec<u8>, Error>>
+        .await                // Await the collection process
+        .into_iter()          // Convert into an iterator
+        .filter_map(Result::ok) // Filter out Ok values, ignore errors
+        .collect();           // Collect into a Vec<Vec<u8>>
+
     for key in keys.iter() {
         let account_idx = 48;
-        let account_key = key.0.as_slice()[account_idx..(account_idx + 32)].to_vec();
+        let account_key = key.as_slice()[account_idx..(account_idx + 32)].to_vec();
         let account_id = AccountId32::decode(&mut &account_key[..]);
         let account_id = Account::from(account_id.unwrap());
 
-        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
+        if let Some(storage_data) = storage.fetch_raw(key.clone()).await.map_err(map_subxt_err)? {
             let value = UserRuntime::<BoundedVec<u8>>::decode(&mut &storage_data[..]);
             let user_value = value.unwrap();
             let input_pool_id = req.pool_id.map(|id| id);
@@ -421,13 +481,22 @@ pub async fn get_all_pool_users(
             }
 
             // Additional check for account value
+            // Additional check for account value
             if let Some(account_value) = req.account.clone() {
-                meet_requirements &= AccountId32::from(
-                    Public::from_str(&account_value.as_str()).map_err(map_account_err)?,
-                ) == AccountId32::from(
-                    Public::from_str(&account_id.as_str()).map_err(map_account_err)?,
-                );
+                // Convert the account_value string to a Public key and then to a byte array
+                let account_value_public = Public::from_str(&account_value.as_str()).map_err(map_account_err)?;
+                let account_value_public_bytes: [u8; 32] = account_value_public.0;
+                let account_value_id_bytes = AccountId32::from(account_value_public_bytes);
+
+                // Convert the account_id string to a Public key and then to a byte array
+                let account_id_public = Public::from_str(&account_id.as_str()).map_err(map_account_err)?;
+                let account_id_public_bytes: [u8; 32] = account_id_public.0;
+                let account_id_bytes = AccountId32::from(account_id_public_bytes);
+
+                // Compare the account IDs
+                meet_requirements &= account_value_id_bytes == account_id_bytes;
             }
+
 
             if meet_requirements {
                 result_array.push(PoolUserData {

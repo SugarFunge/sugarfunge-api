@@ -3,7 +3,6 @@ use actix::prelude::*;
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use crossbeam::channel;
-use futures::StreamExt;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use sugarfunge_api_types::sugarfunge;

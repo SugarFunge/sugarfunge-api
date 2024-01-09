@@ -13,6 +13,7 @@ std = ["codec/std", "scale-info/std"]
 [dependencies]
 sugarfunge-api-types = { path = "crates/sugarfunge-api-types" }
 env_logger = "0.10.0"
+log = "0.4"
 clap = { version = "4.3.0", features = ["derive"] }
 rand = "0.8.5"
 hex = "0.4.3"
@@ -41,8 +42,9 @@ tokio = { default-features = false, features = [
 ], version = "1" }
 
 [dependencies.subxt]
-git = "https://github.com/SugarFunge/subxt.git"
-branch = "feature/polkadot-v0.9.43"
+git = "https://github.com/paritytech/subxt.git"
+branch = "master"
+features = ["substrate-compat"]
 
 [dependencies.sp-keyring]
 git = "https://github.com/paritytech/substrate.git"
