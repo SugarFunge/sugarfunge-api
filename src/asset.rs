@@ -1,12 +1,13 @@
 use crate::state::*;
 use crate::util::*;
 use actix_web::{error, web, HttpResponse};
-use codec::Encode;
+use codec::Decode;
+use futures::stream::StreamExt;
 use serde_json::json;
-use sugarfunge_api_types::primitives::*;
 use std::str::FromStr;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::asset::*;
+use sugarfunge_api_types::primitives::*;
 use sugarfunge_api_types::sugarfunge;
 use sugarfunge_api_types::sugarfunge::runtime_types::bounded_collections::bounded_vec::BoundedVec;
 
@@ -18,7 +19,8 @@ pub async fn create_class(
     let pair = get_pair_from_seed(&req.seed)?;
     let signer = PairSigner::new(pair);
     let to = sp_core::sr25519::Public::from_str(req.owner.as_str()).map_err(map_account_err)?;
-    let to = sp_core::crypto::AccountId32::from(to);
+    let to_array: [u8; 32] = to.0; // Convert 'Public' to array
+    let to = subxt::utils::AccountId32::from(to_array);
     let metadata = serde_json::to_vec(&req.metadata).unwrap_or_default();
     let metadata = BoundedVec(metadata);
     let api = &data.api;
@@ -277,9 +279,15 @@ pub async fn balance(
     data: web::Data<AppState>,
     req: web::Json<AssetBalanceInput>,
 ) -> error::Result<HttpResponse> {
-    let account =
+    // Convert the provided account public key from a string to sp_core::sr25519::Public
+    let account_public =
         sp_core::sr25519::Public::from_str(req.account.as_str()).map_err(map_account_err)?;
-    let account = subxt::utils::AccountId32::from(account);
+
+    // Convert sp_core::sr25519::Public to a [u8; 32] array
+    let account_array: [u8; 32] = account_public.0;
+
+    // Convert [u8; 32] array to subxt::utils::AccountId32
+    let account = subxt::utils::AccountId32::from(account_array);
     let api = &data.api;
 
     let call = sugarfunge::storage().asset().balances(
@@ -303,60 +311,96 @@ pub async fn balance(
     }
 }
 
-use codec::Decode;
-
 /// Get balances for owner and maybe class
 pub async fn balances(
     data: web::Data<AppState>,
     req: web::Json<AssetBalancesInput>,
 ) -> error::Result<HttpResponse> {
-    let account =
-        sp_core::sr25519::Public::from_str(req.account.as_str()).map_err(map_account_err)?;
-    let account = sp_core::crypto::AccountId32::from(account);
+    // Convert the provided account public key from a string to sp_core::sr25519::Public
+    let account_public =
+        sp_core::sr25519::Public::from_str(&req.account.as_str()).map_err(map_account_err)?;
+
+    // Convert sp_core::sr25519::Public to a [u8; 32] array
+    let account_array: [u8; 32] = account_public.0;
+
+    // Convert [u8; 32] array to subxt::utils::AccountId32
+    let account = subxt::utils::AccountId32::from(account_array);
     let api = &data.api;
 
+    let account_clone = account.clone();
     let mut result_array = Vec::new();
-    let mut query_key = sugarfunge::storage().asset().balances_root().to_root_bytes();
-    println!("query_key balances_root len: {}", query_key.len());
-    query_key.extend(subxt::ext::sp_core::blake2_128(&account.encode()));
-    // StaticStorageMapKey::new(&account, StorageHasher::Blake2_128Concat).to_bytes(&mut query_key);
-    println!("query_key account len: {}", query_key.len());
-    if let Some(class_id) = req.class_id {
-        let class_id: u64 = class_id.into();
-        query_key.extend(subxt::ext::sp_core::blake2_128(&class_id.encode()));
-        println!("query_key class_id len: {}", query_key.len());
+
+    let query_key: Vec<u8>;
+    // println!("query_key manifests_root len: {}", query_key.len());
+
+    if let Some(class_id) = req.class_id.clone() {
+        let class_id_u64: u64 = class_id.into();
+        if let Some(asset_id) = req.asset_id.clone() {
+            let asset_id_u64: u64 = asset_id.into();
+            query_key = sugarfunge::storage()
+                .asset()
+                .balances(account_clone, class_id_u64, asset_id_u64)
+                .to_root_bytes();
+        } else {
+            query_key = sugarfunge::storage()
+                .asset()
+                .balances_iter2(account_clone, class_id_u64)
+                .to_root_bytes();
+        }
+    } else {
+        query_key = sugarfunge::storage()
+            .asset()
+            .balances_iter1(account_clone)
+            .to_root_bytes();
     }
 
     let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
-    let keys = storage
-        .fetch_keys(&query_key, 1000, None)
+    let keys_stream = storage
+        .fetch_raw_keys(query_key)
         .await
         .map_err(map_subxt_err)?;
 
-    println!("Obtained keys:");
+    let keys: Vec<Vec<u8>> = keys_stream
+        .collect::<Vec<_>>() // Collect into a Vec<Result<Vec<u8>, Error>>
+        .await // Await the collection process
+        .into_iter() // Convert into an iterator
+        .filter_map(Result::ok) // Filter out Ok values, ignore errors
+        .collect(); // Collect into a Vec<Vec<u8>>
+                    // println!("Obtained keys:");
     for key in keys.iter() {
-        println!("Key: len: {} 0x{}", key.0.len(), hex::encode(key));
+        // println!("Key: len: {} 0x{}", key.0.len(), hex::encode(&key));
+
+        // let account_idx = 48;
+        // let account_key = key.0.as_slice()[account_idx..(account_idx + 32)].to_vec();
+        // let account_id = AccountId32::decode(&mut &account_key[..]);
+        // let account_id = Account::from(account_id.unwrap());
+        // let account_id = String::from(&account_id);
+        // println!("account_id: {}", account_id);
 
         let class_idx = 96;
-        let class_key = key.0.as_slice()[class_idx..(class_idx + 8)].to_vec();
+        let class_key = key.as_slice()[class_idx..(class_idx + 8)].to_vec();
         let class_id = u64::decode(&mut &class_key[..]);
-        println!("class_id: {:?}", class_id);
+        // println!("class_id: {:?}", class_id);
 
         let asset_idx = 120;
-        let asset_key = key.0.as_slice()[asset_idx..(asset_idx + 8)].to_vec();
+        let asset_key = key.as_slice()[asset_idx..(asset_idx + 8)].to_vec();
         let asset_id = u64::decode(&mut &asset_key[..]);
-        println!("asset_id: {:?}", asset_id);
+        // println!("asset_id: {:?}", asset_id);
 
         let storage = api.storage().at_latest().await.map_err(map_subxt_err)?;
 
-        if let Some(storage_data) = storage.fetch_raw(&key.0).await.map_err(map_subxt_err)? {
+        if let Some(storage_data) = storage
+            .fetch_raw(key.clone())
+            .await
+            .map_err(map_subxt_err)?
+        {
             let value = u128::decode(&mut &storage_data[..]);
-            println!(
-                "Class_Id: {:?} AssetId: {:?}  Value: {:?}",
-                class_id, asset_id, value
-            );
-            let item = AssetBalanceItemOutput{
+            // println!(
+            //     "Class_Id: {:?} AssetId: {:?}  Value: {:?}",
+            //     class_id, asset_id, value
+            // );
+            let item = AssetBalanceItemOutput {
                 class_id: ClassId::from(class_id.unwrap()),
                 asset_id: AssetId::from(asset_id.unwrap()),
                 amount: Balance::from(value.unwrap()),
