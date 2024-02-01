@@ -3,7 +3,6 @@ use actix::prelude::*;
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use crossbeam::channel;
-use futures::StreamExt;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use sugarfunge_api_types::sugarfunge;
@@ -53,29 +52,27 @@ impl SubcriptionServiceWS {
                         .unwrap()
                         .is_some()
                     {
-                        let event = serde_json::to_string_pretty(
+                        let event = format!(
+                            "//{:?}",
                             &event
                                 .as_event::<sugarfunge::balances::events::Deposit>()
-                                .unwrap(),
+                                .unwrap()
                         );
-                        if let Ok(event) = event {
-                            let event_msg = String::from("Balance Deposit: ") + &event;
-                            tx.send(event_msg).unwrap();
-                        }
+                        let event_msg = String::from("Balance Deposit: ") + &event;
+                        tx.send(event_msg).unwrap();
                     } else if event
                         .as_event::<sugarfunge::balances::events::Transfer>()
                         .unwrap()
                         .is_some()
                     {
-                        let event = serde_json::to_string_pretty(
+                        let event = format!(
+                            "//{:?}",
                             &event
                                 .as_event::<sugarfunge::balances::events::Transfer>()
                                 .unwrap(),
                         );
-                        if let Ok(event) = event {
-                            let event_msg = String::from("Balance Transfer: ") + &event;
-                            tx.send(event_msg).unwrap();
-                        }
+                        let event_msg = String::from("Balance Transfer: ") + &event;
+                        tx.send(event_msg).unwrap();
                     }
                 }
             }
@@ -101,27 +98,25 @@ impl SubcriptionServiceWS {
                         .unwrap()
                         .is_some()
                     {
-                        let event = serde_json::to_string_pretty(
+                        let event = format!(
+                            "//{:?}",
                             &event
                                 .as_event::<sugarfunge::asset::events::Transferred>()
                                 .unwrap(),
                         );
-                        if let Ok(event) = event {
-                            let event_msg = String::from("Asset Transferred: ") + &event;
-                            tx.send(event_msg).unwrap();
-                        }
+                        let event_msg = String::from("Asset Transferred: ") + &event;
+                        tx.send(event_msg).unwrap();
                     } else if event
                         .as_event::<sugarfunge::asset::events::Mint>()
                         .unwrap()
                         .is_some()
                     {
-                        let event = serde_json::to_string_pretty(
+                        let event = format!(
+                            "//{:?}",
                             &event.as_event::<sugarfunge::asset::events::Mint>().unwrap(),
                         );
-                        if let Ok(event) = event {
-                            let event_msg = String::from("Asset Minted: ") + &event;
-                            tx.send(event_msg).unwrap();
-                        }
+                        let event_msg = String::from("Asset Minted: ") + &event;
+                        tx.send(event_msg).unwrap();
                     }
                 }
             }
@@ -145,29 +140,27 @@ impl SubcriptionServiceWS {
                         .unwrap()
                         .is_some()
                     {
-                        let event = serde_json::to_string_pretty(
+                        let event = format!(
+                            "//{:?}",
                             &event
                                 .as_event::<sugarfunge::bag::events::Created>()
                                 .unwrap(),
                         );
-                        if let Ok(event) = event {
-                            let event_msg = String::from("Bag Created: ") + &event;
-                            tx_origin.send(event_msg).unwrap();
-                        }
+                        let event_msg = String::from("Bag Created: ") + &event;
+                        tx_origin.send(event_msg).unwrap();
                     } else if event
                         .as_event::<sugarfunge::bag::events::Deposit>()
                         .unwrap()
                         .is_some()
                     {
-                        let event = serde_json::to_string_pretty(
+                        let event = format!(
+                            "//{:?}",
                             &event
                                 .as_event::<sugarfunge::bag::events::Deposit>()
                                 .unwrap(),
                         );
-                        if let Ok(event) = event {
-                            let event_msg = String::from("Bag Deposit: ") + &event;
-                            tx_origin.send(event_msg).unwrap();
-                        }
+                        let event_msg = String::from("Bag Deposit: ") + &event;
+                        tx_origin.send(event_msg).unwrap();
                     }
                 }
             }
