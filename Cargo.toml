@@ -36,28 +36,28 @@ branch = "master"
 features = ["substrate-compat"]
 
 [dependencies.sp-keyring]
-git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v1.0.0"
+git = "https://github.com/paritytech/polkadot-sdk.git"
+branch = "release-polkadot-v1.6.0"
 package = "sp-keyring"
 
 [dependencies.sp-std]
-git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v1.0.0"
+git = "https://github.com/paritytech/polkadot-sdk.git"
+branch = "release-polkadot-v1.6.0"
 package = "sp-std"
 
 [dependencies.sp-io]
-git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v1.0.0"
+git = "https://github.com/paritytech/polkadot-sdk.git"
+branch = "release-polkadot-v1.6.0"
 package = "sp-io"
 features = []
 
 [dependencies.sp-core]
-git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v1.0.0"
+git = "https://github.com/paritytech/polkadot-sdk.git"
+branch = "release-polkadot-v1.6.0"
 package = "sp-core"
 features = ["full_crypto"]
 
 [dependencies.sp-runtime]
-git = "https://github.com/paritytech/substrate.git"
-branch = "polkadot-v1.0.0"
+git = "https://github.com/paritytech/polkadot-sdk.git"
+branch = "release-polkadot-v1.6.0"
 package = "sp-runtime"
