@@ -50,7 +50,7 @@ pub async fn fund(
 
     let call = sugarfunge::tx()
         .balances()
-        .transfer(account, amount_input.into());
+        .transfer_keep_alive(account, amount_input.into());
 
     let result = api
         .tx()
