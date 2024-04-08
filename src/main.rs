@@ -56,6 +56,7 @@ async fn main() -> std::io::Result<()> {
             .route("account/exists", web::post().to(account::exists))
             .route("account/create", web::post().to(account::create))
             .route("account/fund", web::post().to(account::fund))
+            .route("account/set_balance", web::post().to(account::set_balance))
             .route("account/balance", web::post().to(account::balance))
             .route("asset/create_class", web::post().to(asset::create_class))
             .route("asset/class_info", web::post().to(asset::class_info))
@@ -77,6 +78,8 @@ async fn main() -> std::io::Result<()> {
             .route("bundle/register", web::post().to(bundle::register_bundle))
             .route("bundle/mint", web::post().to(bundle::mint_bundle))
             .route("bundle/burn", web::post().to(bundle::burn_bundle))
+            .route("bundle", web::post().to(bundle::get_bundles_id))
+            .route("bundle/data", web::post().to(bundle::get_bundles_data))
             .route(
                 "validator/add_validator",
                 web::post().to(validator::add_validator),
@@ -85,6 +88,7 @@ async fn main() -> std::io::Result<()> {
                 "validator/remove_validator",
                 web::post().to(validator::remove_validator),
             )
+            .route("validator/set_keys", web::post().to(validator::set_keys))
             .route(
                 "market/create_market",
                 web::post().to(market::create_market),
