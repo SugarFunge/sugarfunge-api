@@ -3,8 +3,9 @@ use crate::util::*;
 use actix_web::{error, web, HttpRequest, HttpResponse};
 use rand::prelude::*;
 use serde_json::json;
-use sp_core::Pair;
-use sp_runtime::traits::IdentifyAccount;
+use subxt::ext::sp_core::sr25519::Public as SubxtPublic;
+use subxt::ext::sp_core::Pair;
+use subxt::ext::sp_runtime::traits::IdentifyAccount;
 use subxt::tx::PairSigner;
 use sugarfunge_api_types::account::*;
 use sugarfunge_api_types::primitives::*;
@@ -17,7 +18,7 @@ pub async fn create(_req: HttpRequest) -> error::Result<HttpResponse> {
     let seed = format!("//{}", seed);
     let seed = Seed::from(seed);
     let pair = get_pair_from_seed(&seed)?;
-    let account: sp_core::sr25519::Public = pair.public();
+    let account: SubxtPublic = pair.public();
     let account = account.into_account();
     Ok(HttpResponse::Ok().json(CreateAccountOutput {
         seed,
@@ -40,15 +41,16 @@ pub async fn fund(
     data: web::Data<AppState>,
     req: web::Json<FundAccountInput>,
 ) -> error::Result<HttpResponse> {
-    let pair = get_pair_from_seed(&req.seed)?;
-    //let signer = sp_core::sr25519::Pair::try_from(pair).unwrap();
+    let pair = get_pair_from_seed(&req.seed).unwrap(); // Assuming get_pair_from_seed now returns the correct type
     let signer = PairSigner::new(pair);
     let account = subxt::utils::AccountId32::try_from(&req.to).map_err(map_account_err)?;
     let account = subxt::utils::MultiAddress::Id(account);
     let amount_input = req.amount;
     let api = &data.api;
 
-    let call = sugarfunge::tx().balances().transfer(account, amount_input.into());
+    let call = sugarfunge::tx()
+        .balances()
+        .transfer_keep_alive(account, amount_input.into());
 
     let result = api
         .tx()
@@ -95,7 +97,7 @@ pub async fn balance(
             message: json!("Failed to find sugarfunge::balances::events::balance"),
             description: "Error in account::balance".to_string(),
         })),
-    }    
+    }
 }
 
 /// Check if account exists and is active
@@ -119,6 +121,50 @@ pub async fn exists(
         None => Ok(HttpResponse::Ok().json(AccountExistsOutput {
             account: account_out.into(),
             exists: false,
+        })),
+    }
+}
+
+/// Fund a given account with amount
+pub async fn set_balance(
+    data: web::Data<AppState>,
+    req: web::Json<SetBalanceInput>,
+) -> error::Result<HttpResponse> {
+    let pair = get_pair_from_seed(&req.seed).unwrap(); // Assuming get_pair_from_seed now returns the correct type
+    let signer = PairSigner::new(pair);
+    let account = subxt::utils::AccountId32::try_from(&req.to).map_err(map_account_err)?;
+    let account = subxt::utils::MultiAddress::Id(account);
+    let amount_input = req.amount;
+    let api = &data.api;
+
+    let call = sugarfunge::runtime_types::pallet_balances::pallet::Call::force_set_balance {
+        who: account,
+        new_free: amount_input.into(),
+    };
+
+    let call = sugarfunge::runtime_types::sugarfunge_runtime::RuntimeCall::Balances(call);
+
+    let sudo_call = sugarfunge::tx().sudo().sudo(call);
+
+    let result = api
+        .tx()
+        .sign_and_submit_then_watch(&sudo_call, &signer, Default::default())
+        .await
+        .map_err(map_subxt_err)?
+        .wait_for_finalized_success()
+        .await
+        .map_err(map_sf_err)?;
+    let result = result
+        .find_first::<sugarfunge::balances::events::BalanceSet>()
+        .map_err(map_subxt_err)?;
+    match result {
+        Some(event) => Ok(HttpResponse::Ok().json(SetBalanceOutput {
+            account: event.who.into(),
+            amount: event.free.into(),
+        })),
+        None => Ok(HttpResponse::BadRequest().json(RequestError {
+            message: json!("Failed to find sugarfunge::balances::events::BalanceSet"),
+            description: "Error in account::set_balance".to_string(),
         })),
     }
 }
